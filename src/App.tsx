@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Header, type View } from './components/Header'
+import { container } from './components/layout'
 import { PromptChecker } from './components/PromptChecker'
 import { ToastProvider } from './components/Toast'
 import { Wizard } from './components/Wizard'
@@ -23,7 +24,7 @@ export default function App() {
         ข้ามไปเนื้อหาหลัก
       </a>
       <Header view={view} onNavigate={navigate} />
-      <main id="main" className="mx-auto max-w-2xl px-4 pb-16 pt-6">
+      <main id="main" className={`${container} flex-1 pb-10 pt-6 lg:pt-10`}>
         {view === 'wizard' ? <Wizard wizard={wizard} /> : <PromptChecker />}
       </main>
     </ToastProvider>

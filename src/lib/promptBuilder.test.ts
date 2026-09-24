@@ -151,3 +151,35 @@ describe('buildImagePrompt', () => {
     expect(text).toContain('วิทยาศาสตร์ เรื่อง ระบบสุริยะ')
   })
 })
+
+describe('หัวข้อสร้างภาพ', () => {
+  const answers: Answers = {
+    imageDesc: 'แมวใส่ชุดนักเรียน\nนั่งอ่านหนังสือ',
+    imagePurpose: 'ปกรายงาน',
+    imageStyle: 'สีน้ำ',
+  }
+
+  it('มีคำถาม 2 หน้า ไม่ถามชื่อหรือจำนวนหน้า', () => {
+    expect(visibleQuestions('image').map((q) => q.id)).toEqual(['imageWhat', 'imageLookAndFeel'])
+  })
+
+  it('สร้าง prompt จากคำบรรยาย การใช้งาน และสไตล์', async () => {
+    const { buildFreeImagePrompt } = await import('./promptBuilder')
+    const text = buildFreeImagePrompt(answers, 'chatgpt')
+    expect(text).toContain('สร้างภาพ: แมวใส่ชุดนักเรียน / นั่งอ่านหนังสือ')
+    expect(text).toContain('สไตล์: ภาพวาดสีน้ำ')
+    expect(text).toContain('ใช้สำหรับ: ปกรายงาน (เว้นพื้นที่ว่างด้านบนไว้ใส่ชื่อเรื่องทีหลัง)')
+    expect(text).toContain('สัดส่วนภาพ 3:4 (แนวตั้ง)')
+    expect(text).not.toContain('อารมณ์ของภาพ') // ไม่ได้เลือก จึงตัดทิ้ง
+    expect(text).toContain('ห้ามใส่ตัวหนังสือ')
+    expect(countBlanks(text)).toBe(0)
+    expect(buildFreeImagePrompt({ ...answers, mood: 'ตลก' }, 'claude')).toMatch(/อารมณ์ของภาพ: ตลก[\s\S]*SVG/)
+  })
+
+  it('ตัวเลือกในคำถามตรงกับ images.json', async () => {
+    const { imagePurposes, imageStyles, questions } = await import('../data')
+    const fields = questions.flatMap((q) => q.fields)
+    expect(fields.find((f) => f.id === 'imagePurpose')?.options).toEqual(imagePurposes.map((p) => p.label))
+    expect(fields.find((f) => f.id === 'imageStyle')?.options).toEqual(imageStyles.map((s) => s.label))
+  })
+})

@@ -1,17 +1,18 @@
-export type GoalId = 'm4' | 'present'
+export type GoalId = 'm4' | 'present' | 'image'
 
 export interface Goal {
   id: GoalId
   title: string
   description: string
+  /** ค่าด้านล่างใช้กับหัวข้อที่ทำสไลด์ (หัวข้อสร้างภาพไม่มี) */
   /** จำนวนหน้าที่แนะนำ ใช้เป็นค่าเริ่มต้นของ pageCount */
-  defaultPages: string
+  defaultPages?: string
   /** น้ำเสียงของเนื้อหา */
-  voice: string
+  voice?: string
   /** ชนิดสไลด์ที่ใช้ใน prompt ทำสไลด์ เช่น "พอร์ตโฟลิโอ" */
-  deckType: string
+  deckType?: string
   /** รูปที่ควรเว้นที่ไว้ เช่น "ผลงานจริง" */
-  photoHint: string
+  photoHint?: string
   note?: string
 }
 

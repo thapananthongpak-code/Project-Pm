@@ -1,4 +1,4 @@
-import { goals, imageStyles, imageSubjects, imageTools, questions, refinements, templates, tools } from '../data'
+import { goals, imagePurposes, imageRefinements, imageStyles, imageSubjects, imageTools, questions, refinements, templates, tools } from '../data'
 import type { ImageStyle, ImageSubject, ImageTool } from '../data'
 import type { Answers, GoalId, PromptTemplate, Tool, ToolId } from '../types'
 import { visibleFields, visibleQuestions } from './visible'
@@ -60,13 +60,17 @@ export function withDefaults(goal: GoalId | null, answers: Answers): Answers {
   }
 }
 
+/** เทมเพลตแรกของขั้นนั้นที่ใช้กับหัวข้อนี้ */
+export function templateFor(stage: PromptTemplate['stage'], goal: GoalId): PromptTemplate {
+  return templates.find((t) => t.stage === stage && t.goals.includes(goal)) ?? templates.find((t) => t.stage === stage)!
+}
+
 export function contentTemplateFor(goal: GoalId): PromptTemplate {
-  return templates.find((t) => t.stage === 'content' && t.goals.includes(goal)) ?? templates[0]
+  return templateFor('content', goal)
 }
 
 export const designTemplate = templates.find((t) => t.stage === 'design')!
 export const refineTemplate = templates.find((t) => t.stage === 'refine')!
-export const imageTemplate = templates.find((t) => t.stage === 'image')!
 
 /** AI ที่เลือก ถ้าไม่มีใช้ตัวแรก */
 export function toolById(id: ToolId | null): Tool {
@@ -140,7 +144,7 @@ export function buildImagePrompt(goal: GoalId, answers: Answers, toolId: ToolId 
   const { subject, style, tool } = imageChoice(goal, answers, toolId)
   const values = withDefaults(goal, answers)
   const look = answers.imageLook?.trim()
-  const text = fillTemplate(imageTemplate.body, {
+  const text = fillTemplate(templateFor('image', goal).body, {
     ...values,
     imageSubjectDesc: subject.desc,
     imageStyleDesc: style.desc,
@@ -151,6 +155,24 @@ export function buildImagePrompt(goal: GoalId, answers: Answers, toolId: ToolId 
     imageRatio: subject.ratio,
   })
   return `${text}\n${tool.suffix}`
+}
+
+/** หัวข้อ "สร้างภาพ": ภาพตามที่นักเรียนบรรยาย */
+export function buildFreeImagePrompt(answers: Answers, toolId: ToolId | null): string {
+  const style = imageStyles.find((s) => s.label === answers.imageStyle)
+  const purpose = imagePurposes.find((p) => p.label === answers.imagePurpose)
+  const tool = imageTools.find((t) => t.id === toolId) ?? imageTools[0]
+  const text = fillTemplate(templateFor('image', 'image').body, {
+    ...withDefaults('image', answers),
+    imageStyleDesc: style?.desc ?? '',
+    imagePurposeExtra: purpose?.extra ?? '',
+    imageRatio: purpose?.ratio ?? '',
+  })
+  return `${text}\n${tool.suffix}`
+}
+
+export function buildImageRefinePrompt(refinementId: string): string {
+  return (imageRefinements.find((r) => r.id === refinementId) ?? imageRefinements[0]).text
 }
 
 export function countBlanks(text: string): number {

@@ -36,8 +36,24 @@ export interface ImageTool {
   id: ToolId
   suffix: string
   note?: string
+  /** ข้อความสั้นใต้ชื่อ AI ในหน้าเลือก AI ของหัวข้อสร้างภาพ */
+  short?: string
+}
+
+export interface ImagePurpose {
+  label: string
+  ratio: string
+  extra: string
+}
+
+export interface ImageRefinement {
+  id: string
+  label: string
+  text: string
 }
 
 export const imageSubjects = imagesJson.subjects as ImageSubject[]
 export const imageStyles = imagesJson.styles as ImageStyle[]
 export const imageTools = imagesJson.tools as ImageTool[]
+export const imagePurposes = imagesJson.purposes as ImagePurpose[]
+export const imageRefinements = imagesJson.refinements as ImageRefinement[]

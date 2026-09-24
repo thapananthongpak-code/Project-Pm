@@ -1,4 +1,5 @@
 import { useTheme } from '../hooks/useTheme'
+import { container } from './layout'
 
 export type View = 'wizard' | 'checker'
 
@@ -29,8 +30,8 @@ export function Header({ view, onNavigate }: Props) {
   const { dark, toggle } = useTheme()
 
   return (
-    <header className="sticky top-0 z-20 border-b border-line bg-bg/90 backdrop-blur">
-      <div className="mx-auto flex h-14 max-w-2xl items-center gap-2 px-4">
+    <header className="sticky top-0 z-20 border-b border-line bg-bg/90 pt-[env(safe-area-inset-top)] backdrop-blur">
+      <div className={`${container} flex h-14 items-center gap-2 lg:h-16`}>
         <button
           type="button"
           onClick={() => onNavigate('wizard')}

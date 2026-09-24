@@ -42,6 +42,16 @@
     "body": "สร้าง{{imageSubjectDesc}}\nสไตล์: {{imageStyleDesc}}\nตัวละคร: {{imageCharacter}}\nเรื่องราวในรูป: {{imageTheme}}\nโทนสี{{colors}} พื้นหลังเรียบ ไม่รก\nห้ามใส่ตัวหนังสือหรือตัวอักษรใดๆ ในรูป\nสัดส่วนภาพ {{imageRatio}}"
   },
   {
+    "id": "image-free",
+    "title": "สร้างภาพการ์ตูน",
+    "description": "ภาพการ์ตูนตามที่นักเรียนบรรยาย พร้อมสัดส่วนตามการใช้งาน",
+    "stage": "image",
+    "goals": [
+      "image"
+    ],
+    "body": "สร้างภาพ: {{imageDesc}}\nสไตล์: {{imageStyleDesc}}\nใช้สำหรับ: {{imagePurpose}} ({{imagePurposeExtra}})\nอารมณ์ของภาพ: {{mood}}\nโทนสี{{colors}} องค์ประกอบไม่รก เห็นจุดเด่นชัด\nห้ามใส่ตัวหนังสือหรือตัวอักษรใดๆ ในภาพ\nสัดส่วนภาพ {{imageRatio}}"
+  },
+  {
     "id": "refine",
     "title": "ต่อยอดให้ปังขึ้น",
     "description": "ใช้หลังได้เนื้อหาแล้ว ให้ AI ปรับความยาว โทน หรือภาษา",

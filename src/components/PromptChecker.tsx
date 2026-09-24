@@ -24,12 +24,14 @@ export function PromptChecker() {
       </h1>
       <p className="mt-1 text-muted">วาง prompt ที่เขียนเอง แล้วดูว่ายังขาดอะไร</p>
 
+      <div className="lg:grid lg:grid-cols-2 lg:items-start lg:gap-6">
+      <div>
       <label htmlFor="checker-input" className="sr-only">
         prompt ของคุณ
       </label>
       <textarea
         id="checker-input"
-        rows={6}
+        rows={8}
         value={text}
         onChange={(e) => setText(e.target.value)}
         placeholder="เช่น ช่วยทำสไลด์วิทยาศาสตร์เรื่องระบบสุริยะให้หน่อย..."
@@ -46,9 +48,10 @@ export function PromptChecker() {
           </button>
         )}
       </div>
+      </div>
 
       {hasText && (
-        <div className="mt-5 space-y-4" aria-live="polite">
+        <div className="mt-5 space-y-4 lg:mt-4" aria-live="polite">
           <div className="card p-5">
             <p className="flex items-baseline justify-between gap-2">
               <span className="font-display text-xl font-bold">
@@ -101,6 +104,7 @@ export function PromptChecker() {
           )}
         </div>
       )}
+      </div>
     </section>
   )
 }

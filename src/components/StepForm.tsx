@@ -52,6 +52,7 @@ export function StepForm({ goal, page, answers, onAnswer, onPage, onBack, onDone
       <p className="mt-1 text-muted">{byGoal(question.subtitle, goal)}</p>
 
       <form
+        id="step-form"
         className="mt-5 space-y-5"
         onSubmit={(e) => {
           e.preventDefault()
@@ -76,7 +77,8 @@ export function StepForm({ goal, page, answers, onAnswer, onPage, onBack, onDone
           <button type="button" onClick={handleBack} className="btn-ghost">
             ย้อนกลับ
           </button>
-          <button type="submit" className="btn-primary flex-1 text-lg">
+          {/* ปุ่มนี้ถูกส่งออกไปนอก <form> (ActionBar) จึงผูกกับฟอร์มด้วย form="step-form" */}
+          <button type="submit" form="step-form" className="btn-primary flex-1 text-lg">
             {isLast ? 'เลือก AI' : 'ถัดไป'}
           </button>
         </ActionBar>

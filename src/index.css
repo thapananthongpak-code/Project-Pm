@@ -88,6 +88,9 @@
   html {
     -webkit-text-size-adjust: 100%;
   }
+  #root {
+    @apply flex min-h-dvh flex-col;
+  }
   body {
     @apply bg-bg font-sans text-ink antialiased;
     font-size: 17px;
@@ -116,7 +119,7 @@
   @apply rounded-3xl border border-line bg-surface shadow-soft;
 }
 @utility btn {
-  @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl px-5 font-semibold transition
+  @apply inline-flex min-h-13 items-center justify-center gap-2 rounded-2xl px-5 font-semibold transition lg:min-h-14
     active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50;
 }
 @utility btn-primary {

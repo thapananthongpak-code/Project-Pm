@@ -25,13 +25,15 @@ export function Wizard({ wizard }: { wizard: WizardApi }) {
   return (
     <>
       {step === 0 && !hasAnswers && (
-        <div className="mb-8 animate-step-in">
-          <h1 className="text-[28px] font-bold leading-tight">
+        <div className="mb-8 animate-step-in lg:mb-12">
+          <h1 className="text-[28px] font-bold leading-tight sm:text-4xl lg:text-5xl">
             ตอบคำถามง่ายๆ
             <br />
-            <span className="text-brand-600 dark:text-brand-300">ได้ prompt ทำสไลด์ที่ตรงจุด</span>
+            <span className="text-brand-600 dark:text-brand-300">ได้ prompt ที่ตรงจุด</span>
           </h1>
-          <p className="mt-2 text-muted">สำหรับนักเรียน ม.3 · ใช้กับ ChatGPT, Gemini, Claude</p>
+          <p className="mt-2 text-muted lg:mt-4 lg:text-lg">
+            ทำสไลด์และสร้างภาพ สำหรับนักเรียน ม.3 · ใช้กับ ChatGPT, Gemini, Claude
+          </p>
         </div>
       )}
 
@@ -51,6 +53,7 @@ export function Wizard({ wizard }: { wizard: WizardApi }) {
         />
       ) : step === 2 || !toolId ? (
         <StepTool
+          goal={goal}
           value={toolId}
           onSelect={selectTool}
           onBack={() => goTo(1, pageTotal - 1)}
