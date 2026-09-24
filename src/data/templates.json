@@ -21,14 +21,14 @@
   },
   {
     "id": "slide-design",
-    "title": "เจนดีไซน์สไลด์",
-    "description": "นำเนื้อหาจากขั้น ก ไปให้ Canva / Gamma / Google Slides จัดหน้า",
+    "title": "ทำเป็นสไลด์",
+    "description": "ให้ AI ตัวเดิมนำเนื้อหาจากขั้นที่ 1 มาทำเป็นไฟล์สไลด์",
     "stage": "design",
     "goals": [
       "m4",
       "present"
     ],
-    "body": "สร้างสไลด์{{deckType}} {{pageCount}} หน้า สไตล์{{slideStyle}}\nโทนสี{{colors}} ฟอนต์อ่านง่าย\nเนื้อหาแต่ละหน้า:\n{{content}}\nเน้นพื้นที่ว่าง หัวข้อใหญ่ชัด และเว้นที่วางรูป{{photoHint}}"
+    "body": "นำเนื้อหาข้างต้นมาทำเป็นสไลด์{{deckType}} {{pageCount}} หน้า\nสไตล์{{slideStyle}} โทนสี{{colors}} ฟอนต์อ่านง่าย\nเน้นพื้นที่ว่าง หัวข้อใหญ่ชัด และเว้นที่วางรูป{{photoHint}}\n{{slideSuffix}}"
   },
   {
     "id": "cartoon-image",

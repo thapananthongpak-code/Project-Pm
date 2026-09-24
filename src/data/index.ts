@@ -8,7 +8,6 @@ import imagesJson from './images.json'
 
 export interface Refinement {
   id: string
-  emoji: string
   label: string
   refineMode: string
 }
@@ -34,7 +33,7 @@ export interface ImageStyle {
 }
 
 export interface ImageTool {
-  id: Extract<ToolId, 'chatgpt' | 'gemini' | 'claude'>
+  id: ToolId
   suffix: string
   note?: string
 }

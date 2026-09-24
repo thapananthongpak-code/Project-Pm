@@ -25,9 +25,13 @@ export function Wizard({ wizard }: { wizard: WizardApi }) {
   return (
     <>
       {step === 0 && !hasAnswers && (
-        <div className="mb-6 animate-step-in rounded-3xl bg-linear-to-br from-brand-600 to-sea-600 p-6 text-white shadow-lift">
-          <h1 className="text-[26px] font-bold leading-tight">ตอบคำถามง่ายๆ ได้ prompt ทำสไลด์ที่ตรงจุด</h1>
-          <p className="mt-2 text-white/90">สำหรับนักเรียน ม.3 · ใช้เวลาราว 3 นาที</p>
+        <div className="mb-8 animate-step-in">
+          <h1 className="text-[28px] font-bold leading-tight">
+            ตอบคำถามง่ายๆ
+            <br />
+            <span className="text-brand-600 dark:text-brand-300">ได้ prompt ทำสไลด์ที่ตรงจุด</span>
+          </h1>
+          <p className="mt-2 text-muted">สำหรับนักเรียน ม.3 · ใช้กับ ChatGPT, Gemini, Claude</p>
         </div>
       )}
 

@@ -23,7 +23,7 @@ export default function App() {
         ข้ามไปเนื้อหาหลัก
       </a>
       <Header view={view} onNavigate={navigate} />
-      <main id="main" className="mx-auto max-w-3xl px-4 pb-16 pt-6">
+      <main id="main" className="mx-auto max-w-2xl px-4 pb-16 pt-6">
         {view === 'wizard' ? <Wizard wizard={wizard} /> : <PromptChecker />}
       </main>
     </ToastProvider>

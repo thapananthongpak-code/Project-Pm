@@ -92,7 +92,7 @@ export function FieldInput({ field, goal, value, error, hideOptional, onChange }
 
       {error && (
         <p id={errorId} role="alert" className="mt-2 font-medium text-accent-700 dark:text-accent-300">
-          ⚠️ {error}
+          {error}
         </p>
       )}
 

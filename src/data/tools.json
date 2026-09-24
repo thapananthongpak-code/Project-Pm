@@ -1,56 +1,26 @@
 [
   {
     "id": "chatgpt",
-    "emoji": "💬",
     "name": "ChatGPT",
-    "kind": "content",
-    "url": "https://chatgpt.com",
-    "howTo": ["เปิด ChatGPT แล้ววาง Prompt ขั้น ก", "ถ้า AI ถามข้อมูลเพิ่ม ให้ตอบตามจริง", "คัดลอกเนื้อหาที่ได้ ไปใช้กับ Prompt ขั้น ข"],
-    "promptSuffix": "ตอบเป็นหัวข้อ \"สไลด์ที่ 1, 2, 3...\" ให้คัดลอกไปใช้ต่อได้ง่าย"
-  },
-  {
-    "id": "claude",
-    "emoji": "✳️",
-    "name": "Claude",
-    "kind": "content",
-    "url": "https://claude.ai",
-    "howTo": ["เปิด Claude แล้ววาง Prompt ขั้น ก", "ขอให้ปรับได้เรื่อยๆ เช่น \"สไลด์ 3 สั้นลงอีก\"", "คัดลอกเนื้อหาที่ได้ ไปใช้กับ Prompt ขั้น ข"],
-    "promptSuffix": "ตอบเป็นหัวข้อ \"สไลด์ที่ 1, 2, 3...\" ให้คัดลอกไปใช้ต่อได้ง่าย"
+    "url": "https://chatgpt.com/",
+    "blurb": "ใช้ง่าย สร้างรูปได้",
+    "promptSuffix": "ตอบเป็นหัวข้อ \"สไลด์ที่ 1, 2, 3...\"",
+    "slideSuffix": "สร้างเป็นไฟล์ PowerPoint (.pptx) ให้ฉันดาวน์โหลด"
   },
   {
     "id": "gemini",
-    "emoji": "✨",
     "name": "Gemini",
-    "kind": "content",
-    "url": "https://gemini.google.com",
-    "howTo": ["เปิด Gemini ด้วยบัญชี Google แล้ววาง Prompt ขั้น ก", "ถ้า AI ถามข้อมูลเพิ่ม ให้ตอบตามจริง", "คัดลอกเนื้อหาที่ได้ ไปใช้กับ Prompt ขั้น ข"],
-    "promptSuffix": "ตอบเป็นหัวข้อ \"สไลด์ที่ 1, 2, 3...\" ให้คัดลอกไปใช้ต่อได้ง่าย"
+    "url": "https://gemini.google.com/app",
+    "blurb": "ใช้บัญชี Google ได้ สร้างรูปได้",
+    "promptSuffix": "ตอบเป็นหัวข้อ \"สไลด์ที่ 1, 2, 3...\"",
+    "slideSuffix": "สร้างเป็นงานนำเสนอใน Canvas เพื่อให้ฉันส่งออกไป Google Slides ได้"
   },
   {
-    "id": "canva",
-    "emoji": "🎨",
-    "name": "Canva",
-    "kind": "design",
-    "url": "https://www.canva.com",
-    "howTo": ["ใช้ Prompt ขั้น ก กับ ChatGPT / Claude / Gemini ให้ได้เนื้อหาก่อน", "เปิด Canva เลือก Canva AI แล้ววาง Prompt ขั้น ข พร้อมเนื้อหา", "เลือกแบบที่ชอบ แล้วใส่รูปจริงของตัวเอง"],
-    "promptSuffix": "จัดเป็นงานนำเสนอขนาด 16:9 และใช้องค์ประกอบที่แก้ไขได้ใน Canva"
-  },
-  {
-    "id": "gamma",
-    "emoji": "⚡",
-    "name": "Gamma",
-    "kind": "design",
-    "url": "https://gamma.app",
-    "howTo": ["ใช้ Prompt ขั้น ก กับ ChatGPT / Claude / Gemini ให้ได้เนื้อหาก่อน", "เปิด Gamma เลือก Paste in text แล้ววาง Prompt ขั้น ข พร้อมเนื้อหา", "เลือกธีม แล้วเปลี่ยนรูปเป็นรูปจริง"],
-    "promptSuffix": "ใช้เครื่องหมาย --- คั่นระหว่างสไลด์ และคงเนื้อหาภาษาไทยตามที่ให้ไว้"
-  },
-  {
-    "id": "gslides",
-    "emoji": "📊",
-    "name": "Google Slides",
-    "kind": "design",
-    "url": "https://slides.google.com",
-    "howTo": ["ใช้ Prompt ขั้น ก กับ Gemini ให้ได้เนื้อหาก่อน", "เปิด Google Slides กดไอคอน Gemini แล้ววาง Prompt ขั้น ข", "ถ้าบัญชีไม่มี Gemini ให้จัดหน้าเองตามคำแนะนำใน prompt"],
-    "promptSuffix": "ออกแบบทีละสไลด์ และบอกตำแหน่งกล่องข้อความกับรูปให้ชัด"
+    "id": "claude",
+    "name": "Claude",
+    "url": "https://claude.ai/new",
+    "blurb": "เขียนภาษาไทยเป็นธรรมชาติ",
+    "promptSuffix": "ตอบเป็นหัวข้อ \"สไลด์ที่ 1, 2, 3...\"",
+    "slideSuffix": "สร้างเป็นไฟล์ PowerPoint (.pptx) ให้ฉันดาวน์โหลด"
   }
 ]

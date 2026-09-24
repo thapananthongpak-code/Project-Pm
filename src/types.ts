@@ -2,14 +2,13 @@ export type GoalId = 'm4' | 'present'
 
 export interface Goal {
   id: GoalId
-  emoji: string
   title: string
   description: string
   /** จำนวนหน้าที่แนะนำ ใช้เป็นค่าเริ่มต้นของ pageCount */
   defaultPages: string
   /** น้ำเสียงของเนื้อหา */
   voice: string
-  /** ชนิดสไลด์ที่ใช้ใน prompt ดีไซน์ เช่น "พอร์ตโฟลิโอ" */
+  /** ชนิดสไลด์ที่ใช้ใน prompt ทำสไลด์ เช่น "พอร์ตโฟลิโอ" */
   deckType: string
   /** รูปที่ควรเว้นที่ไว้ เช่น "ผลงานจริง" */
   photoHint: string
@@ -38,26 +37,24 @@ export interface Field {
 
 export interface Question {
   id: string
-  emoji: string
   title: string | ByGoal
   subtitle: string | ByGoal
   fields: Field[]
   goals?: GoalId[]
 }
 
-export type ToolKind = 'content' | 'design'
-export type ToolId = 'chatgpt' | 'claude' | 'gemini' | 'canva' | 'gamma' | 'gslides'
+export type ToolId = 'chatgpt' | 'gemini' | 'claude'
 
 export interface Tool {
   id: ToolId
-  emoji: string
   name: string
-  kind: ToolKind
+  /** ลิงก์เปิดแชทใหม่ */
   url: string
-  /** วิธีใช้ prompt กับเครื่องมือนี้ ทีละข้อ */
-  howTo: string[]
-  /** ข้อความเสริมท้าย prompt ให้เหมาะกับเครื่องมือ */
-  promptSuffix?: string
+  blurb: string
+  /** ข้อความท้าย prompt ขั้นเขียนเนื้อหา */
+  promptSuffix: string
+  /** ข้อความท้าย prompt ขั้นทำสไลด์ บอกว่า AI ตัวนี้ส่งสไลด์ออกมาแบบไหน */
+  slideSuffix: string
 }
 
 export type TemplateStage = 'content' | 'design' | 'image' | 'refine'

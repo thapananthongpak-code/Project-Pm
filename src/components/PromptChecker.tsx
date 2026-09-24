@@ -4,9 +4,9 @@ import { analyzePrompt, improvePrompt, weakSample } from '../lib/promptChecker'
 import { PromptCard } from './PromptCard'
 
 function verdict(ratio: number) {
-  if (ratio >= 0.8) return { text: 'ดีมาก พร้อมใช้', emoji: '🌟', bar: 'bg-sea-500' }
-  if (ratio >= 0.5) return { text: 'พอใช้ เติมอีกนิด', emoji: '👍', bar: 'bg-brand-500' }
-  return { text: 'ยังขาดหลายอย่าง', emoji: '🛠️', bar: 'bg-accent-400' }
+  if (ratio >= 0.8) return { text: 'ดีมาก พร้อมใช้', bar: 'bg-sea-500' }
+  if (ratio >= 0.5) return { text: 'พอใช้ เติมอีกนิด', bar: 'bg-brand-500' }
+  return { text: 'ยังขาดหลายอย่าง', bar: 'bg-accent-400' }
 }
 
 export function PromptChecker() {
@@ -52,7 +52,6 @@ export function PromptChecker() {
           <div className="card p-5">
             <p className="flex items-baseline justify-between gap-2">
               <span className="font-display text-xl font-bold">
-                <span aria-hidden="true">{v.emoji} </span>
                 {v.text}
               </span>
               <span className="text-lg font-bold text-brand-700 dark:text-brand-300">
@@ -74,7 +73,7 @@ export function PromptChecker() {
             </div>
             {analysis.blanks > 0 && (
               <p className="mt-3 text-[15px] text-accent-700 dark:text-accent-300">
-                ⚠️ ยังมีช่องที่ยังไม่เติม {analysis.blanks} จุด เช่น [__]
+                ยังมีช่องที่ยังไม่เติม {analysis.blanks} จุด เช่น [__]
               </p>
             )}
 
@@ -84,7 +83,7 @@ export function PromptChecker() {
                 <ul className="mt-2 space-y-2">
                   {missing.map(({ rule }) => (
                     <li key={rule.id} className="rounded-2xl bg-accent-50 px-3 py-2 dark:bg-accent-700/15">
-                      <span className="font-semibold">➕ {rule.label}</span>
+                      <span className="font-semibold">{rule.label}</span>
                       <span className="block text-[15px] text-muted">เช่น “{rule.fix}”</span>
                     </li>
                   ))}
@@ -95,8 +94,6 @@ export function PromptChecker() {
 
           {missing.length > 0 && (
             <PromptCard
-              badge="ปรับแล้ว"
-              tone="sea"
               title="prompt ที่เติมส่วนที่ขาดให้แล้ว"
               subtitle="แก้ช่องสีส้มเป็นข้อมูลจริงก่อนใช้"
               text={improvePrompt(text, analysis)}

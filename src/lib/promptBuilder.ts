@@ -4,7 +4,6 @@ import type { Answers, GoalId, PromptTemplate, Tool, ToolId } from '../types'
 import { visibleFields, visibleQuestions } from './visible'
 
 export const BLANK = '[__]'
-export const PASTE_HERE = '[วางเนื้อหาที่ได้จาก Prompt ขั้น ก ตรงนี้]'
 
 const PLACEHOLDER = /\{\{(\w+)\}\}/g
 const requiredIds = new Set(questions.flatMap((q) => q.fields.filter((f) => f.required).map((f) => f.id)))
@@ -58,7 +57,6 @@ export function withDefaults(goal: GoalId | null, answers: Answers): Answers {
     deckType: info?.deckType ?? '',
     photoHint: info?.photoHint ?? '',
     audience: audienceFor(goal),
-    content: PASTE_HERE,
   }
 }
 
@@ -70,30 +68,26 @@ export const designTemplate = templates.find((t) => t.stage === 'design')!
 export const refineTemplate = templates.find((t) => t.stage === 'refine')!
 export const imageTemplate = templates.find((t) => t.stage === 'image')!
 
-export function toolById(id: ToolId | null): Tool | undefined {
-  return tools.find((t) => t.id === id)
+/** AI ที่เลือก ถ้าไม่มีใช้ตัวแรก */
+export function toolById(id: ToolId | null): Tool {
+  return tools.find((t) => t.id === id) ?? tools[0]
 }
 
 export interface BuiltPrompts {
+  /** ขั้นที่ 1: เขียนเนื้อหา (เปิดแชทใหม่) */
   content: string
+  /** ขั้นที่ 2: ทำเป็นสไลด์ (วางต่อในแชทเดิม) */
   design: string
-  contentTool: Tool
-  designTool: Tool | undefined
+  tool: Tool
 }
 
 export function buildPrompts(goal: GoalId, answers: Answers, toolId: ToolId | null): BuiltPrompts {
-  const values = withDefaults(goal, answers)
-  const picked = toolById(toolId)
-  const contentTool = picked?.kind === 'content' ? picked : tools.find((t) => t.kind === 'content')!
-  const designTool = picked?.kind === 'design' ? picked : undefined
-
-  const withSuffix = (text: string, tool?: Tool) => (tool?.promptSuffix ? `${text}\n${tool.promptSuffix}` : text)
-
+  const tool = toolById(toolId)
+  const values = { ...withDefaults(goal, answers), slideSuffix: tool.slideSuffix }
   return {
-    content: withSuffix(fillTemplate(contentTemplateFor(goal).body, values), contentTool),
-    design: withSuffix(fillTemplate(designTemplate.body, values), designTool),
-    contentTool,
-    designTool,
+    content: `${fillTemplate(contentTemplateFor(goal).body, values)}\n${tool.promptSuffix}`,
+    design: fillTemplate(designTemplate.body, values),
+    tool,
   }
 }
 
@@ -132,21 +126,18 @@ export interface ImageChoice {
 }
 
 /** ตัวเลือกรูปที่ผู้ใช้เลือกไว้ (เก็บในคำตอบ) หรือค่าเริ่มต้น */
-export function imageChoice(goal: GoalId, answers: Answers, fallbackTool: ToolId | null): ImageChoice {
+export function imageChoice(goal: GoalId, answers: Answers, toolId: ToolId | null): ImageChoice {
   return {
     subject:
       imageSubjects.find((s) => s.label === answers.imageSubject) ??
       imageSubjects.find((s) => s.id === (goal === 'm4' ? 'avatar' : 'scene'))!,
     style: imageStyles.find((s) => s.label === answers.imageStyle) ?? imageStyles[0],
-    tool:
-      imageTools.find((t) => toolById(t.id)?.name === answers.imageTool) ??
-      imageTools.find((t) => t.id === fallbackTool) ??
-      imageTools[0],
+    tool: imageTools.find((t) => t.id === toolId) ?? imageTools[0],
   }
 }
 
-export function buildImagePrompt(goal: GoalId, answers: Answers, fallbackTool: ToolId | null): string {
-  const { subject, style, tool } = imageChoice(goal, answers, fallbackTool)
+export function buildImagePrompt(goal: GoalId, answers: Answers, toolId: ToolId | null): string {
+  const { subject, style, tool } = imageChoice(goal, answers, toolId)
   const values = withDefaults(goal, answers)
   const look = answers.imageLook?.trim()
   const text = fillTemplate(imageTemplate.body, {

@@ -13,7 +13,7 @@ export function StepGoal({ value, onSelect }: Props) {
         อยากทำอะไร?
       </h2>
 
-      <div role="radiogroup" aria-labelledby="step-heading" className="mt-4 grid gap-3 sm:grid-cols-2">
+      <div role="radiogroup" aria-labelledby="step-heading" className="mt-4 space-y-3">
         {goals.map((goal) => {
           const selected = value === goal.id
           return (
@@ -23,19 +23,16 @@ export function StepGoal({ value, onSelect }: Props) {
               role="radio"
               aria-checked={selected}
               onClick={() => onSelect(goal.id)}
-              className={`card flex items-center gap-4 p-5 text-left transition hover:-translate-y-0.5 hover:shadow-lift ${
-                selected ? 'border-2 border-brand-500 bg-brand-50 dark:bg-brand-900/40' : ''
+              className={`card flex w-full items-center justify-between gap-4 p-5 text-left transition hover:border-brand-300 ${
+                selected ? 'border-brand-500 ring-2 ring-brand-500' : ''
               }`}
             >
-              <span
-                aria-hidden="true"
-                className="grid size-14 shrink-0 place-items-center rounded-2xl bg-linear-to-br from-brand-100 to-sea-100 text-3xl dark:from-brand-800 dark:to-sea-700"
-              >
-                {goal.emoji}
-              </span>
               <span>
                 <span className="block font-display text-lg font-semibold">{goal.title}</span>
-                <span className="block text-[15px] leading-snug text-muted">{goal.description}</span>
+                <span className="block text-[15px] text-muted">{goal.description}</span>
+              </span>
+              <span aria-hidden="true" className="text-xl text-muted">
+                →
               </span>
             </button>
           )

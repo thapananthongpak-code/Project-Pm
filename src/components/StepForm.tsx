@@ -47,7 +47,6 @@ export function StepForm({ goal, page, answers, onAnswer, onPage, onBack, onDone
   return (
     <section key={question.id} aria-labelledby="step-heading" className="animate-step-in">
       <h2 id="step-heading" tabIndex={-1} className="text-2xl font-bold">
-        <span aria-hidden="true">{question.emoji} </span>
         {byGoal(question.title, goal)}
       </h2>
       <p className="mt-1 text-muted">{byGoal(question.subtitle, goal)}</p>
@@ -75,10 +74,10 @@ export function StepForm({ goal, page, answers, onAnswer, onPage, onBack, onDone
 
         <ActionBar>
           <button type="button" onClick={handleBack} className="btn-ghost">
-            <span aria-hidden="true">←</span> ย้อนกลับ
+            ย้อนกลับ
           </button>
           <button type="submit" className="btn-primary flex-1 text-lg">
-            {isLast ? 'ไปเลือกเครื่องมือ' : 'ถัดไป'} <span aria-hidden="true">→</span>
+            {isLast ? 'เลือก AI' : 'ถัดไป'}
           </button>
         </ActionBar>
       </form>

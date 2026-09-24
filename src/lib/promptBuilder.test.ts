@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { templates } from '../data'
 import type { Answers } from '../types'
-import { BLANK, PASTE_HERE, buildPrompts, buildRefinePrompt, countBlanks, fillTemplate, firstBlankPage, firstIncompletePage } from './promptBuilder'
+import { BLANK, buildPrompts, buildRefinePrompt, countBlanks, fillTemplate, firstBlankPage, firstIncompletePage } from './promptBuilder'
 import { visibleFields, visibleQuestions } from './visible'
 
 const m4: Answers = {
@@ -40,15 +40,14 @@ describe('fillTemplate', () => {
 
 describe('buildPrompts', () => {
   it('พอร์ต ม.4 ครบ ไม่มีช่องว่าง', () => {
-    const { content, design } = buildPrompts('m4', m4, 'gamma')
+    const { content, design } = buildPrompts('m4', m4, 'chatgpt')
     expect(countBlanks(content) + countBlanks(design)).toBe(0)
     expect(content).toContain('เพื่อสมัคร ม.4 แผนการเรียนวิทย์-คณิต โรงเรียนสวนกุหลาบวิทยาลัย')
     expect(content).toContain('นักเรียน ม.3')
     expect(content).not.toContain('รางวัล:') // ไม่ได้ตอบ จึงตัดทิ้ง
-    expect(design).toContain('สร้างสไลด์พอร์ตโฟลิโอ 10 หน้า')
+    expect(design).toContain('นำเนื้อหาข้างต้นมาทำเป็นสไลด์พอร์ตโฟลิโอ 10 หน้า')
     expect(design).toContain('โทนสีที่เข้ากับเนื้อหา') // ค่าเริ่มต้นเมื่อไม่ได้เลือก
-    expect(design).toContain(PASTE_HERE)
-    expect(design).toContain('---') // คำแนะนำเฉพาะ Gamma
+    expect(design).toContain('PowerPoint (.pptx)')
   })
 
   it('สื่อนำเสนอ ใส่วิชาและหัวข้อ', () => {
@@ -58,7 +57,7 @@ describe('buildPrompts', () => {
     expect(content).toContain('เรื่อง: ระบบสุริยะ')
     expect(content).toContain('ภาษาสุภาพ เข้าใจง่าย')
     expect(content).not.toContain('เวลานำเสนอ') // ไม่ได้เลือก จึงตัดทิ้ง
-    expect(design).toContain('สร้างสไลด์นำเสนอ 8 หน้า')
+    expect(design).toContain('ทำเป็นสไลด์นำเสนอ 8 หน้า')
   })
 
   it('เลือกวิชา "อื่นๆ" ใช้ชื่อที่พิมพ์เอง', () => {
@@ -67,10 +66,11 @@ describe('buildPrompts', () => {
     expect(content).not.toContain('อื่นๆ')
   })
 
-  it('เลือกเครื่องมือทำสไลด์ ขั้น ก ยังได้คำแนะนำของ AI แชท', () => {
-    const { content, contentTool, designTool } = buildPrompts('m4', m4, 'canva')
-    expect(contentTool.kind).toBe('content')
-    expect(designTool?.id).toBe('canva')
+  it('ขั้นทำสไลด์ปรับตาม AI ที่เลือก', () => {
+    expect(buildPrompts('m4', m4, 'gemini').design).toContain('Canvas')
+    expect(buildPrompts('m4', m4, 'claude').design).toContain('.pptx')
+    const { content, tool } = buildPrompts('m4', m4, null)
+    expect(tool.id).toBe('chatgpt') // ไม่ได้เลือก ใช้ตัวแรก
     expect(content).toContain('สไลด์ที่ 1, 2, 3')
   })
 })
@@ -135,8 +135,8 @@ describe('buildImagePrompt', () => {
     const { buildImagePrompt } = await import('./promptBuilder')
     const text = buildImagePrompt(
       'present',
-      { ...present, imageSubject: 'ไอคอนหัวข้อ', imageStyle: 'พิกเซลอาร์ต', imageTool: 'Claude' },
-      'chatgpt',
+      { ...present, imageSubject: 'ไอคอนหัวข้อ', imageStyle: 'พิกเซลอาร์ต' },
+      'claude',
     )
     expect(text).not.toContain('ตัวละคร:')
     expect(text).toContain('ไอคอนละ 1 เรื่อง: ดาวเคราะห์ 8 ดวง, ทำไมโลกมีสิ่งมีชีวิต')
