@@ -25,7 +25,7 @@ npm run dev        # เปิด http://localhost:5173
 
 ## วิธีใช้ (สำหรับนักเรียน)
 
-มี 2 เมนู: **สร้าง** และ **ตรวจ prompt**
+มี 3 เมนู: **สร้าง**, **สร้างภาพ** (เข้าหัวข้อสร้างภาพทันที) และ **ตรวจ prompt**
 
 **สร้าง**: ตอบคำถามทีละหน้า คำตอบบันทึกอัตโนมัติ ปิดเว็บแล้วกลับมาทำต่อได้
 
@@ -68,7 +68,7 @@ src/
 │   ├── useLocalStorage.ts
 │   └── useTheme.ts        # สลับ dark mode
 ├── components/
-│   ├── Header.tsx         # โลโก้ เมนู 2 แท็บ ปุ่มโหมดมืด
+│   ├── Header.tsx         # โลโก้ เมนู 3 แท็บ ปุ่มโหมดมืด
 │   ├── Wizard.tsx         # คุมขั้น 1–4
 │   ├── ProgressBar.tsx
 │   ├── StepGoal.tsx / StepForm.tsx / StepTool.tsx / StepResult.tsx

@@ -3,14 +3,19 @@ import { container } from './layout'
 
 export type View = 'wizard' | 'checker'
 
-const tabs: { id: View; label: string }[] = [
-  { id: 'wizard', label: 'สร้าง' },
+/** เมนูด้านบน: "สร้างภาพ" คือ wizard ที่เลือกหัวข้อสร้างภาพไว้แล้ว */
+export type Menu = 'create' | 'image' | 'checker'
+
+const tabs: { id: Menu; label: string }[] = [
+  { id: 'create', label: 'สร้าง' },
+  { id: 'image', label: 'สร้างภาพ' },
   { id: 'checker', label: 'ตรวจ prompt' },
 ]
 
 interface Props {
-  view: View
-  onNavigate: (view: View) => void
+  active: Menu
+  onMenu: (menu: Menu) => void
+  onHome: () => void
 }
 
 function ThemeIcon({ dark }: { dark: boolean }) {
@@ -26,33 +31,34 @@ function ThemeIcon({ dark }: { dark: boolean }) {
   )
 }
 
-export function Header({ view, onNavigate }: Props) {
+export function Header({ active, onMenu, onHome }: Props) {
   const { dark, toggle } = useTheme()
 
   return (
     <header className="sticky top-0 z-20 border-b border-line bg-bg/90 pt-[env(safe-area-inset-top)] backdrop-blur">
-      <div className={`${container} flex h-14 items-center gap-2 lg:h-16`}>
+      <div className={`${container} flex h-14 items-center gap-1 sm:gap-2 lg:h-16`}>
         <button
           type="button"
-          onClick={() => onNavigate('wizard')}
+          onClick={onHome}
           aria-label="PromptFolio หน้าแรก"
-          className="mr-auto flex items-center gap-2 rounded-xl font-display text-lg font-bold"
+          // จอแคบมาก (ต่ำกว่า 360px) ซ่อนโลโก้ ให้เมนูมีที่พอ
+          className="mr-auto flex items-center gap-2 rounded-xl font-display text-lg font-bold max-[359px]:hidden"
         >
-          <img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" className="size-7" />
+          <img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" className="size-7 shrink-0" />
           <span aria-hidden="true" className="hidden min-[420px]:inline">
             PromptFolio
           </span>
         </button>
-        <nav aria-label="เมนูหลัก">
+        <nav aria-label="เมนูหลัก" className="max-[359px]:mr-auto">
           <ul className="flex rounded-2xl bg-sunken p-1">
             {tabs.map((tab) => (
               <li key={tab.id}>
                 <button
                   type="button"
-                  onClick={() => onNavigate(tab.id)}
-                  aria-current={view === tab.id ? 'page' : undefined}
-                  className={`min-h-10 whitespace-nowrap rounded-xl px-3 text-[15px] font-semibold transition ${
-                    view === tab.id ? 'bg-surface text-ink shadow-soft' : 'text-muted hover:text-ink'
+                  onClick={() => onMenu(tab.id)}
+                  aria-current={active === tab.id ? 'page' : undefined}
+                  className={`min-h-10 whitespace-nowrap rounded-xl px-2.5 text-sm font-semibold transition sm:px-3 sm:text-[15px] ${
+                    active === tab.id ? 'bg-surface text-ink shadow-soft' : 'text-muted hover:text-ink'
                   }`}
                 >
                   {tab.label}
@@ -64,7 +70,7 @@ export function Header({ view, onNavigate }: Props) {
         <button
           type="button"
           onClick={toggle}
-          className="grid size-11 place-items-center rounded-xl text-muted hover:bg-sunken hover:text-ink"
+          className="grid size-10 shrink-0 place-items-center rounded-xl text-muted hover:bg-sunken hover:text-ink sm:size-11"
           aria-label={dark ? 'เปลี่ยนเป็นโหมดสว่าง' : 'เปลี่ยนเป็นโหมดมืด'}
         >
           <ThemeIcon dark={dark} />
