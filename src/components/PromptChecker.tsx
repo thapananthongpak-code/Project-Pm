@@ -1,0 +1,124 @@
+import { useMemo } from 'react'
+import { useLocalStorage } from '../hooks/useLocalStorage'
+import { analyzePrompt, improvePrompt, weakSample } from '../lib/promptChecker'
+import { PromptCard } from './PromptCard'
+
+function verdict(ratio: number) {
+  if (ratio >= 0.8) return { text: 'ดีมาก พร้อมใช้', emoji: '🌟', bar: 'bg-sea-500' }
+  if (ratio >= 0.5) return { text: 'พอใช้ เติมอีกนิดจะดีขึ้น', emoji: '👍', bar: 'bg-brand-500' }
+  return { text: 'ยังขาดหลายอย่าง', emoji: '🛠️', bar: 'bg-accent-400' }
+}
+
+export function PromptChecker() {
+  const [text, setText] = useLocalStorage('promptfolio:checker:v1', '', (raw) => (typeof raw === 'string' ? raw : ''))
+  const analysis = useMemo(() => analyzePrompt(text), [text])
+  const hasText = text.trim().length > 0
+  const ratio = analysis.passed / analysis.total
+  const v = verdict(ratio)
+  const missing = analysis.results.filter((r) => !r.pass)
+
+  return (
+    <section aria-labelledby="page-heading" className="animate-step-in">
+      <h1 id="page-heading" className="text-2xl font-bold">
+        ตรวจ prompt ของคุณ
+      </h1>
+      <p className="mt-1 text-muted">วาง prompt ที่เขียนเอง แล้วดูว่ายังขาดอะไร พร้อมประโยคที่เติมได้ทันที</p>
+
+      <label htmlFor="checker-input" className="mt-5 block font-semibold">
+        prompt ของคุณ
+      </label>
+      <textarea
+        id="checker-input"
+        rows={7}
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        placeholder="เช่น ช่วยทำสไลด์แนะนำตัวให้หน่อย..."
+        className="field mt-2 resize-y"
+      />
+      <div className="mt-2 flex flex-wrap gap-2">
+        <button type="button" onClick={() => setText(weakSample)} className="btn-ghost min-h-11 text-[15px]">
+          ลองกับ prompt ตัวอย่าง
+        </button>
+        {hasText && (
+          <button type="button" onClick={() => setText('')} className="btn-ghost min-h-11 text-[15px]">
+            ล้างข้อความ
+          </button>
+        )}
+      </div>
+
+      {hasText && (
+        <div className="mt-6 space-y-4" aria-live="polite">
+          <div className="card p-5">
+            <p className="flex items-baseline justify-between gap-2">
+              <span className="font-display text-xl font-bold">
+                <span aria-hidden="true">{v.emoji} </span>
+                {v.text}
+              </span>
+              <span className="text-lg font-bold text-brand-700 dark:text-brand-300">
+                {analysis.passed}/{analysis.total}
+              </span>
+            </p>
+            <div
+              role="meter"
+              aria-label="คะแนน prompt"
+              aria-valuemin={0}
+              aria-valuemax={analysis.total}
+              aria-valuenow={analysis.passed}
+              className="mt-3 h-3 overflow-hidden rounded-full bg-sunken ring-1 ring-line"
+            >
+              <div className={`h-full rounded-full transition-[width] duration-500 ${v.bar}`} style={{ width: `${ratio * 100}%` }} />
+            </div>
+            {analysis.tooShort && (
+              <p className="mt-3 text-[15px] text-accent-700 dark:text-accent-300">
+                ⚠️ prompt สั้นไป AI จะเดาเองเยอะ ลองเล่าข้อมูลเพิ่มอีกหน่อย
+              </p>
+            )}
+            {analysis.blanks > 0 && (
+              <p className="mt-3 text-[15px] text-accent-700 dark:text-accent-300">
+                ⚠️ ยังมีช่องว่างที่ยังไม่เติม {analysis.blanks} จุด เช่น [__]
+              </p>
+            )}
+          </div>
+
+          <ul className="space-y-2">
+            {analysis.results.map(({ rule, pass }) => (
+              <li
+                key={rule.id}
+                className={`rounded-2xl border p-4 ${
+                  pass
+                    ? 'border-sea-200 bg-sea-50 dark:border-sea-700/60 dark:bg-sea-700/15'
+                    : 'border-accent-200 bg-accent-50 dark:border-accent-700/60 dark:bg-accent-700/15'
+                }`}
+              >
+                <p className="font-semibold">
+                  <span aria-hidden="true">{pass ? '✅ ' : '➕ '}</span>
+                  <span className="sr-only">{pass ? 'มีแล้ว: ' : 'ยังขาด: '}</span>
+                  {rule.label}
+                </p>
+                {!pass && (
+                  <>
+                    <p className="mt-1 text-[15px] text-muted">{rule.tip}</p>
+                    <p className="mt-2 rounded-xl bg-surface px-3 py-2 text-[15px]">
+                      <span className="font-semibold text-sea-700 dark:text-sea-300">เติมได้เลย: </span>
+                      {rule.fix}
+                    </p>
+                  </>
+                )}
+              </li>
+            ))}
+          </ul>
+
+          {missing.length > 0 && (
+            <PromptCard
+              badge="ปรับแล้ว"
+              tone="sea"
+              title="prompt ที่เติมส่วนที่ขาดให้แล้ว"
+              subtitle="แก้ช่องสีส้มให้เป็นข้อมูลจริงก่อนใช้"
+              text={improvePrompt(text, analysis)}
+            />
+          )}
+        </div>
+      )}
+    </section>
+  )
+}

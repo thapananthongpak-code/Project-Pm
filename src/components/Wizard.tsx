@@ -1,0 +1,79 @@
+import { useEffect, useRef } from 'react'
+import type { Wizard as WizardApi } from '../hooks/useWizard'
+import { visibleQuestions } from '../lib/visible'
+import type { View } from './Header'
+import { ProgressBar } from './ProgressBar'
+import { StepForm } from './StepForm'
+import { StepGoal } from './StepGoal'
+import { StepResult } from './StepResult'
+import { StepTool } from './StepTool'
+
+interface Props {
+  wizard: WizardApi
+  onNavigate: (view: View) => void
+}
+
+export function Wizard({ wizard, onNavigate }: Props) {
+  const { state, hasAnswers, selectGoal, setAnswer, goTo, selectTool, reset } = wizard
+  const { step, page, goal, answers, toolId } = state
+  const pageTotal = goal ? visibleQuestions(goal).length : 0
+  const shown = useRef(`${step}:${page}`)
+
+  // เปลี่ยนขั้น: เลื่อนขึ้นบนสุด และย้ายโฟกัสไปที่หัวข้อ ให้ screen reader อ่านขั้นใหม่
+  useEffect(() => {
+    const key = `${step}:${page}`
+    if (shown.current === key) return
+    shown.current = key
+    window.scrollTo({ top: 0 })
+    document.getElementById('step-heading')?.focus({ preventScroll: true })
+  }, [step, page])
+
+  return (
+    <>
+      {step === 0 && !hasAnswers && (
+        <div className="mb-6 animate-step-in rounded-3xl bg-gradient-to-br from-brand-600 to-sea-600 p-6 text-white shadow-lift">
+          <p className="font-display text-sm font-medium text-white/85">ไม่เคยเขียน prompt ก็ทำได้</p>
+          <h1 className="mt-1 text-[28px] font-bold leading-tight">
+            ตอบคำถามง่ายๆ
+            <br />
+            ได้ prompt ทำพอร์ตที่ตรงจุด
+          </h1>
+          <p className="mt-2 text-white/90">สำหรับสไลด์แนะนำตัว พอร์ต ม.4 และ TCAS ใช้เวลาราว 5 นาที</p>
+        </div>
+      )}
+
+      <ProgressBar step={step} page={page} pageTotal={pageTotal} saved={hasAnswers} onStepClick={(s) => goTo(s)} />
+
+      {step === 0 || !goal ? (
+        <StepGoal value={goal} onSelect={selectGoal} onBrowseTemplates={() => onNavigate('templates')} />
+      ) : step === 1 ? (
+        <StepForm
+          goal={goal}
+          page={page}
+          answers={answers}
+          onAnswer={setAnswer}
+          onPage={(p) => goTo(1, p)}
+          onBack={() => goTo(0)}
+          onDone={() => goTo(2)}
+        />
+      ) : step === 2 || !toolId ? (
+        <StepTool
+          value={toolId}
+          onSelect={selectTool}
+          onBack={() => goTo(1, pageTotal - 1)}
+          onNext={() => goTo(3)}
+        />
+      ) : (
+        <StepResult
+          goal={goal}
+          answers={answers}
+          toolId={toolId}
+          onGoTo={goTo}
+          onOpenChecklist={() => onNavigate('checklist')}
+          onOpenChecker={() => onNavigate('checker')}
+          onReset={reset}
+        />
+      )}
+    </>
+  )
+}
