@@ -31,6 +31,17 @@
     "body": "สร้างสไลด์{{deckType}} {{pageCount}} หน้า สไตล์{{slideStyle}}\nโทนสี{{colors}} ฟอนต์อ่านง่าย\nเนื้อหาแต่ละหน้า:\n{{content}}\nเน้นพื้นที่ว่าง หัวข้อใหญ่ชัด และเว้นที่วางรูป{{photoHint}}"
   },
   {
+    "id": "cartoon-image",
+    "title": "สร้างรูปการ์ตูน",
+    "description": "รูปตัวการ์ตูน ภาพปก หรือไอคอน ใช้กับ ChatGPT / Gemini / Claude",
+    "stage": "image",
+    "goals": [
+      "m4",
+      "present"
+    ],
+    "body": "สร้าง{{imageSubjectDesc}}\nสไตล์: {{imageStyleDesc}}\nตัวละคร: {{imageCharacter}}\nเรื่องราวในรูป: {{imageTheme}}\nโทนสี{{colors}} พื้นหลังเรียบ ไม่รก\nห้ามใส่ตัวหนังสือหรือตัวอักษรใดๆ ในรูป\nสัดส่วนภาพ {{imageRatio}}"
+  },
+  {
     "id": "refine",
     "title": "ต่อยอดให้ปังขึ้น",
     "description": "ใช้หลังได้เนื้อหาแล้ว ให้ AI ปรับความยาว โทน หรือภาษา",

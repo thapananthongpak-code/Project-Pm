@@ -117,3 +117,37 @@ describe('templates.json', () => {
     }
   })
 })
+
+describe('buildImagePrompt', () => {
+  it('ค่าเริ่มต้น: พอร์ต ม.4 ได้ตัวการ์ตูนของฉัน ใช้เรื่องราวจากคำตอบ', async () => {
+    const { buildImagePrompt } = await import('./promptBuilder')
+    const text = buildImagePrompt('m4', m4, 'chatgpt')
+    expect(text).toContain('ตัวละครการ์ตูนครึ่งตัว')
+    expect(text).toContain('การ์ตูนชิบิน่ารัก')
+    expect(text).toContain('นักเรียนไทย ม.3 ใส่ชุดนักเรียน')
+    expect(text).toContain('ฉันชอบทดลองวิทยาศาสตร์ และกำลังจะเรียนต่อสายวิทย์-คณิต')
+    expect(text).toContain('ห้ามใส่ตัวหนังสือ')
+    expect(text).toContain('สร้างเป็นรูปภาพ 1 รูป')
+    expect(countBlanks(text)).toBe(0)
+  })
+
+  it('สื่อนำเสนอ + ไอคอน + Claude: ไม่มีตัวละคร ใช้ประเด็นเป็นไอคอน และวาดเป็น SVG', async () => {
+    const { buildImagePrompt } = await import('./promptBuilder')
+    const text = buildImagePrompt(
+      'present',
+      { ...present, imageSubject: 'ไอคอนหัวข้อ', imageStyle: 'พิกเซลอาร์ต', imageTool: 'Claude' },
+      'chatgpt',
+    )
+    expect(text).not.toContain('ตัวละคร:')
+    expect(text).toContain('ไอคอนละ 1 เรื่อง: ดาวเคราะห์ 8 ดวง, ทำไมโลกมีสิ่งมีชีวิต')
+    expect(text).toContain('พิกเซลอาร์ต')
+    expect(text).toContain('SVG')
+  })
+
+  it('ใส่หน้าตาตัวละครที่ผู้ใช้พิมพ์', async () => {
+    const { buildImagePrompt } = await import('./promptBuilder')
+    const text = buildImagePrompt('present', { ...present, imageLook: 'ผมสั้น ใส่แว่น' }, 'gemini')
+    expect(text).toContain('ใส่ชุดนักเรียน ผมสั้น ใส่แว่น')
+    expect(text).toContain('วิทยาศาสตร์ เรื่อง ระบบสุริยะ')
+  })
+})

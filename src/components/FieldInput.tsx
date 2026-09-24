@@ -6,10 +6,12 @@ interface Props {
   goal: GoalId
   value: string
   error?: string
+  /** ไม่แสดงป้าย "(ไม่บังคับ)" */
+  hideOptional?: boolean
   onChange: (value: string) => void
 }
 
-export function FieldInput({ field, goal, value, error, onChange }: Props) {
+export function FieldInput({ field, goal, value, error, hideOptional, onChange }: Props) {
   const id = `f-${field.id}`
   const label = byGoal(field.label, goal)
   const placeholder = byGoal(field.placeholder, goal)
@@ -25,7 +27,7 @@ export function FieldInput({ field, goal, value, error, onChange }: Props) {
           *<span className="sr-only">(จำเป็น)</span>
         </span>
       ) : (
-        <span className="text-sm font-normal text-muted"> (ไม่บังคับ)</span>
+        !hideOptional && <span className="text-sm font-normal text-muted"> (ไม่บังคับ)</span>
       )}
     </>
   )

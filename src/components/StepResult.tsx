@@ -3,17 +3,19 @@ import { goals, refinements } from '../data'
 import type { Step } from '../hooks/useWizard'
 import { buildPrompts, buildRefinePrompt, countBlanks, firstBlankPage } from '../lib/promptBuilder'
 import type { Answers, GoalId, ToolId } from '../types'
+import { ImagePrompt } from './ImagePrompt'
 import { PromptCard } from './PromptCard'
 
 interface Props {
   goal: GoalId
   answers: Answers
   toolId: ToolId
+  onAnswer: (id: string, value: string) => void
   onGoTo: (step: Step, page?: number) => void
   onReset: () => void
 }
 
-export function StepResult({ goal, answers, toolId, onGoTo, onReset }: Props) {
+export function StepResult({ goal, answers, toolId, onAnswer, onGoTo, onReset }: Props) {
   const [refineId, setRefineId] = useState<string | null>(null)
   const { content, design, contentTool, designTool } = buildPrompts(goal, answers, toolId)
   const picked = designTool ?? contentTool
@@ -58,6 +60,8 @@ export function StepResult({ goal, answers, toolId, onGoTo, onReset }: Props) {
           copyToast="คัดลอกแล้ว! อย่าลืมวางเนื้อหาจากขั้น ก แทนช่องสีส้ม"
         />
       </div>
+
+      <ImagePrompt goal={goal} answers={answers} toolId={toolId} onAnswer={onAnswer} />
 
       {/* การ์ด 2: ขั้นต่อไป */}
       <div className="card mt-5 p-5">

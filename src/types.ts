@@ -60,7 +60,7 @@ export interface Tool {
   promptSuffix?: string
 }
 
-export type TemplateStage = 'content' | 'design' | 'refine'
+export type TemplateStage = 'content' | 'design' | 'image' | 'refine'
 
 export interface PromptTemplate {
   id: string

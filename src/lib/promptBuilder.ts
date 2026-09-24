@@ -1,4 +1,5 @@
-import { goals, questions, refinements, templates, tools } from '../data'
+import { goals, imageStyles, imageSubjects, imageTools, questions, refinements, templates, tools } from '../data'
+import type { ImageStyle, ImageSubject, ImageTool } from '../data'
 import type { Answers, GoalId, PromptTemplate, Tool, ToolId } from '../types'
 import { visibleFields, visibleQuestions } from './visible'
 
@@ -67,6 +68,7 @@ export function contentTemplateFor(goal: GoalId): PromptTemplate {
 
 export const designTemplate = templates.find((t) => t.stage === 'design')!
 export const refineTemplate = templates.find((t) => t.stage === 'refine')!
+export const imageTemplate = templates.find((t) => t.stage === 'image')!
 
 export function toolById(id: ToolId | null): Tool | undefined {
   return tools.find((t) => t.id === id)
@@ -98,6 +100,66 @@ export function buildPrompts(goal: GoalId, answers: Answers, toolId: ToolId | nu
 export function buildRefinePrompt(goal: GoalId | null, refinementId: string): string {
   const refinement = refinements.find((r) => r.id === refinementId) ?? refinements[0]
   return fillTemplate(refineTemplate.body, { audience: audienceFor(goal), refineMode: refinement.refineMode })
+}
+
+/** คำตอบหลายบรรทัด แยกเป็นรายการ */
+function lines(value: string | undefined): string[] {
+  return (value ?? '')
+    .split('\n')
+    .map((s) => s.trim())
+    .filter(Boolean)
+}
+
+/** เรื่องราวในรูป ดึงจากคำตอบที่มีอยู่แล้ว ผู้ใช้ไม่ต้องกรอกเพิ่ม */
+function imageTheme(goal: GoalId, values: Answers, subject: ImageSubject): string {
+  if (subject.id === 'icons') {
+    const items =
+      goal === 'm4' ? ['ข้อมูลส่วนตัว', 'จุดเด่น', 'ผลงาน', 'รางวัล', 'เป้าหมายการเรียน'] : lines(values.keyPoints).slice(0, 6)
+    return items.length ? `ไอคอนละ 1 เรื่อง: ${items.join(', ')}` : ''
+  }
+  if (goal === 'present') {
+    return [values.subjectLabel, values.topic && `เรื่อง ${values.topic}`].filter(Boolean).join(' ')
+  }
+  const strength = lines(values.strengths)[0]
+  const track = values.track && values.track !== 'ยังไม่แน่ใจ' ? values.track : ''
+  return [strength && `ท่าทางที่บอกว่าฉัน${strength}`, track && `กำลังจะเรียนต่อสาย${track}`].filter(Boolean).join(' และ')
+}
+
+export interface ImageChoice {
+  subject: ImageSubject
+  style: ImageStyle
+  tool: ImageTool
+}
+
+/** ตัวเลือกรูปที่ผู้ใช้เลือกไว้ (เก็บในคำตอบ) หรือค่าเริ่มต้น */
+export function imageChoice(goal: GoalId, answers: Answers, fallbackTool: ToolId | null): ImageChoice {
+  return {
+    subject:
+      imageSubjects.find((s) => s.label === answers.imageSubject) ??
+      imageSubjects.find((s) => s.id === (goal === 'm4' ? 'avatar' : 'scene'))!,
+    style: imageStyles.find((s) => s.label === answers.imageStyle) ?? imageStyles[0],
+    tool:
+      imageTools.find((t) => toolById(t.id)?.name === answers.imageTool) ??
+      imageTools.find((t) => t.id === fallbackTool) ??
+      imageTools[0],
+  }
+}
+
+export function buildImagePrompt(goal: GoalId, answers: Answers, fallbackTool: ToolId | null): string {
+  const { subject, style, tool } = imageChoice(goal, answers, fallbackTool)
+  const values = withDefaults(goal, answers)
+  const look = answers.imageLook?.trim()
+  const text = fillTemplate(imageTemplate.body, {
+    ...values,
+    imageSubjectDesc: subject.desc,
+    imageStyleDesc: style.desc,
+    imageCharacter: subject.character
+      ? `นักเรียนไทย ม.3 ใส่ชุดนักเรียน${look ? ` ${look}` : ''} ยิ้มแย้ม ดูเป็นมิตร`
+      : '',
+    imageTheme: imageTheme(goal, values, subject),
+    imageRatio: subject.ratio,
+  })
+  return `${text}\n${tool.suffix}`
 }
 
 export function countBlanks(text: string): number {
