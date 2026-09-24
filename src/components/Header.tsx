@@ -1,12 +1,10 @@
 import { useTheme } from '../hooks/useTheme'
 
-export type View = 'wizard' | 'templates' | 'checker' | 'checklist'
+export type View = 'wizard' | 'checker'
 
-const tabs: { id: View; label: string; short?: string; emoji: string }[] = [
+const tabs: { id: View; label: string; emoji: string }[] = [
   { id: 'wizard', label: 'สร้าง', emoji: '✏️' },
-  { id: 'templates', label: 'เทมเพลต', emoji: '📚' },
-  { id: 'checker', label: 'ตรวจ prompt', short: 'ตรวจ', emoji: '🔍' },
-  { id: 'checklist', label: 'เช็กลิสต์', emoji: '✅' },
+  { id: 'checker', label: 'ตรวจ prompt', emoji: '🔍' },
 ]
 
 interface Props {
@@ -41,7 +39,7 @@ export function Header({ view, onNavigate }: Props) {
         </button>
       </div>
       <nav aria-label="เมนูหลัก" className="mx-auto max-w-3xl px-2">
-        <ul className="grid grid-cols-4">
+        <ul className="grid grid-cols-2">
           {tabs.map((tab) => {
             const active = view === tab.id
             return (
@@ -49,25 +47,15 @@ export function Header({ view, onNavigate }: Props) {
                 <button
                   type="button"
                   onClick={() => onNavigate(tab.id)}
-                  aria-label={tab.label}
                   aria-current={active ? 'page' : undefined}
-                  className={`flex min-h-12 w-full items-center whitespace-nowrap justify-center gap-1 border-b-[3px] px-1 text-sm font-semibold transition sm:text-base ${
+                  className={`flex min-h-12 w-full items-center justify-center gap-1.5 border-b-[3px] font-semibold transition ${
                     active
                       ? 'border-brand-600 text-brand-700 dark:border-brand-300 dark:text-brand-200'
                       : 'border-transparent text-muted hover:text-ink'
                   }`}
                 >
-                  <span aria-hidden="true" className="hidden min-[400px]:inline">
-                    {tab.emoji}
-                  </span>
-                  {tab.short ? (
-                    <>
-                      <span className="sm:hidden">{tab.short}</span>
-                      <span className="hidden sm:inline">{tab.label}</span>
-                    </>
-                  ) : (
-                    tab.label
-                  )}
+                  <span aria-hidden="true">{tab.emoji}</span>
+                  {tab.label}
                 </button>
               </li>
             )

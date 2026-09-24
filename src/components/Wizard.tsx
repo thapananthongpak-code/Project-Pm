@@ -1,19 +1,13 @@
 import { useEffect, useRef } from 'react'
 import type { Wizard as WizardApi } from '../hooks/useWizard'
 import { visibleQuestions } from '../lib/visible'
-import type { View } from './Header'
 import { ProgressBar } from './ProgressBar'
 import { StepForm } from './StepForm'
 import { StepGoal } from './StepGoal'
 import { StepResult } from './StepResult'
 import { StepTool } from './StepTool'
 
-interface Props {
-  wizard: WizardApi
-  onNavigate: (view: View) => void
-}
-
-export function Wizard({ wizard, onNavigate }: Props) {
+export function Wizard({ wizard }: { wizard: WizardApi }) {
   const { state, hasAnswers, selectGoal, setAnswer, goTo, selectTool, reset } = wizard
   const { step, page, goal, answers, toolId } = state
   const pageTotal = goal ? visibleQuestions(goal).length : 0
@@ -31,21 +25,16 @@ export function Wizard({ wizard, onNavigate }: Props) {
   return (
     <>
       {step === 0 && !hasAnswers && (
-        <div className="mb-6 animate-step-in rounded-3xl bg-gradient-to-br from-brand-600 to-sea-600 p-6 text-white shadow-lift">
-          <p className="font-display text-sm font-medium text-white/85">ไม่เคยเขียน prompt ก็ทำได้</p>
-          <h1 className="mt-1 text-[28px] font-bold leading-tight">
-            ตอบคำถามง่ายๆ
-            <br />
-            ได้ prompt ทำพอร์ตที่ตรงจุด
-          </h1>
-          <p className="mt-2 text-white/90">สำหรับสไลด์แนะนำตัว พอร์ต ม.4 และ TCAS ใช้เวลาราว 5 นาที</p>
+        <div className="mb-6 animate-step-in rounded-3xl bg-linear-to-br from-brand-600 to-sea-600 p-6 text-white shadow-lift">
+          <h1 className="text-[26px] font-bold leading-tight">ตอบคำถามง่ายๆ ได้ prompt ทำสไลด์ที่ตรงจุด</h1>
+          <p className="mt-2 text-white/90">สำหรับนักเรียน ม.3 · ใช้เวลาราว 3 นาที</p>
         </div>
       )}
 
-      <ProgressBar step={step} page={page} pageTotal={pageTotal} saved={hasAnswers} onStepClick={(s) => goTo(s)} />
+      <ProgressBar step={step} page={page} pageTotal={pageTotal} />
 
       {step === 0 || !goal ? (
-        <StepGoal value={goal} onSelect={selectGoal} onBrowseTemplates={() => onNavigate('templates')} />
+        <StepGoal value={goal} onSelect={selectGoal} />
       ) : step === 1 ? (
         <StepForm
           goal={goal}
@@ -64,15 +53,7 @@ export function Wizard({ wizard, onNavigate }: Props) {
           onNext={() => goTo(3)}
         />
       ) : (
-        <StepResult
-          goal={goal}
-          answers={answers}
-          toolId={toolId}
-          onGoTo={goTo}
-          onOpenChecklist={() => onNavigate('checklist')}
-          onOpenChecker={() => onNavigate('checker')}
-          onReset={reset}
-        />
+        <StepResult goal={goal} answers={answers} toolId={toolId} onGoTo={goTo} onReset={reset} />
       )}
     </>
   )

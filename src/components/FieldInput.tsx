@@ -1,6 +1,5 @@
 import { byGoal } from '../lib/byGoal'
 import type { Field, GoalId } from '../types'
-import { useToast } from './Toast'
 
 interface Props {
   field: Field
@@ -11,14 +10,11 @@ interface Props {
 }
 
 export function FieldInput({ field, goal, value, error, onChange }: Props) {
-  const notify = useToast()
   const id = `f-${field.id}`
   const label = byGoal(field.label, goal)
   const placeholder = byGoal(field.placeholder, goal)
   const example = byGoal(field.example, goal)
-  const exampleId = `${id}-example`
   const errorId = `${id}-error`
-  const describedBy = [example && exampleId, error && errorId].filter(Boolean).join(' ') || undefined
 
   const labelText = (
     <>
@@ -37,7 +33,7 @@ export function FieldInput({ field, goal, value, error, onChange }: Props) {
   return (
     <div>
       {field.type === 'chips' ? (
-        <fieldset id={id} aria-describedby={describedBy}>
+        <fieldset id={id} aria-describedby={error ? errorId : undefined}>
           <legend className="font-semibold">{labelText}</legend>
           <div className="mt-2 flex flex-wrap gap-2">
             {field.options?.map((option) => {
@@ -49,13 +45,12 @@ export function FieldInput({ field, goal, value, error, onChange }: Props) {
                   aria-pressed={selected}
                   // กดซ้ำเพื่อยกเลิก
                   onClick={() => onChange(selected ? '' : option)}
-                  className={`min-h-12 rounded-2xl border-2 px-4 font-medium transition ${
+                  className={`min-h-11 rounded-2xl border-2 px-3.5 font-medium transition ${
                     selected
                       ? 'border-brand-600 bg-brand-600 text-white'
                       : 'border-line bg-surface hover:border-brand-300 hover:bg-brand-50 dark:hover:bg-brand-900/40'
                   }`}
                 >
-                  {selected && <span aria-hidden="true">✓ </span>}
                   {option}
                 </button>
               )
@@ -70,12 +65,12 @@ export function FieldInput({ field, goal, value, error, onChange }: Props) {
           {field.type === 'textarea' ? (
             <textarea
               id={id}
-              rows={4}
+              rows={3}
               value={value}
               placeholder={placeholder}
               onChange={(e) => onChange(e.target.value)}
               aria-invalid={error ? true : undefined}
-              aria-describedby={describedBy}
+              aria-describedby={error ? errorId : undefined}
               className="field mt-2 resize-y"
             />
           ) : (
@@ -86,7 +81,7 @@ export function FieldInput({ field, goal, value, error, onChange }: Props) {
               placeholder={placeholder}
               onChange={(e) => onChange(e.target.value)}
               aria-invalid={error ? true : undefined}
-              aria-describedby={describedBy}
+              aria-describedby={error ? errorId : undefined}
               className="field mt-2"
             />
           )}
@@ -100,20 +95,24 @@ export function FieldInput({ field, goal, value, error, onChange }: Props) {
       )}
 
       {example && (
-        <div id={exampleId} className="mt-2 rounded-2xl bg-sunken p-3 text-[15px]">
-          <p className="font-semibold text-sea-700 dark:text-sea-300">ตัวอย่างคำตอบ</p>
-          <p className="mt-0.5 whitespace-pre-line text-muted">{example}</p>
-          <button
-            type="button"
-            onClick={() => {
-              onChange(example)
-              notify('ใส่ตัวอย่างแล้ว อย่าลืมแก้ให้เป็นเรื่องของตัวเองนะ')
-            }}
-            className="mt-1 min-h-10 rounded-xl font-semibold text-brand-700 underline underline-offset-4 dark:text-brand-300"
-          >
-            ใช้เป็นแนวทาง
-          </button>
-        </div>
+        <details className="group mt-2 text-[15px]">
+          <summary className="inline-flex min-h-10 cursor-pointer list-none items-center gap-1 rounded-xl font-semibold text-sea-700 dark:text-sea-300">
+            <span aria-hidden="true" className="transition group-open:rotate-90">
+              ›
+            </span>
+            ดูตัวอย่าง
+          </summary>
+          <div className="rounded-2xl bg-sunken p-3">
+            <p className="whitespace-pre-line text-muted">{example}</p>
+            <button
+              type="button"
+              onClick={() => onChange(example)}
+              className="mt-1 min-h-10 rounded-xl font-semibold text-brand-700 underline underline-offset-4 dark:text-brand-300"
+            >
+              ใช้ตัวอย่างนี้ แล้วแก้เป็นของตัวเอง
+            </button>
+          </div>
+        </details>
       )}
     </div>
   )

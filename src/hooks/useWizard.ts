@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import { goals, tools } from '../data'
-import type { Answers, GoalId, Sample, ToolId } from '../types'
+import type { Answers, GoalId, ToolId } from '../types'
 import { useLocalStorage } from './useLocalStorage'
 
 export type Step = 0 | 1 | 2 | 3
@@ -36,7 +36,7 @@ function defaultPages(goal: GoalId | null) {
 }
 
 export function useWizard() {
-  const [state, setState] = useLocalStorage<WizardState>('promptfolio:wizard:v1', initial, revive)
+  const [state, setState] = useLocalStorage<WizardState>('promptfolio:wizard:v2', initial, revive)
 
   const selectGoal = useCallback(
     (goal: GoalId) =>
@@ -61,23 +61,11 @@ export function useWizard() {
 
   const selectTool = useCallback((toolId: ToolId) => setState((s) => ({ ...s, toolId })), [setState])
 
-  const loadSample = useCallback(
-    (sample: Sample) =>
-      setState((s) => ({
-        step: 3,
-        page: 0,
-        goal: sample.goal,
-        answers: { ...sample.answers },
-        toolId: s.toolId ?? 'chatgpt',
-      })),
-    [setState],
-  )
-
   const reset = useCallback(() => setState(initial), [setState])
 
   const hasAnswers = Object.values(state.answers).some((v) => v.trim() && v !== defaultPages(state.goal))
 
-  return { state, hasAnswers, selectGoal, setAnswer, goTo, selectTool, loadSample, reset }
+  return { state, hasAnswers, selectGoal, setAnswer, goTo, selectTool, reset }
 }
 
 export type Wizard = ReturnType<typeof useWizard>

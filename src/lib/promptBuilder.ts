@@ -1,6 +1,6 @@
 import { goals, questions, refinements, templates, tools } from '../data'
 import type { Answers, GoalId, PromptTemplate, Tool, ToolId } from '../types'
-import { visibleQuestions } from './visible'
+import { visibleFields, visibleQuestions } from './visible'
 
 export const BLANK = '[__]'
 export const PASTE_HERE = '[วางเนื้อหาที่ได้จาก Prompt ขั้น ก ตรงนี้]'
@@ -40,18 +40,22 @@ export function fillTemplate(body: string, values: Answers, { dropEmptyOptional 
 }
 
 export function audienceFor(goal: GoalId | null): string {
-  if (goal === 'intro') return 'เพื่อนและครู'
-  if (goal === 'project') return 'กรรมการและผู้ฟัง'
-  return 'กรรมการ'
+  return goal === 'present' ? 'เพื่อนและครู' : 'กรรมการ'
 }
 
 /** รวมคำตอบกับค่าเริ่มต้น และค่าพิเศษที่เทมเพลตใช้ */
 export function withDefaults(goal: GoalId | null, answers: Answers): Answers {
   const filled = Object.fromEntries(Object.entries(answers).filter(([, v]) => v?.trim()))
+  const info = goals.find((g) => g.id === goal)
   return {
-    voice: 'เป็นกันเอง จริงใจ',
-    pageCount: goals.find((g) => g.id === goal)?.defaultPages ?? '8',
+    voice: info?.voice ?? 'เป็นกันเอง จริงใจ',
+    pageCount: info?.defaultPages ?? '8',
+    slideStyle: 'เรียบง่าย อ่านง่าย',
+    colors: 'ที่เข้ากับเนื้อหา',
     ...filled,
+    subjectLabel: filled.subject === 'อื่นๆ' ? (filled.subjectOther ?? '') : (filled.subject ?? ''),
+    deckType: info?.deckType ?? '',
+    photoHint: info?.photoHint ?? '',
     audience: audienceFor(goal),
     content: PASTE_HERE,
   }
@@ -96,21 +100,6 @@ export function buildRefinePrompt(goal: GoalId | null, refinementId: string): st
   return fillTemplate(refineTemplate.body, { audience: audienceFor(goal), refineMode: refinement.refineMode })
 }
 
-/** ตัวอย่างเทมเพลตสำหรับคลังเทมเพลต: เติมด้วย persona ตัวอย่าง หรือแบบเปล่า */
-export function previewTemplate(template: PromptTemplate, answers: Answers | null, goal: GoalId | null): string {
-  if (template.stage === 'refine') {
-    return answers
-      ? buildRefinePrompt(goal, refinements[0].id)
-      : fillTemplate(
-          template.body,
-          { refineMode: `[${refinements.map((r) => r.label).join(' / ')}]`, audience: 'กรรมการ' },
-          { dropEmptyOptional: false },
-        )
-  }
-  if (!answers) return fillTemplate(template.body, { content: PASTE_HERE }, { dropEmptyOptional: false })
-  return fillTemplate(template.body, withDefaults(goal, answers))
-}
-
 export function countBlanks(text: string): number {
   return text.split(BLANK).length - 1
 }
@@ -125,14 +114,12 @@ export function firstBlankPage(goal: GoalId, answers: Answers): number {
   if (current === 0) return -1
   // ช่องที่ถ้ากรอกแล้ว [__] ลดลง คือช่องที่ยังขาดจริง
   const isBlank = (id: string) => !answers[id]?.trim() && blanksWith({ ...answers, [id]: 'x' }) < current
-  return visibleQuestions(goal).findIndex((q) =>
-    q.fields.some((f) => (!f.goals || f.goals.includes(goal)) && isBlank(f.id)),
-  )
+  return visibleQuestions(goal).findIndex((q) => visibleFields(q, goal, answers).some((f) => isBlank(f.id)))
 }
 
 /** หน้าคำถามแรกที่ยังมีช่องบังคับว่างอยู่ (-1 ถ้าครบ) */
 export function firstIncompletePage(goal: GoalId, answers: Answers): number {
   return visibleQuestions(goal).findIndex((q) =>
-    q.fields.some((f) => f.required && (!f.goals || f.goals.includes(goal)) && !answers[f.id]?.trim()),
+    visibleFields(q, goal, answers).some((f) => f.required && !answers[f.id]?.trim()),
   )
 }

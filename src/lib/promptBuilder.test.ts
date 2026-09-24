@@ -1,23 +1,35 @@
 import { describe, expect, it } from 'vitest'
-import { samples, templates } from '../data'
-import { BLANK, PASTE_HERE, buildPrompts, buildRefinePrompt, countBlanks, fillTemplate, firstIncompletePage } from './promptBuilder'
+import { templates } from '../data'
+import type { Answers } from '../types'
+import { BLANK, PASTE_HERE, buildPrompts, buildRefinePrompt, countBlanks, fillTemplate, firstBlankPage, firstIncompletePage } from './promptBuilder'
+import { visibleFields, visibleQuestions } from './visible'
 
-const tcas = samples.find((s) => s.id === 'sample-tcas')!
+const m4: Answers = {
+  fullName: 'ธนพร ใจดี',
+  nickname: 'น้ำใส',
+  school: 'โรงเรียนวัดสุทธิวราราม',
+  gpa: '3.78',
+  strengths: 'ชอบทดลองวิทยาศาสตร์\nวาดรูปในแท็บเล็ต',
+  works: 'โครงงานรดน้ำอัตโนมัติ ลดการใช้น้ำ 30%',
+  track: 'วิทย์-คณิต',
+  target: 'โรงเรียนสวนกุหลาบวิทยาลัย',
+  inspiration: 'อยากช่วยพ่อรดน้ำสวน',
+}
+
+const present: Answers = {
+  subject: 'วิทยาศาสตร์',
+  topic: 'ระบบสุริยะ',
+  keyPoints: 'ดาวเคราะห์ 8 ดวง\nทำไมโลกมีสิ่งมีชีวิต',
+  fullName: 'กลุ่มดาวเหนือ ม.3/2',
+}
 
 describe('fillTemplate', () => {
   it('แทนคำตอบ และใส่ [__] ในช่องบังคับที่ว่าง', () => {
-    const out = fillTemplate('ชื่อ: {{fullName}}\nเป้าหมาย {{target}}', { fullName: 'ภูมิ' })
-    expect(out).toBe(`ชื่อ: ภูมิ\nเป้าหมาย ${BLANK}`)
+    expect(fillTemplate('ชื่อ: {{fullName}}\nเรื่อง {{topic}}', { fullName: 'ภูมิ' })).toBe(`ชื่อ: ภูมิ\nเรื่อง ${BLANK}`)
   })
 
   it('ตัดบรรทัด "หัวข้อ: {{x}}" ที่ไม่บังคับและว่างทิ้ง', () => {
-    const out = fillTemplate('- ชื่อ: {{fullName}}\n- รางวัล: {{awards}}', { fullName: 'ภูมิ' })
-    expect(out).toBe('- ชื่อ: ภูมิ')
-  })
-
-  it('แบบเปล่าเก็บทุกบรรทัดไว้เป็น [__]', () => {
-    const out = fillTemplate('- รางวัล: {{awards}}', {}, { dropEmptyOptional: false })
-    expect(out).toBe(`- รางวัล: ${BLANK}`)
+    expect(fillTemplate('- ชื่อ: {{fullName}}\n- รางวัล: {{awards}}', { fullName: 'ภูมิ' })).toBe('- ชื่อ: ภูมิ')
   })
 
   it('รวมคำตอบหลายบรรทัดเป็นบรรทัดเดียว และไม่แสดงวงเล็บชื่อเล่นว่าง', () => {
@@ -27,85 +39,81 @@ describe('fillTemplate', () => {
 })
 
 describe('buildPrompts', () => {
-  it('ข้อมูลตัวอย่าง TCAS ไม่มีช่องว่างเหลือ และใส่ข้อมูลครบ', () => {
-    const { content, design } = buildPrompts('tcas', tcas.answers, 'gamma')
-    expect(countBlanks(content)).toBe(0)
-    expect(countBlanks(design)).toBe(0)
-    expect(content).toContain('วิศวกรรมคอมพิวเตอร์ มหาวิทยาลัยเกษตรศาสตร์')
-    expect(content).toContain('เกรดเฉลี่ย: 3.52')
-    expect(content).toContain('ให้ถามฉันก่อนเขียนต่อ')
+  it('พอร์ต ม.4 ครบ ไม่มีช่องว่าง', () => {
+    const { content, design } = buildPrompts('m4', m4, 'gamma')
+    expect(countBlanks(content) + countBlanks(design)).toBe(0)
+    expect(content).toContain('เพื่อสมัคร ม.4 แผนการเรียนวิทย์-คณิต โรงเรียนสวนกุหลาบวิทยาลัย')
+    expect(content).toContain('นักเรียน ม.3')
+    expect(content).not.toContain('รางวัล:') // ไม่ได้ตอบ จึงตัดทิ้ง
+    expect(design).toContain('สร้างสไลด์พอร์ตโฟลิโอ 10 หน้า')
+    expect(design).toContain('โทนสีที่เข้ากับเนื้อหา') // ค่าเริ่มต้นเมื่อไม่ได้เลือก
     expect(design).toContain(PASTE_HERE)
     expect(design).toContain('---') // คำแนะนำเฉพาะ Gamma
   })
 
-  it('เลือกเครื่องมือเจนสไลด์ ขั้น ก ยังได้คำแนะนำของ AI แชท', () => {
-    const { content, contentTool, designTool } = buildPrompts('tcas', tcas.answers, 'canva')
+  it('สื่อนำเสนอ ใส่วิชาและหัวข้อ', () => {
+    const { content, design } = buildPrompts('present', present, 'chatgpt')
+    expect(countBlanks(content)).toBe(0)
+    expect(content).toContain('วิชา/กิจกรรม: วิทยาศาสตร์')
+    expect(content).toContain('เรื่อง: ระบบสุริยะ')
+    expect(content).toContain('ภาษาสุภาพ เข้าใจง่าย')
+    expect(content).not.toContain('เวลานำเสนอ') // ไม่ได้เลือก จึงตัดทิ้ง
+    expect(design).toContain('สร้างสไลด์นำเสนอ 8 หน้า')
+  })
+
+  it('เลือกวิชา "อื่นๆ" ใช้ชื่อที่พิมพ์เอง', () => {
+    const { content } = buildPrompts('present', { ...present, subject: 'อื่นๆ', subjectOther: 'ชุมนุมหุ่นยนต์' }, 'claude')
+    expect(content).toContain('วิชา/กิจกรรม: ชุมนุมหุ่นยนต์')
+    expect(content).not.toContain('อื่นๆ')
+  })
+
+  it('เลือกเครื่องมือทำสไลด์ ขั้น ก ยังได้คำแนะนำของ AI แชท', () => {
+    const { content, contentTool, designTool } = buildPrompts('m4', m4, 'canva')
     expect(contentTool.kind).toBe('content')
     expect(designTool?.id).toBe('canva')
     expect(content).toContain('สไลด์ที่ 1, 2, 3')
-  })
-
-  it('เลือกเป้าหมายแล้วใช้เทมเพลตเนื้อหาที่ตรงกัน', () => {
-    expect(buildPrompts('intro', {}, 'claude').content).toContain('สไลด์แนะนำตัว')
-    expect(buildPrompts('m4', {}, 'claude').content).toContain('วางโครงพอร์ตโฟลิโอ')
-    expect(buildPrompts('project', {}, 'claude').content).toContain('นำเสนอโครงงาน')
-  })
-
-  it('ใช้จำนวนหน้าและน้ำเสียงเริ่มต้นเมื่อผู้ใช้ไม่ได้เลือก', () => {
-    const { content } = buildPrompts('intro', { fullName: 'ข้าวหอม' }, 'chatgpt')
-    expect(content).toContain('6 หน้า')
-    expect(content).toContain('ภาษาเป็นกันเอง จริงใจ')
   })
 })
 
 describe('buildRefinePrompt', () => {
   it('ใช้ข้อความต่อยอดและผู้ฟังตามเป้าหมาย', () => {
-    expect(buildRefinePrompt('tcas', 'shorter')).toBe(
+    expect(buildRefinePrompt('m4', 'shorter')).toBe(
       'ปรับเนื้อหาข้างต้นให้สั้นลง 30% โดยเก็บตัวเลขและผลลัพธ์สำคัญไว้ครบ\nและเพิ่มประโยคเปิดที่ทำให้กรรมการจำฉันได้',
     )
-    expect(buildRefinePrompt('intro', 'shorter')).toContain('เพื่อนและครู')
+    expect(buildRefinePrompt('present', 'shorter')).toContain('เพื่อนและครู')
   })
 })
 
-describe('firstIncompletePage', () => {
+describe('หน้าคำถาม', () => {
+  it('ช่อง "ระบุวิชา" แสดงเฉพาะเมื่อเลือก "อื่นๆ"', () => {
+    const q = visibleQuestions('present')[0]
+    expect(visibleFields(q, 'present', { subject: 'ศิลปะ' }).map((f) => f.id)).not.toContain('subjectOther')
+    expect(visibleFields(q, 'present', { subject: 'อื่นๆ' }).map((f) => f.id)).toContain('subjectOther')
+  })
+
   it('ชี้หน้าแรกที่ช่องบังคับยังว่าง', () => {
-    expect(firstIncompletePage('tcas', {})).toBe(0)
-    expect(firstIncompletePage('tcas', tcas.answers)).toBe(-1)
+    expect(firstIncompletePage('m4', {})).toBe(0)
+    expect(firstIncompletePage('m4', m4)).toBe(-1)
+    expect(firstIncompletePage('present', { ...present, subject: 'อื่นๆ' })).toBe(0)
+  })
+
+  it('"กลับไปเติม" ชี้หน้าที่มีช่องซึ่งกลายเป็น [__]', () => {
+    const idx = firstBlankPage('m4', { ...m4, school: '' })
+    expect(visibleQuestions('m4')[idx].id).toBe('basic')
+    expect(firstBlankPage('m4', m4)).toBe(-1)
+  })
+
+  it('แต่ละเป้าหมายมีคำถามไม่เกิน 5 หน้า', () => {
+    expect(visibleQuestions('m4').length).toBeLessThanOrEqual(5)
+    expect(visibleQuestions('present').length).toBeLessThanOrEqual(5)
   })
 })
 
 describe('templates.json', () => {
   it('มีเทมเพลตอย่างน้อย 4 แบบ และทุกเป้าหมายมีเทมเพลตเนื้อหา', () => {
     expect(templates.length).toBeGreaterThanOrEqual(4)
-    for (const goal of ['intro', 'm4', 'tcas', 'project'] as const) {
+    for (const goal of ['m4', 'present'] as const) {
       expect(templates.some((t) => t.stage === 'content' && t.goals.includes(goal))).toBe(true)
     }
-  })
-
-  it('ข้อมูลตัวอย่างทุกชุดสร้าง prompt ได้ครบไม่มีช่องว่าง', () => {
-    for (const s of samples) {
-      const { content } = buildPrompts(s.goal, s.answers, 'chatgpt')
-      expect(countBlanks(content), s.id).toBe(0)
-    }
-  })
-})
-
-describe('firstBlankPage', () => {
-  it('ชี้หน้าที่มีช่องซึ่งกลายเป็น [__] ใน prompt', async () => {
-    const { firstBlankPage } = await import('./promptBuilder')
-    const { visibleQuestions } = await import('./visible')
-    const answers = { ...tcas.answers, colors: '' }
-    const idx = firstBlankPage('tcas', answers)
-    expect(visibleQuestions('tcas')[idx].id).toBe('style')
-    expect(firstBlankPage('tcas', tcas.answers)).toBe(-1)
-  })
-})
-
-describe('firstBlankPage ข้ามช่องไม่บังคับที่ถูกตัดทิ้ง', () => {
-  it('รางวัลว่างไม่ใช่ช่องว่าง แต่โทนสีว่างคือช่องว่าง', async () => {
-    const { firstBlankPage } = await import('./promptBuilder')
-    const { visibleQuestions } = await import('./visible')
-    const idx = firstBlankPage('tcas', { ...tcas.answers, awards: '', colors: '' })
-    expect(visibleQuestions('tcas')[idx].id).toBe('style')
   })
 })

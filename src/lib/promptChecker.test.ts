@@ -1,20 +1,18 @@
 import { describe, expect, it } from 'vitest'
-import { samples } from '../data'
 import { buildPrompts } from './promptBuilder'
 import { analyzePrompt, improvePrompt, weakSample } from './promptChecker'
 
 describe('analyzePrompt', () => {
-  it('prompt สั้นๆ ได้คะแนนต่ำ และบอกว่าสั้นไป', () => {
-    const a = analyzePrompt(weakSample)
-    expect(a.passed).toBeLessThanOrEqual(3)
-    expect(a.tooShort).toBe(true)
+  it('prompt สั้นๆ ได้คะแนนต่ำ', () => {
+    expect(analyzePrompt(weakSample).passed).toBeLessThanOrEqual(3)
   })
 
-  it('prompt ที่เว็บสร้างผ่านเกือบทุกข้อ', () => {
-    const tcas = samples.find((s) => s.id === 'sample-tcas')!
-    const a = analyzePrompt(buildPrompts('tcas', tcas.answers, 'chatgpt').content)
-    expect(a.passed).toBeGreaterThanOrEqual(a.total - 1)
-    expect(a.blanks).toBe(0)
+  it('prompt ที่เว็บสร้างผ่านทุกข้อ', () => {
+    const answers = { subject: 'วิทยาศาสตร์', topic: 'ระบบสุริยะ', keyPoints: 'ดาวเคราะห์ 8 ดวง', fullName: 'ข้าวหอม' }
+    for (const goal of ['m4', 'present'] as const) {
+      const a = analyzePrompt(buildPrompts(goal, answers, 'chatgpt').content)
+      expect(a.passed, goal).toBe(a.total)
+    }
   })
 
   it('นับช่องที่ยังไม่เติม', () => {

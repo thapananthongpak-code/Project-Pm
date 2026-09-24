@@ -19,14 +19,14 @@ export function StepForm({ goal, page, answers, onAnswer, onPage, onBack, onDone
   const pages = visibleQuestions(goal)
   const index = Math.min(page, pages.length - 1)
   const question = pages[index]
-  const fields = visibleFields(question, goal)
+  const fields = visibleFields(question, goal, answers)
   const isLast = index === pages.length - 1
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   function handleNext() {
     const missing = fields.filter((f) => f.required && !answers[f.id]?.trim())
     if (missing.length > 0) {
-      setErrors(Object.fromEntries(missing.map((f) => [f.id, 'ช่องนี้ช่วยให้ prompt ตรงจุดขึ้น กรอกสั้นๆ ก็ได้'])))
+      setErrors(Object.fromEntries(missing.map((f) => [f.id, 'กรอกช่องนี้ก่อนนะ สั้นๆ ก็ได้'])))
       // กลุ่มตัวเลือก (fieldset) ให้โฟกัสปุ่มแรก
       const el = document.getElementById(`f-${missing[0].id}`)
       const target = el?.tagName === 'FIELDSET' ? el.querySelector<HTMLElement>('button') : el
@@ -46,28 +46,14 @@ export function StepForm({ goal, page, answers, onAnswer, onPage, onBack, onDone
 
   return (
     <section key={question.id} aria-labelledby="step-heading" className="animate-step-in">
-      <div className="flex items-center gap-3">
-        <span
-          aria-hidden="true"
-          className="grid size-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-brand-100 to-sea-100 text-2xl dark:from-brand-800 dark:to-sea-700"
-        >
-          {question.emoji}
-        </span>
-        <h2 id="step-heading" tabIndex={-1} className="text-2xl font-bold">
-          {byGoal(question.title, goal)}
-        </h2>
-      </div>
-      <p className="mt-2 text-muted">{byGoal(question.subtitle, goal)}</p>
-
-      {question.tip && (
-        <p className="mt-4 flex gap-2 rounded-2xl border border-accent-200 bg-accent-50 p-3 text-[15px] text-[#5a2a05] dark:border-accent-700/60 dark:bg-accent-700/15 dark:text-accent-100">
-          <span aria-hidden="true">💡</span>
-          <span>{question.tip}</span>
-        </p>
-      )}
+      <h2 id="step-heading" tabIndex={-1} className="text-2xl font-bold">
+        <span aria-hidden="true">{question.emoji} </span>
+        {byGoal(question.title, goal)}
+      </h2>
+      <p className="mt-1 text-muted">{byGoal(question.subtitle, goal)}</p>
 
       <form
-        className="mt-6 space-y-6"
+        className="mt-5 space-y-5"
         onSubmit={(e) => {
           e.preventDefault()
           handleNext()

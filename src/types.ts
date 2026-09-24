@@ -1,4 +1,4 @@
-export type GoalId = 'intro' | 'm4' | 'tcas' | 'project'
+export type GoalId = 'm4' | 'present'
 
 export interface Goal {
   id: GoalId
@@ -7,6 +7,12 @@ export interface Goal {
   description: string
   /** จำนวนหน้าที่แนะนำ ใช้เป็นค่าเริ่มต้นของ pageCount */
   defaultPages: string
+  /** น้ำเสียงของเนื้อหา */
+  voice: string
+  /** ชนิดสไลด์ที่ใช้ใน prompt ดีไซน์ เช่น "พอร์ตโฟลิโอ" */
+  deckType: string
+  /** รูปที่ควรเว้นที่ไว้ เช่น "ผลงานจริง" */
+  photoHint: string
   note?: string
 }
 
@@ -20,12 +26,14 @@ export interface Field {
   label: string | ByGoal
   type: FieldType
   placeholder?: string | ByGoal
-  /** ตัวอย่างคำตอบ แสดงใต้ช่อง และกด "ใช้ตัวอย่างนี้" ได้ */
+  /** ตัวอย่างคำตอบ กด "ดูตัวอย่าง" แล้วเลือกใช้ได้ */
   example?: string | ByGoal
   options?: string[]
   required?: boolean
   /** ถ้ากำหนด จะแสดงเฉพาะเป้าหมายเหล่านี้ */
   goals?: GoalId[]
+  /** แสดงเมื่อช่องอื่นมีค่าตามที่กำหนด เช่น เลือก "อื่นๆ" */
+  showIf?: { field: string; equals: string }
 }
 
 export interface Question {
@@ -33,7 +41,6 @@ export interface Question {
   emoji: string
   title: string | ByGoal
   subtitle: string | ByGoal
-  tip?: string
   fields: Field[]
   goals?: GoalId[]
 }
@@ -47,7 +54,6 @@ export interface Tool {
   name: string
   kind: ToolKind
   url: string
-  blurb: string
   /** วิธีใช้ prompt กับเครื่องมือนี้ ทีละข้อ */
   howTo: string[]
   /** ข้อความเสริมท้าย prompt ให้เหมาะกับเครื่องมือ */
@@ -64,15 +70,6 @@ export interface PromptTemplate {
   goals: GoalId[]
   /** เนื้อหา prompt ใช้ {{fieldId}} แทนคำตอบ ถ้าไม่มีคำตอบจะแสดงเป็น [__] */
   body: string
-  /** persona ตัวอย่างที่ใช้แสดงในคลังเทมเพลต */
-  sampleId: string
-}
-
-export interface Sample {
-  id: string
-  label: string
-  goal: GoalId
-  answers: Answers
 }
 
 export type Answers = Record<string, string>
