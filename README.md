@@ -57,7 +57,7 @@ src/
 │   ├── images.json        # ประเภทรูป สไตล์การ์ตูน และข้อความท้าย prompt รูปของแต่ละ AI
 │   └── index.ts           # โหลด JSON พร้อม type
 ├── lib/
-│   ├── promptBuilder.ts   # เติมคำตอบลงเทมเพลต สร้าง prompt ขั้น ก/ข/ต่อยอด
+│   ├── promptBuilder.ts   # เติมคำตอบลงเทมเพลต สร้าง prompt เนื้อหา/สไลด์/รูป/ปรับเพิ่ม
 │   ├── promptChecker.ts   # กฎของโหมดตรวจ prompt
 │   ├── visible.ts         # เลือกคำถามตามเป้าหมาย
 │   ├── byGoal.ts          # เลือกข้อความตามเป้าหมาย
