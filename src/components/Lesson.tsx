@@ -6,7 +6,7 @@ import type { RtcfPart } from '../types'
 import { BadgeShelf } from './BadgeShelf'
 import { useGame } from './Game'
 import type { Menu } from './Header'
-import { Buddy, BuddyTip, useBuddy } from './Buddy'
+import { Buddy, BuddyTip, LivelyBuddy, useBuddy } from './Buddy'
 import { QuizPick, QuizSort } from './Quiz'
 import { RtcfTag, RtcfText } from './Rtcf'
 import { SCHOOL } from './layout'
@@ -135,7 +135,7 @@ export function Lesson({ onGo }: Props) {
         <div
           key={slide.id}
           role="tabpanel"
-          className={`card mt-4 flex-1 p-5 sm:p-8 lg:p-10 ${present ? '' : 'min-h-[60vh]'} ${
+          className={`card deco-card mt-4 flex-1 p-5 sm:p-8 lg:p-10 ${present ? '' : 'min-h-[60vh]'} ${
             dir === 'next' ? 'animate-slide-next' : 'animate-slide-prev'
           }`}
         >
@@ -179,7 +179,7 @@ function SlideBody({
     case 'cover':
       return (
         <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
-          <Buddy action="wave" className="size-36 lg:size-48" />
+          <LivelyBuddy action="wave" className="size-36 lg:size-48" label="แตะเล่นกับผู้ช่วย" />
           <p className="text-sm font-semibold text-muted">{SCHOOL}</p>
           <h2 className="text-3xl font-bold leading-tight sm:text-5xl">
             เขียน Prompt ให้เก่ง
@@ -343,7 +343,7 @@ function SlideBody({
       return (
         <div className="space-y-5">
           <div className="flex items-center gap-4">
-            <Buddy action="love" className="size-28 shrink-0" />
+            <LivelyBuddy action="love" className="size-28 shrink-0" label="แตะเล่นกับผู้ช่วย" />
             <div>
               <h2 className="text-2xl font-bold sm:text-4xl">เก่งมาก! พร้อมลุยแล้ว</h2>
               <p className="text-muted">จำไว้: R ใคร · T ทำอะไร · C ข้อมูลเบื้องหลัง · F หน้าตาคำตอบ</p>

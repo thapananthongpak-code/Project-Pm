@@ -6,6 +6,7 @@ import { container, SCHOOL } from './components/layout'
 import { Lesson } from './components/Lesson'
 import { ToastProvider } from './components/Toast'
 import { Wizard } from './components/Wizard'
+import { BuddyGallery } from './dev/BuddyGallery'
 import { useWizard } from './hooks/useWizard'
 
 export default function App() {
@@ -37,6 +38,9 @@ export default function App() {
     navigate('wizard')
   }
 
+  // หน้ารวมท่าทางผู้ช่วย ใช้ตอนพัฒนาเท่านั้น (ถูกตัดออกตอน build)
+  if (import.meta.env.DEV && window.location.hash === '#gallery') return <BuddyGallery />
+
   return (
     <ToastProvider>
       <Backdrop />
@@ -52,7 +56,11 @@ export default function App() {
         {view === 'wizard' && <Wizard wizard={wizard} />}
       </main>
       {showFooter && (
-      <footer className="border-t border-line py-5 text-center text-sm text-muted">
+      <footer className="relative mt-6 bg-sunken/80 pb-5 pt-8 text-center text-sm text-muted">
+        {/* ขอบคลื่นด้านบน */}
+        <svg aria-hidden="true" viewBox="0 0 1200 40" preserveAspectRatio="none" className="absolute inset-x-0 -top-[39px] h-10 w-full fill-sunken/80">
+          <path d="M0 40V22c100-20 200-20 300 0s200 20 300 0 200-20 300 0 200 20 300 0v18z" />
+        </svg>
         <div className={container}>
           สื่อการสอนการเขียน Prompt ตามหลัก RTCF สำหรับนักเรียนชั้น ม.3
           <br />

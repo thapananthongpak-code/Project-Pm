@@ -1,3 +1,4 @@
+import type { BuddyAction, MoveAction } from '../components/BuddyArt'
 import type { Goal, PromptTemplate, Question, RtcfPart, Tool, ToolId } from '../types'
 import goalsJson from './goals.json'
 import questionsJson from './questions.json'
@@ -104,9 +105,19 @@ export type BuddyKind = 'cat' | 'bear' | 'bunny' | 'robot' | 'dino'
 export interface BuddyInfo {
   id: string
   kind: BuddyKind
+  /** นิสัยสั้นๆ แสดงในหน้าเลือกผู้ช่วย */
+  trait: string
   intro: string
   /** คำลงท้ายประจำตัว ต่อท้ายข้อความให้กำลังใจ */
   ending: string
+  /** ขยับเองทุกกี่วินาที [น้อยสุด, มากสุด] ตามนิสัย */
+  tempo: [number, number]
+  /** ท่าที่ชอบทำตอนว่าง (ซ้ำได้ = ทำบ่อยขึ้น) */
+  moves: MoveAction[]
+  /** ท่าเมื่อถูกแตะ */
+  tap: BuddyAction[]
+  /** ประโยคพึมพำสั้นๆ ตอนขยับเอง */
+  chatter: string[]
   color: string
   dark: string
   belly: string
@@ -120,5 +131,5 @@ export interface BuddyLines {
   tips: string[]
 }
 
-export const buddies = buddiesJson.buddies as BuddyInfo[]
+export const buddies = buddiesJson.buddies as unknown as BuddyInfo[]
 export const buddyLines: BuddyLines = buddiesJson

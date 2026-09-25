@@ -13,7 +13,7 @@ export function RefinePanel({ title, options, build }: Props) {
   const [selected, setSelected] = useState<string | null>(null)
 
   return (
-    <div className="card p-4 sm:p-5">
+    <div className="card deco-card p-4 sm:p-5">
       <h3 className="font-semibold">{title}</h3>
       <p className="text-[15px] text-muted">เลือกแล้วคัดลอกไปวางต่อในแชทเดิม</p>
       <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">

@@ -3,7 +3,7 @@ import { lesson, rtcf } from '../data'
 import { PARTS, partStyle } from '../lib/rtcf'
 import type { RtcfPart } from '../types'
 import { useGame } from './Game'
-import { Buddy, useBuddy } from './Buddy'
+import { LivelyBuddy, useBuddy } from './Buddy'
 
 function ScoreBar({ index, total, score, streak }: { index: number; total: number; score: number; streak: number }) {
   return (
@@ -27,7 +27,7 @@ function Finished({ score, total, pass, onRetry }: { score: number; total: numbe
   const { buddy } = useBuddy()
   return (
     <div className="flex animate-bounce-in flex-col items-center gap-3 py-4 text-center">
-      <Buddy action={pass ? 'love' : 'think'} className="size-28" />
+      <LivelyBuddy action={pass ? 'love' : 'think'} className="size-28" />
       <p className="text-2xl font-bold">
         ได้ {score}/{total} ข้อ
       </p>
@@ -94,7 +94,7 @@ export function QuizSort() {
     <div className="space-y-4">
       <ScoreBar index={i} total={items.length} score={score} streak={streak} />
       <div key={i} className="flex animate-bounce-in items-center gap-3">
-        <Buddy action={!picked ? 'think' : correct ? 'cheer' : 'oops'} className="size-20 shrink-0" />
+        <LivelyBuddy action={!picked ? 'think' : correct ? 'cheer' : 'oops'} className="size-20 shrink-0" />
         <p className="card flex-1 p-4 text-lg font-semibold lg:text-2xl">“{item.text}”</p>
       </div>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">

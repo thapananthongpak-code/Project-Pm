@@ -76,3 +76,23 @@ describe('ผู้ช่วย', () => {
     }
   })
 })
+
+describe('บุคลิกผู้ช่วย', () => {
+  it('ท่าที่ใช้มีอยู่จริง และแต่ละตัวมีท่าประจำตัวต่างกัน', async () => {
+    const { buddies } = await import('../data')
+    const { ALL_ACTIONS } = await import('../components/BuddyArt')
+    for (const b of buddies) {
+      for (const a of [...b.moves, ...b.tap]) expect(ALL_ACTIONS, `${b.id}: ${a}`).toContain(a)
+      expect(b.chatter.length, b.id).toBeGreaterThan(0)
+      // ขยับไม่ถี่เกินไป: อย่างน้อยทุก 4 วินาที
+      expect(b.tempo[0], b.id).toBeGreaterThanOrEqual(4)
+      expect(b.tempo[1], b.id).toBeGreaterThan(b.tempo[0])
+    }
+    const favourite = (id: string) => buddies.find((b) => b.id === id)!.moves
+    expect(favourite('cat')).toContain('tailwag')
+    expect(favourite('bear')).toContain('sleep')
+    expect(favourite('bunny')).toContain('earflop')
+    expect(favourite('robot')).toContain('scan')
+    expect(favourite('dino')).toContain('roar')
+  })
+})

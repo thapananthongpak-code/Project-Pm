@@ -27,6 +27,8 @@ export function StepForm({ goal, page, answers, onAnswer, onPage, onBack, onDone
   const [errors, setErrors] = useState<Record<string, string>>({})
   const { award } = useGame()
   const hasError = Object.values(errors).some(Boolean)
+  // นับการพิมพ์ ให้ผู้ช่วยพยักหน้าตอบ
+  const [typing, setTyping] = useState(0)
   // ผู้ช่วยให้กำลังใจเมื่อผ่านหน้าก่อน และทำท่าเหงื่อตกเมื่อลืมกรอก
   const lead = useMemo(
     () => (hasError ? randomLine('oops') : index === 0 ? 'เริ่มภารกิจกันเลย!' : randomLine('cheers')),
@@ -70,7 +72,7 @@ export function StepForm({ goal, page, answers, onAnswer, onPage, onBack, onDone
         </div>
       </div>
 
-      <BuddyTip action={hasError ? 'oops' : index === 0 ? 'wave' : 'cheer'} lead={lead} className="mt-4">
+      <BuddyTip action={hasError ? 'oops' : index === 0 ? 'wave' : 'cheer'} lead={lead} pulse={typing} className="mt-4">
         {byGoal(question.why, goal)}
       </BuddyTip>
 
@@ -91,6 +93,7 @@ export function StepForm({ goal, page, answers, onAnswer, onPage, onBack, onDone
             error={errors[field.id]}
             onChange={(v) => {
               onAnswer(field.id, v)
+              setTyping((t) => t + 1)
               if (errors[field.id] && v.trim()) setErrors((e) => ({ ...e, [field.id]: '' }))
             }}
           />

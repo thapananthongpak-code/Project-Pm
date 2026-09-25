@@ -7,8 +7,6 @@ export type { BuddyAction } from './BuddyArt'
 
 interface BuddyApi {
   buddy: BuddyInfo
-  /** เลือกแล้วหรือยัง (ครั้งแรกยังไม่เลือก จะเปิดหน้าต่างให้เลือก) */
-  chosen: boolean
   choose: (id: string) => void
   openPicker: () => void
 }
@@ -21,10 +19,14 @@ export function useBuddy() {
   return api
 }
 
+const pickOne = <T,>(list: T[], avoid?: T): T => {
+  const pool = list.length > 1 ? list.filter((x) => x !== avoid) : list
+  return pool[Math.floor(Math.random() * pool.length)]
+}
+
 /** สุ่มข้อความจากหมวด */
 export function randomLine(kind: keyof BuddyLines, avoid?: string): string {
-  const pool = buddyLines[kind].filter((l) => l !== avoid)
-  return pool[Math.floor(Math.random() * pool.length)] ?? buddyLines[kind][0]
+  return pickOne(buddyLines[kind], avoid) ?? buddyLines[kind][0]
 }
 
 export function BuddyProvider({ children }: { children: ReactNode }) {
@@ -43,7 +45,7 @@ export function BuddyProvider({ children }: { children: ReactNode }) {
   )
 
   return (
-    <BuddyContext.Provider value={{ buddy, chosen: id !== '', choose, openPicker: () => setPicking(true) }}>
+    <BuddyContext.Provider value={{ buddy, choose, openPicker: () => setPicking(true) }}>
       {children}
       {(picking || id === '') && (
         <BuddyPicker current={id || buddies[0].id} canClose={id !== ''} onChoose={choose} onClose={() => setPicking(false)} />
@@ -52,14 +54,157 @@ export function BuddyProvider({ children }: { children: ReactNode }) {
   )
 }
 
-/** ผู้ช่วยที่เลือกไว้ */
-export function Buddy({ action = 'idle', className = '' }: { action?: BuddyAction; className?: string }) {
-  const { buddy } = useBuddy()
-  // key: เปลี่ยนท่าแล้วให้แอนิเมชันเริ่มใหม่
-  return <BuddyArt key={`${buddy.id}-${action}`} buddy={buddy} action={action} className={className} />
+// ---------------------------------------------------------------------------
+// การขยับ
+
+/** ท่าตามสถานการณ์ที่เล่นครั้งเดียวแล้วกลับไปท่าปกติ */
+const EVENTS: BuddyAction[] = ['wave', 'cheer', 'oops', 'love']
+const EVENT_MS = 2800
+const MOVE_MS: Partial<Record<BuddyAction, number>> = { sleep: 4500, dance: 2600, tailwag: 2200, earflop: 2100, scan: 2000 }
+
+function usePrefersReducedMotion() {
+  const [reduced, setReduced] = useState(() => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false)
+  useEffect(() => {
+    const mq = window.matchMedia?.('(prefers-reduced-motion: reduce)')
+    if (!mq) return
+    const on = () => setReduced(mq.matches)
+    mq.addEventListener('change', on)
+    return () => mq.removeEventListener('change', on)
+  }, [])
+  return reduced
 }
 
-const tapActions: BuddyAction[] = ['wave', 'cheer', 'love']
+interface Motion {
+  action: BuddyAction
+  /** เปลี่ยนทุกครั้งที่เริ่มท่าใหม่ ใช้เป็น key ให้แอนิเมชันเล่นใหม่ */
+  n: number
+  chatter?: string
+}
+
+/**
+ * ท่าทางของผู้ช่วย: เล่นท่าตามสถานการณ์ (base) แล้ว ถ้า lively จะขยับเองตามนิสัยเป็นระยะ
+ * ไม่ถี่เกินไป หยุดเมื่อแท็บถูกซ่อน และปิดเมื่อผู้ใช้ตั้งค่าลดการเคลื่อนไหว
+ */
+export function useBuddyMotion(buddy: BuddyInfo, base: BuddyAction, lively: boolean) {
+  const [m, setM] = useState<Motion>({ action: base, n: 0 })
+  const back = useRef<number | undefined>(undefined)
+  const reduced = usePrefersReducedMotion()
+  // ท่าที่จะกลับไปหลังเล่นจบ: ท่าค้าง (เช่น think) หรือท่าปกติ
+  const rest: BuddyAction = EVENTS.includes(base) ? 'idle' : base
+
+  const play = useCallback(
+    (action: BuddyAction, ms?: number, chatter?: string) => {
+      window.clearTimeout(back.current)
+      setM((s) => ({ action, n: s.n + 1, chatter }))
+      back.current = window.setTimeout(
+        () => setM((s) => ({ action: rest, n: s.n + 1 })),
+        ms ?? (EVENTS.includes(action) ? EVENT_MS : (MOVE_MS[action] ?? 1900)),
+      )
+    },
+    [rest],
+  )
+
+  // สถานการณ์เปลี่ยน: เล่นท่านั้น
+  useEffect(() => {
+    if (EVENTS.includes(base)) play(base)
+    else {
+      window.clearTimeout(back.current)
+      setM((s) => ({ action: base, n: s.n + 1 }))
+    }
+  }, [base, play])
+
+  useEffect(() => () => window.clearTimeout(back.current), [])
+
+  // ว่างอยู่: สุ่มขยับตามนิสัย
+  useEffect(() => {
+    if (!lively || reduced || m.action !== 'idle') return
+    const [min, max] = buddy.tempo
+    const t = window.setTimeout(
+      () => {
+        if (document.hidden) return setM((s) => ({ ...s, n: s.n + 1 })) // แท็บถูกซ่อน: รอรอบหน้า
+        const chatter = Math.random() < 0.35 ? pickOne(buddy.chatter) : undefined
+        play(pickOne(buddy.moves), undefined, chatter)
+      },
+      (min + Math.random() * (max - min)) * 1000,
+    )
+    return () => window.clearTimeout(t)
+  }, [lively, reduced, m.action, m.n, buddy, play])
+
+  return { ...m, play }
+}
+
+interface LivelyProps {
+  action?: BuddyAction
+  /** ขยับเองเป็นระยะตามนิสัย */
+  lively?: boolean
+  /** กดแล้วทำอะไรเพิ่ม (เช่น บอกทริค) */
+  onTap?: () => void
+  /** เพิ่มค่าเมื่ออยากให้พยักหน้าตอบ (เช่น ตอนนักเรียนพิมพ์) */
+  pulse?: number
+  buddy?: BuddyInfo
+  className?: string
+  label?: string
+}
+
+/** ผู้ช่วยที่มีชีวิต: ขยับเอง พึมพำ แตะแล้วตอบสนองตามนิสัย พร้อมเวทีแสงด้านหลัง */
+export function LivelyBuddy({ action = 'idle', lively = true, onTap, pulse, buddy: own, className = '', label }: LivelyProps) {
+  const { buddy: current } = useBuddy()
+  const buddy = own ?? current
+  const motion = useBuddyMotion(buddy, action, lively)
+  const lastNod = useRef(0)
+  const { play } = motion
+
+  // นักเรียนพิมพ์: พยักหน้าเบาๆ (ไม่เกินทุก 5 วินาที)
+  useEffect(() => {
+    if (!pulse || motion.action !== 'idle') return
+    const now = Date.now()
+    if (now - lastNod.current < 5000) return
+    lastNod.current = now
+    play('nod')
+  }, [pulse]) // ตอบสนองเฉพาะตอน pulse เปลี่ยน
+
+  const art = (
+    <span className="relative isolate inline-block">
+      {/* เวทีแสงหลังตัวละคร */}
+      <span
+        aria-hidden="true"
+        className="absolute inset-x-[8%] bottom-[2%] top-[20%] -z-10 rounded-full opacity-45 blur-md"
+        style={{ background: `radial-gradient(circle at 50% 60%, ${buddy.color}, transparent 70%)` }}
+      />
+      <BuddyArt key={`${buddy.id}-${motion.n}`} buddy={buddy} action={motion.action} className={className} />
+      {motion.chatter && (
+        <span
+          key={`c-${motion.n}`}
+          aria-hidden="true"
+          className="pointer-events-none absolute -top-3 left-1/2 w-max max-w-40 -translate-x-1/2 animate-bounce-in rounded-full border border-line bg-surface px-2.5 py-1 text-xs font-semibold shadow-soft"
+        >
+          {motion.chatter} {buddy.ending}
+        </span>
+      )}
+    </span>
+  )
+
+  if (!onTap && !label) return art
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        play(pickOne(buddy.tap))
+        onTap?.()
+      }}
+      aria-label={label ?? `แตะผู้ช่วย (${buddy.intro})`}
+      className="shrink-0 rounded-full transition active:scale-95"
+    >
+      {art}
+    </button>
+  )
+}
+
+/** ผู้ช่วยแบบนิ่ง (ท่าเดียว ไม่ขยับเอง) เช่น ภาพประกอบในบทเรียน */
+export function Buddy({ action = 'idle', className = '' }: { action?: BuddyAction; className?: string }) {
+  const { buddy } = useBuddy()
+  return <BuddyArt key={`${buddy.id}-${action}`} buddy={buddy} action={action} className={className} />
+}
 
 interface TipProps {
   /** ท่าทางตามสถานการณ์ */
@@ -68,52 +213,44 @@ interface TipProps {
   lead?: string
   children?: ReactNode
   size?: 'md' | 'lg'
+  /** เพิ่มค่าเมื่อนักเรียนพิมพ์ ผู้ช่วยจะพยักหน้า */
+  pulse?: number
   className?: string
 }
 
 /**
- * ผู้ช่วยพร้อมกล่องคำพูด แตะที่ผู้ช่วยเพื่อฟังทริคใหม่ (ขยับท่าน่ารักด้วย)
+ * ผู้ช่วยพร้อมกล่องคำพูด ขยับเองตามนิสัย และแตะที่ผู้ช่วยเพื่อฟังทริคใหม่
  */
-export function BuddyTip({ action = 'idle', lead, children, size = 'md', className = '' }: TipProps) {
+export function BuddyTip({ action = 'idle', lead, children, size = 'md', pulse, className = '' }: TipProps) {
   const { buddy } = useBuddy()
-  const [tapped, setTapped] = useState<{ action: BuddyAction; tip: string } | null>(null)
+  const [tip, setTip] = useState<string | null>(null)
   const timer = useRef<number | undefined>(undefined)
 
   useEffect(() => () => window.clearTimeout(timer.current), [])
   // สถานการณ์เปลี่ยน กลับไปแสดงข้อความของหน้านั้น
-  useEffect(() => setTapped(null), [action, lead])
+  useEffect(() => setTip(null), [action, lead])
 
-  function tap() {
+  function showTip() {
     window.clearTimeout(timer.current)
-    setTapped((prev) => ({
-      action: tapActions[Math.floor(Math.random() * tapActions.length)],
-      tip: randomLine('tips', prev?.tip),
-    }))
-    timer.current = window.setTimeout(() => setTapped(null), 6000)
+    setTip((prev) => randomLine('tips', prev ?? undefined))
+    timer.current = window.setTimeout(() => setTip(null), 7000)
   }
 
   const art = size === 'lg' ? 'size-28 sm:size-36' : 'size-20 sm:size-24'
 
   return (
-    <div className={`flex items-end gap-2 ${className}`}>
-      <button
-        type="button"
-        onClick={tap}
-        aria-label={`แตะผู้ช่วย (${buddy.intro}) เพื่อฟังทริค`}
-        className="shrink-0 rounded-full transition active:scale-95"
-      >
-        <Buddy action={tapped?.action ?? action} className={art} />
-      </button>
+    <div className={`flex items-end gap-3 ${className}`}>
+      <LivelyBuddy action={action} onTap={showTip} pulse={pulse} className={art} label={`แตะผู้ช่วยเพื่อฟังทริค`} />
       <div
         role="status"
         aria-live="polite"
-        key={tapped?.tip ?? `${action}-${lead}`}
-        className="relative mb-3 min-w-0 flex-1 animate-bounce-in rounded-2xl rounded-bl-sm border border-line bg-surface px-4 py-3 text-[15px] shadow-soft"
+        key={tip ?? `${action}-${lead}`}
+        className="bubble relative mb-3 min-w-0 flex-1 animate-bounce-in rounded-2xl border border-line bg-surface px-4 py-3 text-[15px] shadow-soft"
       >
-        {tapped ? (
+        {tip ? (
           <>
-            <span className="font-semibold">ทริค: </span>
-            {tapped.tip} {buddy.ending}
+            <span className="font-semibold text-brand-700 dark:text-brand-300">ทริค: </span>
+            {tip} {buddy.ending}
           </>
         ) : (
           <>
@@ -174,14 +311,16 @@ function BuddyPicker({
       role="dialog"
       aria-modal="true"
       aria-labelledby="picker-title"
-      className="fixed inset-0 z-50 grid place-items-center overflow-auto bg-ink/40 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 overflow-y-auto bg-ink/40 backdrop-blur-sm"
       onClick={canClose ? onClose : undefined}
     >
-      <div className="card w-full max-w-3xl animate-bounce-in p-5 sm:p-7" onClick={(e) => e.stopPropagation()}>
+      {/* min-h-full + items-center: อยู่กลางจอถ้าพอดี และเลื่อนดูได้ถ้าจอเตี้ย (ไม่ถูกตัดด้านบน) */}
+      <div className="flex min-h-full items-center justify-center p-4">
+      <div className="card deco-card w-full max-w-3xl animate-bounce-in p-5 sm:p-7" onClick={(e) => e.stopPropagation()}>
         <h2 id="picker-title" className="text-center text-2xl font-bold sm:text-3xl">
           เลือกผู้ช่วยของเธอ
         </h2>
-        <p className="text-center text-muted">ผู้ช่วยจะคอยให้กำลังใจและบอกทริคตลอดภารกิจ เปลี่ยนได้ทุกเมื่อ</p>
+        <p className="text-center text-muted">ผู้ช่วยจะคอยเล่นด้วย ให้กำลังใจ และบอกทริค เปลี่ยนได้ทุกเมื่อ</p>
 
         <div role="radiogroup" aria-labelledby="picker-title" className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-5">
           {buddies.map((b, i) => {
@@ -195,18 +334,29 @@ function BuddyPicker({
                 aria-label={b.intro}
                 onClick={() => setSelected(b.id)}
                 style={{ animationDelay: `${i * 80}ms` }}
-                className={`flex animate-fly-in flex-col items-center justify-center rounded-3xl border-2 p-3 text-center transition duration-200 hover:-translate-y-1 active:scale-95 ${
+                className={`flex animate-fly-in flex-col items-center justify-center gap-1 rounded-3xl border-2 p-3 pt-5 text-center transition duration-200 hover:-translate-y-1 active:scale-95 ${
                   on ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/40' : 'border-line bg-surface'
                 } ${i === buddies.length - 1 ? 'col-span-2 sm:col-span-1' : ''}`}
               >
-                <BuddyArt key={`${b.id}-${on}`} buddy={b} action={on ? 'wave' : 'idle'} className="size-24 sm:size-28" />
+                {on ? (
+                  <LivelyBuddy buddy={b} action="wave" className="size-20 sm:size-28" />
+                ) : (
+                  <BuddyArt buddy={b} action="idle" className="size-20 sm:size-28" />
+                )}
+                <span
+                  className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                    on ? 'bg-brand-600 text-white' : 'bg-sunken text-muted'
+                  }`}
+                >
+                  {b.trait}
+                </span>
               </button>
             )
           })}
         </div>
 
-        <p key={pick.id} className="mt-4 animate-fly-in text-center font-semibold" aria-live="polite">
-          “สวัสดี! มาเป็นทีมเดียวกันนะ {pick.ending}”
+        <p key={pick.id} className="mt-4 animate-fly-in text-center text-muted" aria-live="polite">
+          {pick.intro} · <span className="font-semibold text-ink">“มาเป็นทีมเดียวกันนะ {pick.ending}”</span>
         </p>
         <div className="mt-4 flex gap-2">
           {canClose && (
@@ -218,6 +368,7 @@ function BuddyPicker({
             เลือกผู้ช่วยตัวนี้
           </button>
         </div>
+      </div>
       </div>
     </div>
   )

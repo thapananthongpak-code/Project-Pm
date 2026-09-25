@@ -207,24 +207,91 @@
     focus-visible:outline-none focus:ring-4 focus:ring-brand-500/20;
 }
 
+/* ===== ตกแต่ง ===== */
+/* การ์ดตกแต่ง: แสงสีจางๆ ที่มุมการ์ด */
+.deco-card { position: relative; isolation: isolate; overflow: hidden; }
+.deco-card::before,
+.deco-card::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  border-radius: 9999px;
+  pointer-events: none;
+}
+.deco-card::before {
+  width: 280px; height: 280px; right: -100px; top: -120px;
+  background: radial-gradient(circle, rgb(120 86 255 / 0.14), transparent 70%);
+}
+.deco-card::after {
+  width: 240px; height: 240px; left: -90px; bottom: -110px;
+  background: radial-gradient(circle, rgb(47 139 255 / 0.11), transparent 70%);
+}
+
+/* หางกล่องคำพูด ชี้ไปที่ผู้ช่วย */
+.bubble::before {
+  content: '';
+  position: absolute;
+  left: -7px;
+  bottom: 16px;
+  width: 13px;
+  height: 13px;
+  background: var(--pf-surface);
+  border-left: 1px solid var(--pf-line);
+  border-bottom: 1px solid var(--pf-line);
+  border-bottom-left-radius: 3px;
+  transform: rotate(45deg);
+}
+
+/* ปุ่มหลัก: แสงวิ่งผ่านเป็นระยะ */
+.btn-primary { position: relative; overflow: hidden; isolation: isolate; }
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / 0.32) 50%, transparent 70%);
+  transform: translateX(-120%);
+  animation: shine 6s ease-in-out infinite;
+  pointer-events: none;
+}
+.btn-primary:hover::after { animation: shine-now 0.9s ease; }
+@keyframes shine {
+  0%, 80% { transform: translateX(-120%); }
+  95%, 100% { transform: translateX(120%); }
+}
+@keyframes shine-now { from { transform: translateX(-120%); } to { transform: translateX(120%); } }
+
+/* ลายจุดบนพื้นหลัง */
+.dot-grid {
+  background-image: radial-gradient(var(--pf-line) 1.2px, transparent 1.4px);
+  background-size: 22px 22px;
+  mask-image: radial-gradient(ellipse at 50% 0%, #000 20%, transparent 75%);
+}
+@keyframes spin-slow { to { transform: rotate(360deg); } }
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0) rotate(0); }
+  50% { transform: translateY(-14px) rotate(8deg); }
+}
+
 /* ===== ผู้ช่วย (BuddyArt) ขยับแต่ละชิ้นตาม data-action ===== */
-.buddy .b-all,
-.buddy .b-ears,
-.buddy .b-eyes,
-.buddy .b-arm-l,
-.buddy .b-arm-r,
-.buddy .b-heart,
-.buddy .b-sparkle,
-.buddy .b-sweat {
+.buddy .b-all, .buddy .b-ears, .buddy .b-ear-l, .buddy .b-ear-r, .buddy .b-eyes, .buddy .b-pupils,
+.buddy .b-arm-l, .buddy .b-arm-r, .buddy .b-tail, .buddy .b-heart, .buddy .b-sparkle, .buddy .b-sweat,
+.buddy .b-z, .buddy .b-note, .buddy .b-roar, .buddy .b-signal, .buddy .b-cheeks, .buddy .b-spikes {
   transform-box: fill-box;
 }
 .buddy .b-all { transform-origin: 50% 100%; animation: buddy-bob 3s ease-in-out infinite; }
 .buddy .b-ears { transform-origin: 50% 100%; animation: ear-twitch 5s ease-in-out infinite; }
+.buddy .b-ear-l { transform-origin: 80% 100%; transition: transform 400ms ease; }
+.buddy .b-ear-r { transform-origin: 20% 100%; transition: transform 400ms ease; }
 .buddy .b-eyes { transform-origin: center; animation: blink 4.5s ease-in-out infinite; }
-.buddy .b-arm-l { transform-origin: 85% 15%; transition: transform 300ms ease; }
-.buddy .b-arm-r { transform-origin: 15% 15%; transition: transform 300ms ease; }
+.buddy .b-arm-l { transform-origin: 85% 15%; transition: transform 350ms ease; }
+.buddy .b-arm-r { transform-origin: 15% 15%; transition: transform 350ms ease; }
+.buddy .b-tail { transform-origin: 0% 100%; }
+.buddy .b-cheeks { transform-origin: center; opacity: 0.7; transition: opacity 300ms; }
 .buddy .b-bulb { animation: bulb 1.6s ease-in-out infinite; }
+.buddy .b-scan { opacity: 0; }
 
+/* --- ท่าตามสถานการณ์ --- */
 .buddy[data-action='wave'] .b-arm-r { animation: buddy-wave 0.45s ease-in-out 6 alternate; }
 .buddy[data-action='cheer'] .b-all { animation: buddy-jump 0.6s ease-out 3; }
 .buddy[data-action='cheer'] .b-arm-l { transform: rotate(55deg); }
@@ -233,36 +300,112 @@
 .buddy[data-action='think'] .b-arm-r { transform: rotate(-70deg); }
 .buddy[data-action='oops'] .b-all { animation: shake 0.45s ease-in-out 2; }
 .buddy[data-action='love'] .b-all { animation: buddy-squish 0.9s ease-in-out 2; }
+.buddy[data-action='love'] .b-cheeks, .buddy[data-action='shy'] .b-cheeks, .buddy[data-action='hug'] .b-cheeks { opacity: 1; }
 .buddy[data-action='love'] .b-arm-l { transform: rotate(-25deg); }
 .buddy[data-action='love'] .b-arm-r { transform: rotate(25deg); }
 
+/* --- ท่าทั่วไปตอนว่าง --- */
+.buddy[data-action='hop'] .b-all { animation: buddy-hop 0.5s ease-out 2; }
+.buddy[data-action='hop'] .b-arm-l { transform: rotate(30deg); }
+.buddy[data-action='hop'] .b-arm-r { transform: rotate(-30deg); }
+.buddy[data-action='dance'] .b-all { animation: buddy-sway 0.5s ease-in-out 5 alternate; }
+.buddy[data-action='dance'] .b-arm-l { animation: arm-up-l 0.5s ease-in-out 5 alternate; }
+.buddy[data-action='dance'] .b-arm-r { animation: arm-up-r 0.5s ease-in-out 5 alternate-reverse; }
+.buddy[data-action='spin'] .b-all { animation: buddy-spin 0.9s ease-in-out 1; }
+.buddy[data-action='stretch'] .b-all { animation: buddy-stretch 1.8s ease-in-out 1; }
+.buddy[data-action='stretch'] .b-arm-l { transform: rotate(150deg); transition-duration: 600ms; }
+.buddy[data-action='stretch'] .b-arm-r { transform: rotate(-150deg); transition-duration: 600ms; }
+.buddy[data-action='look'] .b-pupils { animation: look-around 2s ease-in-out 1; }
+.buddy[data-action='look'] .b-eyes { animation: look-around-eyes 2s ease-in-out 1; }
+.buddy[data-action='look'] .b-all { animation: buddy-tilt 2s ease-in-out 1; }
+.buddy[data-action='shy'] .b-all { animation: buddy-sway 0.8s ease-in-out 2 alternate; }
+.buddy[data-action='shy'] .b-arm-l { transform: rotate(-150deg); }
+.buddy[data-action='shy'] .b-arm-r { transform: rotate(150deg); }
+.buddy[data-action='sleep'] .b-all { animation: buddy-breathe 2s ease-in-out infinite; }
+.buddy[data-action='sleep'] .b-ears { animation: none; }
+.buddy[data-action='nod'] .b-all { animation: buddy-nod 0.45s ease-in-out 2; }
+
+/* --- ท่าประจำตัว --- */
+.buddy[data-action='tailwag'] .b-tail { animation: tail-wag 0.25s ease-in-out 8 alternate; }
+.buddy[data-action='tailwag'] .b-all { animation: buddy-sway 0.5s ease-in-out 4 alternate; }
+.buddy[data-action='hug'] .b-all { animation: buddy-squish 0.9s ease-in-out 2; }
+.buddy[data-action='hug'] .b-arm-l { transform: rotate(-70deg); }
+.buddy[data-action='hug'] .b-arm-r { transform: rotate(70deg); }
+.buddy[data-action='earflop'] .b-ear-r { animation: ear-flop 1.8s ease-in-out 1; }
+.buddy[data-action='earflop'] .b-ear-l { animation: ear-flop-l 1.8s ease-in-out 1; animation-delay: 0.3s; }
+.buddy[data-action='scan'] .b-scan { opacity: 1; animation: scan 0.9s ease-in-out 2 alternate; }
+.buddy[data-action='scan'] .b-pupils { animation: look-around 1.8s ease-in-out 1; }
+.buddy[data-action='beep'] .b-bulb { animation: bulb 0.25s steps(2) 8; }
+.buddy[data-action='beep'] .b-all { animation: buddy-nod 0.3s ease-in-out 3; }
+.buddy[data-action='roar'] .b-all { animation: buddy-roar 1.4s ease-in-out 1; }
+.buddy[data-action='roar'] .b-arm-l { transform: rotate(80deg); }
+.buddy[data-action='roar'] .b-arm-r { transform: rotate(-80deg); }
+.buddy[data-action='roar'] .b-spikes { animation: buddy-nod 0.2s ease-in-out 6; }
+
+/* --- ของตกแต่ง --- */
 .buddy .b-heart { transform-origin: center; animation: heart-up 1.6s ease-out infinite; }
 .buddy .b-sparkle { transform-origin: center; animation: twinkle 1s ease-in-out infinite; }
 .buddy .b-dot { animation: dot-pulse 1.2s ease-in-out infinite; }
 .buddy .b-sweat { animation: sweat 1.2s ease-in infinite; }
+.buddy .b-z { animation: z-float 2.1s ease-out infinite; opacity: 0; }
+.buddy .b-note { transform-origin: center; animation: note-float 1.2s ease-out infinite; }
+.buddy .b-roar { animation: roar-lines 0.35s ease-in-out 4 alternate; }
+.buddy .b-signal { animation: dot-pulse 0.5s ease-in-out 4; }
 
 @keyframes buddy-bob {
   0%, 100% { transform: translateY(0) scale(1, 1); }
   50% { transform: translateY(-3px) scale(1.02, 0.98); }
 }
-@keyframes buddy-wave {
-  from { transform: rotate(-10deg); }
-  to { transform: rotate(-70deg); }
-}
+@keyframes buddy-wave { from { transform: rotate(-10deg); } to { transform: rotate(-70deg); } }
 @keyframes buddy-jump {
   0% { transform: translateY(0) scale(1.08, 0.92); }
   40% { transform: translateY(-16px) scale(0.95, 1.06); }
   75% { transform: translateY(0) scale(1.06, 0.94); }
   100% { transform: translateY(0) scale(1, 1); }
 }
-@keyframes buddy-tilt {
-  0%, 100% { transform: rotate(0); }
-  50% { transform: rotate(-7deg); }
+@keyframes buddy-hop {
+  0% { transform: translateY(0) scale(1.06, 0.94); }
+  45% { transform: translateY(-9px) scale(0.97, 1.03); }
+  100% { transform: translateY(0) scale(1, 1); }
 }
-@keyframes buddy-squish {
+@keyframes buddy-tilt { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-7deg); } }
+@keyframes buddy-sway { from { transform: rotate(-7deg); } to { transform: rotate(7deg); } }
+@keyframes buddy-spin {
+  0% { transform: scaleX(1) translateY(0); }
+  25% { transform: scaleX(0.1) translateY(-6px); }
+  50% { transform: scaleX(-1) translateY(-8px); }
+  75% { transform: scaleX(0.1) translateY(-6px); }
+  100% { transform: scaleX(1) translateY(0); }
+}
+@keyframes buddy-stretch {
   0%, 100% { transform: scale(1, 1); }
-  50% { transform: scale(1.08, 0.93); }
+  40%, 70% { transform: scale(0.96, 1.08); }
 }
+@keyframes buddy-squish { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.08, 0.93); } }
+@keyframes buddy-breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.03, 0.98); } }
+@keyframes buddy-nod { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(5deg) translateY(1px); } }
+@keyframes buddy-roar {
+  0%, 100% { transform: scale(1) translateX(0); }
+  15% { transform: scale(1.08) translateX(-2px); }
+  25%, 45%, 65% { transform: scale(1.08) translateX(2px); }
+  35%, 55%, 75% { transform: scale(1.08) translateX(-2px); }
+}
+@keyframes arm-up-l { from { transform: rotate(10deg); } to { transform: rotate(120deg); } }
+@keyframes arm-up-r { from { transform: rotate(-10deg); } to { transform: rotate(-120deg); } }
+@keyframes look-around {
+  0%, 100% { transform: translateX(0); }
+  25%, 40% { transform: translateX(-2.5px); }
+  60%, 80% { transform: translateX(2.5px); }
+}
+@keyframes look-around-eyes {
+  0%, 100% { transform: translateX(0); }
+  25%, 40% { transform: translateX(-3px); }
+  60%, 80% { transform: translateX(3px); }
+}
+@keyframes tail-wag { from { transform: rotate(-12deg); } to { transform: rotate(16deg); } }
+@keyframes ear-flop { 0%, 100% { transform: rotate(0); } 30%, 70% { transform: rotate(38deg); } }
+@keyframes ear-flop-l { 0%, 100% { transform: rotate(0); } 30%, 70% { transform: rotate(-20deg); } }
+@keyframes scan { from { transform: translateY(0); } to { transform: translateY(33px); } }
 @keyframes ear-twitch {
   0%, 88%, 100% { transform: rotate(0); }
   92% { transform: rotate(-4deg); }
@@ -277,19 +420,24 @@
   0%, 100% { opacity: 0.3; transform: scale(0.6) rotate(0); }
   50% { opacity: 1; transform: scale(1.15) rotate(20deg); }
 }
-@keyframes dot-pulse {
-  0%, 100% { opacity: 0.25; }
-  50% { opacity: 1; }
-}
+@keyframes dot-pulse { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
 @keyframes sweat {
   0% { opacity: 0; transform: translateY(-4px); }
   30% { opacity: 1; }
   100% { opacity: 0; transform: translateY(10px); }
 }
-@keyframes bulb {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.45; }
+@keyframes z-float {
+  0% { opacity: 0; transform: translate(0, 4px) scale(0.7); }
+  30% { opacity: 1; }
+  100% { opacity: 0; transform: translate(6px, -10px) scale(1.1); }
 }
+@keyframes note-float {
+  0% { opacity: 0; transform: translateY(6px) rotate(-10deg); }
+  30% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-14px) rotate(10deg); }
+}
+@keyframes roar-lines { from { opacity: 0.3; transform: scale(0.9); } to { opacity: 1; transform: scale(1.1); } }
+@keyframes bulb { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

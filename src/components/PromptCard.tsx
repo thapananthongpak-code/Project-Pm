@@ -20,7 +20,7 @@ export function PromptCard({ step, title, subtitle, text, openTool, children }: 
   const notify = useToast()
 
   return (
-    <article className="card animate-step-in p-4 sm:p-5">
+    <article className="card deco-card animate-step-in p-4 sm:p-5">
       <div className="flex items-start gap-3">
         {step !== undefined && (
           <span className="grid size-8 shrink-0 place-items-center rounded-full bg-brand-600 font-bold text-white">
