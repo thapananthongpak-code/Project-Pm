@@ -8,6 +8,7 @@ import imagesJson from './images.json'
 import rtcfJson from './rtcf.json'
 import lessonJson from './lesson.json'
 import badgesJson from './badges.json'
+import buddiesJson from './buddies.json'
 
 export interface Refinement {
   id: string
@@ -97,3 +98,28 @@ export interface Badge {
 export const rtcf = rtcfJson as RtcfInfo[]
 export const lesson = lessonJson as Lesson
 export const badges = badgesJson as Badge[]
+
+export type BuddyKind = 'cat' | 'bear' | 'bunny' | 'robot' | 'dino'
+
+export interface BuddyInfo {
+  id: string
+  name: string
+  kind: BuddyKind
+  intro: string
+  /** คำลงท้ายประจำตัว ต่อท้ายข้อความให้กำลังใจ */
+  ending: string
+  color: string
+  dark: string
+  belly: string
+}
+
+export interface BuddyLines {
+  greetings: string[]
+  cheers: string[]
+  oops: string[]
+  done: string[]
+  tips: string[]
+}
+
+export const buddies = buddiesJson.buddies as BuddyInfo[]
+export const buddyLines: BuddyLines = buddiesJson

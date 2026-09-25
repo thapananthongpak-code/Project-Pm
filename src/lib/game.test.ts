@@ -44,3 +44,20 @@ describe('บทเรียน', () => {
     ])
   })
 })
+
+describe('ผู้ช่วย', () => {
+  it('มีผู้ช่วย 3-5 ตัว ไม่ซ้ำกัน และมีคำลงท้าย', async () => {
+    const { buddies } = await import('../data')
+    expect(buddies.length).toBeGreaterThanOrEqual(3)
+    expect(buddies.length).toBeLessThanOrEqual(5)
+    expect(new Set(buddies.map((b) => b.id)).size).toBe(buddies.length)
+    for (const b of buddies) expect(b.ending.length).toBeGreaterThan(0)
+  })
+
+  it('มีข้อความทุกหมวด', async () => {
+    const { buddyLines } = await import('../data')
+    for (const kind of ['greetings', 'cheers', 'oops', 'done', 'tips'] as const) {
+      expect(buddyLines[kind].length, kind).toBeGreaterThan(0)
+    }
+  })
+})

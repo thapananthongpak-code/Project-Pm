@@ -1,10 +1,10 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { byGoal } from '../lib/byGoal'
 import { visibleFields, visibleQuestions } from '../lib/visible'
 import type { Answers, GoalId } from '../types'
 import { ActionBar } from './ActionBar'
 import { FieldInput } from './FieldInput'
-import { MascotTip } from './Mascot'
+import { BuddyTip, randomLine } from './Buddy'
 import { RtcfTag } from './Rtcf'
 
 interface Props {
@@ -24,6 +24,12 @@ export function StepForm({ goal, page, answers, onAnswer, onPage, onBack, onDone
   const fields = visibleFields(question, goal, answers)
   const isLast = index === pages.length - 1
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const hasError = Object.values(errors).some(Boolean)
+  // ผู้ช่วยให้กำลังใจเมื่อผ่านหน้าก่อน และทำท่าเหงื่อตกเมื่อลืมกรอก
+  const lead = useMemo(
+    () => (hasError ? randomLine('oops') : index === 0 ? 'เริ่มภารกิจกันเลย!' : randomLine('cheers')),
+    [hasError, index],
+  )
 
   function handleNext() {
     const missing = fields.filter((f) => f.required && !answers[f.id]?.trim())
@@ -60,9 +66,9 @@ export function StepForm({ goal, page, answers, onAnswer, onPage, onBack, onDone
         </div>
       </div>
 
-      <MascotTip mood={Object.keys(errors).some((k) => errors[k]) ? 'think' : 'idle'} className="mt-4">
+      <BuddyTip action={hasError ? 'oops' : index === 0 ? 'wave' : 'cheer'} lead={lead} className="mt-4">
         {byGoal(question.why, goal)}
-      </MascotTip>
+      </BuddyTip>
 
       <form
         id="step-form"

@@ -4,6 +4,7 @@ import { useLocalStorage } from '../hooks/useLocalStorage'
 import { celebrate } from '../lib/confetti'
 import { applyBadge, emptyGame, reviveGame, type GameState } from '../lib/game'
 import { BadgeIcon } from './BadgeIcon'
+import { Buddy, useBuddy } from './Buddy'
 
 interface GameApi {
   game: GameState
@@ -50,6 +51,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
 function BadgePopup({ id, onClose }: { id: string; onClose: () => void }) {
   const badge = badges.find((b) => b.id === id)
+  const { buddy } = useBuddy()
   const closeRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
@@ -70,11 +72,16 @@ function BadgePopup({ id, onClose }: { id: string; onClose: () => void }) {
     >
       <div className="card w-full max-w-sm animate-bounce-in p-6 text-center" onClick={(e) => e.stopPropagation()}>
         <p className="text-sm font-semibold text-muted">ได้เหรียญใหม่!</p>
-        <BadgeIcon part={badge.color} className="mx-auto mt-3 size-24 animate-wiggle" />
+        <div className="mt-3 flex items-end justify-center gap-2">
+          <Buddy action="cheer" className="size-24" />
+          <BadgeIcon part={badge.color} className="size-24 animate-wiggle" />
+        </div>
         <h2 id="badge-title" className="mt-3 text-2xl font-bold">
           {badge.name}
         </h2>
-        <p className="text-muted">{badge.desc}</p>
+        <p className="text-muted">
+          {badge.desc} · {buddy.name}ดีใจด้วย {buddy.ending}
+        </p>
         <button ref={closeRef} type="button" onClick={onClose} className="btn-primary mt-5 w-full">
           เยี่ยมเลย
         </button>

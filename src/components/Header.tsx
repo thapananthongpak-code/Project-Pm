@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { useTheme } from '../hooks/useTheme'
+import { BuddyButton } from './Buddy'
 import { container } from './layout'
 
 export type View = 'lesson' | 'wizard'
@@ -80,6 +81,7 @@ export function Header({ active, onMenu }: Props) {
           <span aria-hidden="true">PromptFolio</span>
         </button>
         <div className="order-3 w-full md:order-none md:mx-auto md:w-auto">{nav}</div>
+        <BuddyButton />
         <button
           type="button"
           onClick={toggle}

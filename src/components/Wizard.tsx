@@ -1,8 +1,8 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Wizard as WizardApi } from '../hooks/useWizard'
 import { PARTS } from '../lib/rtcf'
 import { visibleQuestions } from '../lib/visible'
-import { Mascot } from './Mascot'
+import { BuddyTip, randomLine } from './Buddy'
 import { QuestPath } from './QuestPath'
 import { RtcfTag } from './Rtcf'
 import { StepForm } from './StepForm'
@@ -15,6 +15,7 @@ export function Wizard({ wizard }: { wizard: WizardApi }) {
   const { step, page, goal, answers, toolId } = state
   const pageTotal = goal ? visibleQuestions(goal).length : 0
   const shown = useRef(`${step}:${page}`)
+  const [greeting] = useState(() => ({ hello: randomLine('greetings'), tip: randomLine('tips') }))
 
   // เปลี่ยนขั้น: เลื่อนขึ้นบนสุด และย้ายโฟกัสไปที่หัวข้อ ให้ screen reader อ่านขั้นใหม่
   useEffect(() => {
@@ -28,8 +29,7 @@ export function Wizard({ wizard }: { wizard: WizardApi }) {
   return (
     <>
       {step === 0 && (
-        <div className="mb-8 flex animate-step-in items-center gap-4 lg:mb-10">
-          <Mascot mood="happy" className="size-24 shrink-0 sm:size-32" />
+        <div className="mb-8 animate-step-in lg:mb-10">
           <div>
             <h1 className="text-[26px] font-bold leading-tight sm:text-4xl lg:text-5xl">
               ภารกิจเขียน Prompt
@@ -47,6 +47,11 @@ export function Wizard({ wizard }: { wizard: WizardApi }) {
               <span className="ml-1 self-center text-sm text-muted">ผ่านทีละด่าน สะสมเหรียญ</span>
             </div>
           </div>
+          <BuddyTip action="wave" lead={greeting.hello} size="lg" className="mt-4 max-w-2xl">
+            <span className="font-semibold">ทริค: </span>
+            {greeting.tip}
+            <span className="mt-1 block text-xs text-muted">แตะที่ผู้ช่วยเพื่อฟังทริคใหม่</span>
+          </BuddyTip>
         </div>
       )}
 

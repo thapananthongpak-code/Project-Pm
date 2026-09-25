@@ -3,7 +3,7 @@ import { lesson, rtcf } from '../data'
 import { PARTS, partStyle } from '../lib/rtcf'
 import type { RtcfPart } from '../types'
 import { useGame } from './Game'
-import { Mascot } from './Mascot'
+import { Buddy, useBuddy } from './Buddy'
 
 function ScoreBar({ index, total, score, streak }: { index: number; total: number; score: number; streak: number }) {
   return (
@@ -24,13 +24,16 @@ function ScoreBar({ index, total, score, streak }: { index: number; total: numbe
 }
 
 function Finished({ score, total, pass, onRetry }: { score: number; total: number; pass: boolean; onRetry: () => void }) {
+  const { buddy } = useBuddy()
   return (
     <div className="flex animate-bounce-in flex-col items-center gap-3 py-4 text-center">
-      <Mascot mood={pass ? 'happy' : 'think'} className="size-24" />
+      <Buddy action={pass ? 'love' : 'think'} className="size-28" />
       <p className="text-2xl font-bold">
         ได้ {score}/{total} ข้อ
       </p>
-      <p className="text-muted">{pass ? 'เก่งมาก! ได้เหรียญด้วยนะ' : 'เกือบแล้ว ลองอีกรอบได้เลย'}</p>
+      <p className="text-muted">
+        {pass ? 'เก่งมาก! ได้เหรียญด้วย' : 'เกือบแล้ว ลองอีกรอบได้เลย'} {buddy.ending}
+      </p>
       <button type="button" onClick={onRetry} className="btn-ghost">
         เล่นอีกรอบ
       </button>
@@ -42,6 +45,7 @@ function Finished({ score, total, pass, onRetry }: { score: number; total: numbe
 export function QuizSort() {
   const items = lesson.sort
   const { award } = useGame()
+  const { buddy } = useBuddy()
   const [i, setI] = useState(0)
   const [picked, setPicked] = useState<RtcfPart | null>(null)
   const [score, setScore] = useState(0)
@@ -89,7 +93,7 @@ export function QuizSort() {
     <div className="space-y-4">
       <ScoreBar index={i} total={items.length} score={score} streak={streak} />
       <div key={i} className="flex animate-bounce-in items-center gap-3">
-        <Mascot mood={!picked ? 'think' : correct ? 'happy' : 'sad'} className="size-16 shrink-0" />
+        <Buddy action={!picked ? 'think' : correct ? 'cheer' : 'oops'} className="size-20 shrink-0" />
         <p className="card flex-1 p-4 text-lg font-semibold lg:text-2xl">“{item.text}”</p>
       </div>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -121,7 +125,7 @@ export function QuizSort() {
         {picked && (
           <div className="flex animate-fly-in flex-wrap items-center gap-3">
             <p className="flex-1 font-semibold">
-              {correct ? 'ถูกต้อง! ' : 'ยังไม่ใช่ '}
+              {correct ? `ถูกต้อง! ${buddy.ending} ` : 'ยังไม่ใช่ ไม่เป็นไรนะ '}
               <span className={partStyle[item.answer].text}>
                 ข้อนี้คือ {item.answer} = {answerInfo.th} ({answerInfo.ask})
               </span>
@@ -140,6 +144,7 @@ export function QuizSort() {
 export function QuizPick() {
   const items = lesson.pick
   const { award } = useGame()
+  const { buddy } = useBuddy()
   const [i, setI] = useState(0)
   const [picked, setPicked] = useState<number | null>(null)
   const [score, setScore] = useState(0)
@@ -202,7 +207,9 @@ export function QuizPick() {
         {picked !== null && (
           <div className="flex animate-fly-in flex-wrap items-center gap-3">
             <p className="flex-1">
-              <span className="font-semibold">{picked === item.better ? 'ถูกต้อง! ' : 'ยังไม่ใช่ '}</span>
+              <span className="font-semibold">
+                {picked === item.better ? `ถูกต้อง! ${buddy.ending} ` : 'ยังไม่ใช่ ไม่เป็นไรนะ '}
+              </span>
               {item.why}
             </p>
             <button type="button" onClick={next} className="btn-primary">

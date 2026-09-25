@@ -6,7 +6,7 @@ import type { RtcfPart } from '../types'
 import { BadgeShelf } from './BadgeShelf'
 import { useGame } from './Game'
 import type { Menu } from './Header'
-import { Mascot, MASCOT_NAME, MascotTip } from './Mascot'
+import { Buddy, BuddyTip, useBuddy } from './Buddy'
 import { QuizPick, QuizSort } from './Quiz'
 import { RtcfTag, RtcfText } from './Rtcf'
 import { SCHOOL } from './layout'
@@ -173,11 +173,12 @@ function SlideBody({
   onGo: (menu: Menu) => void
   onReset: () => void
 }) {
+  const { buddy } = useBuddy()
   switch (kind) {
     case 'cover':
       return (
         <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
-          <Mascot mood="happy" className="size-32 lg:size-44" />
+          <Buddy action="wave" className="size-36 lg:size-48" />
           <p className="text-sm font-semibold text-muted">{SCHOOL}</p>
           <h2 className="text-3xl font-bold leading-tight sm:text-5xl">
             เขียน Prompt ให้เก่ง
@@ -193,7 +194,9 @@ function SlideBody({
               </span>
             ))}
           </div>
-          <p className="text-muted">สวัสดีน้องๆ! {MASCOT_NAME}จะพาไปรู้จัก 4 ส่วนของ prompt ที่ดี</p>
+          <p className="text-muted">
+            สวัสดี! เรา{buddy.name} จะพาไปรู้จัก 4 ส่วนของ prompt ที่ดี {buddy.ending}
+          </p>
         </div>
       )
 
@@ -207,7 +210,7 @@ function SlideBody({
           <div className="grid gap-4 md:grid-cols-2">
             <div className="animate-fly-in rounded-3xl border-2 border-dashed border-accent-300 p-4">
               <div className="flex items-center gap-3">
-                <Mascot mood="sad" className="size-14 shrink-0" />
+                <Buddy action="oops" className="size-16 shrink-0" />
                 <p className="font-bold text-accent-700 dark:text-accent-300">prompt ที่ยังไม่ดี</p>
               </div>
               <p className="mt-3 rounded-2xl bg-sunken p-4 text-xl">“{lesson.compare.bad}”</p>
@@ -215,7 +218,7 @@ function SlideBody({
             </div>
             <div className="animate-fly-in rounded-3xl border-2 border-mint-400 p-4" style={{ animationDelay: '400ms' }}>
               <div className="flex items-center gap-3">
-                <Mascot mood="happy" className="size-14 shrink-0" />
+                <Buddy action="cheer" className="size-16 shrink-0" />
                 <p className="font-bold text-mint-700 dark:text-mint-300">prompt ที่ดี</p>
               </div>
               <div className="mt-3">
@@ -264,7 +267,9 @@ function SlideBody({
               </p>
             ))}
           </div>
-          <MascotTip mood="happy">{info.tip}</MascotTip>
+          <BuddyTip action="love" lead="จำง่ายๆ">
+            {info.tip}
+          </BuddyTip>
         </div>
       )
     }
@@ -285,7 +290,9 @@ function SlideBody({
           <div className="text-lg">
             <RtcfText text={goodPrompt} animate />
           </div>
-          <MascotTip mood="wow">ลำดับสลับกันได้ ขอแค่มีครบทั้ง 4 ส่วน</MascotTip>
+          <BuddyTip action="cheer" lead="รวมร่างสำเร็จ!">
+            ลำดับสลับกันได้ ขอแค่มีครบทั้ง 4 ส่วน
+          </BuddyTip>
         </div>
       )
 
@@ -335,7 +342,7 @@ function SlideBody({
       return (
         <div className="space-y-5">
           <div className="flex items-center gap-4">
-            <Mascot mood="happy" className="size-24 shrink-0" />
+            <Buddy action="love" className="size-28 shrink-0" />
             <div>
               <h2 className="text-2xl font-bold sm:text-4xl">เก่งมาก! พร้อมลุยแล้ว</h2>
               <p className="text-muted">จำไว้: R ใคร · T ทำอะไร · C ข้อมูลเบื้องหลัง · F หน้าตาคำตอบ</p>
