@@ -35,7 +35,7 @@ npm run dev        # เปิด http://localhost:5173
 | `npm run dev` | รันโหมดพัฒนา |
 | `npm run build` | ตรวจ TypeScript แล้ว build ไปที่ `dist/` |
 | `npm run preview` | เปิดดูไฟล์ที่ build แล้ว |
-| `npm test` | รันเทสต์ของตัวสร้าง prompt และตัวตรวจ prompt |
+| `npm test` | รันเทสต์ของตัวสร้าง prompt บทเรียน และระบบเหรียญ |
 
 ## วิธีใช้ (สำหรับนักเรียน)
 
