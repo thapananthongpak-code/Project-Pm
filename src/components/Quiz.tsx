@@ -1,73 +1,154 @@
 import { useState } from 'react'
 import { lesson, rtcf } from '../data'
+import { PERFECT_BONUS, quizCoins } from '../lib/game'
 import { PARTS, partStyle } from '../lib/rtcf'
 import type { RtcfPart } from '../types'
-import { useGame } from './Game'
+import { CoinIcon, useGame } from './Game'
 import { LivelyBuddy, useBuddy } from './Buddy'
 
-function ScoreBar({ index, total, score, streak }: { index: number; total: number; score: number; streak: number }) {
+/** สลับลำดับ (ทุกรอบข้อไม่เรียงเหมือนเดิม) */
+function shuffled<T>(list: T[]): T[] {
+  const a = [...list]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[a[i], a[j]] = [a[j], a[i]]
+  }
+  return a
+}
+
+function ScoreBar({ index, total, score, streak, earned }: { index: number; total: number; score: number; streak: number; earned: number }) {
   return (
-    <div className="flex items-center justify-between text-sm">
+    <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
       <span className="text-muted">
         ข้อ {Math.min(index + 1, total)}/{total}
       </span>
-      <span className="flex gap-3 font-semibold">
+      <span className="flex items-center gap-3 font-semibold">
         <span>ถูก {score}</span>
         {streak >= 2 && (
           <span key={streak} className="animate-bounce-in text-accent-700 dark:text-accent-300">
             ติดกัน {streak} ข้อ!
           </span>
         )}
+        <span className="flex items-center gap-1 text-accent-700 dark:text-accent-300">
+          <CoinIcon className="size-5" />+{earned}
+        </span>
       </span>
     </div>
   )
 }
 
-function Finished({ score, total, pass, onRetry }: { score: number; total: number; pass: boolean; onRetry: () => void }) {
+/** ข้อความหลังตอบ: บอกเหรียญที่ได้ และโบนัสติดกัน */
+function CoinNote({ coins, streak }: { coins: number; streak: number }) {
+  return (
+    <span className="ml-1 inline-flex animate-bounce-in items-center gap-1 rounded-full bg-[#fff3c4] px-2 py-0.5 text-sm font-bold text-[#7a5200]">
+      <CoinIcon className="size-4" />+{coins}
+      {streak >= 3 && <span>(ติดกัน {streak} ข้อ!)</span>}
+    </span>
+  )
+}
+
+function Finished({
+  score,
+  total,
+  earned,
+  perfect,
+  badgeText,
+  onRetry,
+}: {
+  score: number
+  total: number
+  earned: number
+  perfect: boolean
+  badgeText?: string
+  onRetry: () => void
+}) {
   const { buddy } = useBuddy()
   return (
     <div className="flex animate-bounce-in flex-col items-center gap-3 py-4 text-center">
-      <LivelyBuddy action={pass ? 'love' : 'think'} className="size-28" />
+      <LivelyBuddy action={perfect ? 'love' : score >= total / 2 ? 'cheer' : 'think'} className="size-28" />
       <p className="text-2xl font-bold">
         ได้ {score}/{total} ข้อ
       </p>
-      <p className="text-muted">
-        {pass ? 'เก่งมาก! ได้ตรารางวัลด้วย' : 'เกือบแล้ว ลองอีกรอบได้เลย'} {buddy.ending}
+      <p className="flex items-center gap-1 text-lg font-bold text-accent-700 dark:text-accent-300">
+        <CoinIcon className="size-6" />
+        รอบนี้ได้ +{earned} เหรียญ
+        {perfect && <span className="text-sm">(รวมโบนัสถูกหมด +{PERFECT_BONUS})</span>}
       </p>
-      <button type="button" onClick={onRetry} className="btn-ghost">
+      <p className="text-muted">
+        {perfect ? 'ถูกหมดเลย เก่งสุดๆ' : 'เล่นอีกรอบ ได้เหรียญเพิ่มอีกนะ'}
+        {badgeText && ` · ${badgeText}`} {buddy.ending}
+      </p>
+      <button type="button" onClick={onRetry} className="btn-primary">
         เล่นอีกรอบ
       </button>
     </div>
   )
 }
 
-/** เกมแยกประเภท: ประโยคนี้คือ R, T, C หรือ F */
-export function QuizSort() {
-  const items = lesson.sort
+/** ติดตามคะแนน/ติดกัน/เหรียญของ 1 รอบ */
+function useRound(total: number) {
   const { award } = useGame()
-  const { buddy } = useBuddy()
-  const [i, setI] = useState(0)
-  const [picked, setPicked] = useState<RtcfPart | null>(null)
   const [score, setScore] = useState(0)
   const [streak, setStreak] = useState(0)
+  const [earned, setEarned] = useState(0)
+  const [lastGain, setLastGain] = useState(0)
+
+  function answer(correct: boolean) {
+    if (!correct) {
+      setStreak(0)
+      setLastGain(0)
+      return
+    }
+    const nextStreak = streak + 1
+    const coins = quizCoins(nextStreak)
+    // ไม่มี key = ได้เหรียญทุกครั้งที่ตอบถูก (เล่นซ้ำได้เหรียญเพิ่ม)
+    award({ coins })
+    setScore((s) => s + 1)
+    setStreak(nextStreak)
+    setEarned((e) => e + coins)
+    setLastGain(coins)
+  }
+
+  /** จบรอบ: ถูกหมดได้โบนัส */
+  function finish(finalScore: number) {
+    if (finalScore === total) {
+      award({ coins: PERFECT_BONUS })
+      setEarned((e) => e + PERFECT_BONUS)
+    }
+  }
+
+  function reset() {
+    setScore(0)
+    setStreak(0)
+    setEarned(0)
+    setLastGain(0)
+  }
+
+  return { score, streak, earned, lastGain, answer, finish, reset }
+}
+
+/** เกมแยกประเภท: ประโยคนี้คือ R, T, C หรือ F */
+export function QuizSort() {
+  const { award } = useGame()
+  const { buddy } = useBuddy()
+  const [items, setItems] = useState(() => shuffled(lesson.sort))
+  const [i, setI] = useState(0)
+  const [picked, setPicked] = useState<RtcfPart | null>(null)
+  const round = useRound(items.length)
   const item = items[i]
   const done = i >= items.length
 
   function pick(p: RtcfPart) {
     if (picked) return
     setPicked(p)
-    if (p === item.answer) {
-      setScore((s) => s + 1)
-      setStreak((s) => s + 1)
-      award({ key: `sort:${i}`, coins: 10 })
-    } else {
-      setStreak(0)
-    }
+    round.answer(p === item.answer)
   }
 
   function next() {
-    const last = i === items.length - 1
-    if (last && score >= 8) award({ key: 'sort:badge', badge: 'sorter' })
+    if (i === items.length - 1) {
+      round.finish(round.score)
+      if (round.score >= 8) award({ key: 'sort:badge', badge: 'sorter' })
+    }
     setPicked(null)
     setI(i + 1)
   }
@@ -75,13 +156,15 @@ export function QuizSort() {
   if (done) {
     return (
       <Finished
-        score={score}
+        score={round.score}
         total={items.length}
-        pass={score >= 8}
+        earned={round.earned}
+        perfect={round.score === items.length}
+        badgeText={round.score >= 8 ? 'ได้ตรารางวัลนักแยก RTCF' : undefined}
         onRetry={() => {
+          setItems(shuffled(lesson.sort))
           setI(0)
-          setScore(0)
-          setStreak(0)
+          round.reset()
         }}
       />
     )
@@ -92,7 +175,7 @@ export function QuizSort() {
 
   return (
     <div className="space-y-4">
-      <ScoreBar index={i} total={items.length} score={score} streak={streak} />
+      <ScoreBar index={i} total={items.length} score={round.score} streak={round.streak} earned={round.earned} />
       <div key={i} className="flex animate-bounce-in items-center gap-3">
         <LivelyBuddy action={!picked ? 'think' : correct ? 'cheer' : 'oops'} className="size-20 shrink-0" />
         <p className="card flex-1 p-4 text-lg font-semibold lg:text-2xl">“{item.text}”</p>
@@ -126,7 +209,8 @@ export function QuizSort() {
         {picked && (
           <div className="flex animate-fly-in flex-wrap items-center gap-3">
             <p className="flex-1 font-semibold">
-              {correct ? `ถูกต้อง! ${buddy.ending} ` : 'ยังไม่ใช่ ไม่เป็นไรนะ '}
+              {correct ? `ถูกต้อง! ${buddy.ending}` : 'ยังไม่ใช่ ไม่เป็นไรนะ'}
+              {correct && <CoinNote coins={round.lastGain} streak={round.streak} />}{' '}
               <span className={partStyle[item.answer].text}>
                 ข้อนี้คือ {item.answer} = {answerInfo.th} ({answerInfo.ask})
               </span>
@@ -143,47 +227,53 @@ export function QuizSort() {
 
 /** เกมเลือก prompt ที่ดีกว่า */
 export function QuizPick() {
-  const items = lesson.pick
   const { award } = useGame()
   const { buddy } = useBuddy()
+  const [items, setItems] = useState(() => shuffled(lesson.pick))
   const [i, setI] = useState(0)
   const [picked, setPicked] = useState<number | null>(null)
-  const [score, setScore] = useState(0)
+  const round = useRound(items.length)
   const item = items[i]
   const done = i >= items.length
 
   function pick(n: number) {
     if (picked !== null) return
     setPicked(n)
-    if (n === item.better) {
-      setScore((s) => s + 1)
-      award({ key: `pick:${i}`, coins: 10 })
-    }
+    round.answer(n === item.better)
   }
 
   function next() {
-    if (i === items.length - 1 && score === items.length) award({ key: 'pick:badge', badge: 'sharp-eye' })
+    if (i === items.length - 1) {
+      round.finish(round.score)
+      if (round.score === items.length) award({ key: 'pick:badge', badge: 'sharp-eye' })
+    }
     setPicked(null)
     setI(i + 1)
   }
 
   if (done) {
+    const perfect = round.score === items.length
     return (
       <Finished
-        score={score}
+        score={round.score}
         total={items.length}
-        pass={score === items.length}
+        earned={round.earned}
+        perfect={perfect}
+        badgeText={perfect ? 'ได้ตรารางวัลตาไว' : undefined}
         onRetry={() => {
+          setItems(shuffled(lesson.pick))
           setI(0)
-          setScore(0)
+          round.reset()
         }}
       />
     )
   }
 
+  const correct = picked === item.better
+
   return (
     <div className="space-y-4">
-      <ScoreBar index={i} total={items.length} score={score} streak={0} />
+      <ScoreBar index={i} total={items.length} score={round.score} streak={round.streak} earned={round.earned} />
       <div key={i} className="grid gap-3 md:grid-cols-2">
         {item.options.map((text, n) => {
           const isBetter = picked !== null && n === item.better
@@ -209,10 +299,8 @@ export function QuizPick() {
         {picked !== null && (
           <div className="flex animate-fly-in flex-wrap items-center gap-3">
             <p className="flex-1">
-              <span className="font-semibold">
-                {picked === item.better ? `ถูกต้อง! ${buddy.ending} ` : 'ยังไม่ใช่ ไม่เป็นไรนะ '}
-              </span>
-              {item.why}
+              <span className="font-semibold">{correct ? `ถูกต้อง! ${buddy.ending}` : 'ยังไม่ใช่ ไม่เป็นไรนะ'}</span>
+              {correct && <CoinNote coins={round.lastGain} streak={round.streak} />} {item.why}
             </p>
             <button type="button" onClick={next} className="btn-primary">
               {i === items.length - 1 ? 'ดูคะแนน' : 'ข้อต่อไป'}

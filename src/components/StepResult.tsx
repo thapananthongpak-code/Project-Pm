@@ -11,9 +11,10 @@ import {
   toolById,
 } from '../lib/promptBuilder'
 import { celebrate } from '../lib/confetti'
+import { fingerprint, MISSION_COINS } from '../lib/game'
 import { PARTS } from '../lib/rtcf'
 import type { Answers, GoalId, ToolId } from '../types'
-import { useGame } from './Game'
+import { CoinIcon, useGame } from './Game'
 import { BuddyTip, randomLine } from './Buddy'
 import { ImagePrompt } from './ImagePrompt'
 import { PromptCard } from './PromptCard'
@@ -44,14 +45,17 @@ function BlankWarning({ blanks, onFix }: { blanks: number; onFix: () => void }) 
 export function StepResult({ goal, answers, toolId, onAnswer, onGoTo, onReset }: Props) {
   const tool = toolById(toolId)
   const goalInfo = goals.find((g) => g.id === goal)
-  const { award } = useGame()
+  const { game, award } = useGame()
   const [cheer] = useState(() => randomLine('done'))
+  // prompt ใหม่ที่ไม่ซ้ำเดิมได้เหรียญทุกครั้ง (ไม่ขึ้นกับ AI ที่เลือก กันการสลับ AI เพื่อเก็บเหรียญ)
+  const doneKey = `done:${goal}:${fingerprint(goal === 'image' ? buildFreeImagePrompt(answers, null) : buildPrompts(goal, answers, null).content)}`
+  const [fresh] = useState(() => !game.claimed.includes(doneKey))
 
-  // ภารกิจสำเร็จ: พลุกระดาษ + 50 เหรียญ + ตรารางวัล (ได้ครั้งเดียว)
+  // ภารกิจสำเร็จ: พลุกระดาษ + เหรียญ (prompt ใหม่) + ตรารางวัล (ครั้งแรก)
   useEffect(() => {
     celebrate('big')
-    award({ key: `done:${goal}`, coins: 50, badge: goal === 'image' ? 'artist' : 'first-prompt' })
-  }, [goal, award])
+    award({ key: doneKey, coins: MISSION_COINS, badge: goal === 'image' ? 'artist' : 'first-prompt' })
+  }, [doneKey, goal, award])
 
   let body
   if (goal === 'image') {
@@ -113,6 +117,12 @@ export function StepResult({ goal, answers, toolId, onAnswer, onGoTo, onReset }:
       </div>
       <BuddyTip action="cheer" lead={cheer} className="mt-3">
         prompt ของเธอมีครบทั้ง 4 ส่วน นำไปใช้ใน {tool.name} ได้เลย
+        <span className="mt-1 flex items-center gap-1 text-sm font-semibold text-accent-700 dark:text-accent-300">
+          <CoinIcon className="size-5" />
+          {fresh
+            ? `ได้ +${MISSION_COINS} เหรียญ จาก prompt ใหม่นี้`
+            : 'prompt นี้ได้เหรียญไปแล้ว ลองสร้าง prompt แบบใหม่เพื่อรับเหรียญเพิ่ม'}
+        </span>
       </BuddyTip>
 
 

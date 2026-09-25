@@ -1,7 +1,9 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { buddies, buddyLines, type BuddyInfo, type BuddyLines } from '../data'
 import { useLocalStorage } from '../hooks/useLocalStorage'
+import type { Equipped } from '../lib/game'
 import { BuddyArt, type BuddyAction } from './BuddyArt'
+import { useGame } from './Game'
 
 export type { BuddyAction } from './BuddyArt'
 
@@ -142,13 +144,16 @@ interface LivelyProps {
   /** เพิ่มค่าเมื่ออยากให้พยักหน้าตอบ (เช่น ตอนนักเรียนพิมพ์) */
   pulse?: number
   buddy?: BuddyInfo
+  /** ของแต่งตัว (ไม่ใส่ = ใช้ของที่ใส่อยู่) เช่น ร้านค้าใช้ลองใส่ */
+  outfit?: Equipped
   className?: string
   label?: string
 }
 
 /** ผู้ช่วยที่มีชีวิต: ขยับเอง พึมพำ แตะแล้วตอบสนองตามนิสัย พร้อมเวทีแสงด้านหลัง */
-export function LivelyBuddy({ action = 'idle', lively = true, onTap, pulse, buddy: own, className = '', label }: LivelyProps) {
+export function LivelyBuddy({ action = 'idle', lively = true, onTap, pulse, buddy: own, outfit, className = '', label }: LivelyProps) {
   const { buddy: current } = useBuddy()
+  const { game } = useGame()
   const buddy = own ?? current
   const motion = useBuddyMotion(buddy, action, lively)
   const lastNod = useRef(0)
@@ -171,7 +176,13 @@ export function LivelyBuddy({ action = 'idle', lively = true, onTap, pulse, budd
         className="absolute inset-x-[8%] bottom-[2%] top-[20%] -z-10 rounded-full opacity-45 blur-md"
         style={{ background: `radial-gradient(circle at 50% 60%, ${buddy.color}, transparent 70%)` }}
       />
-      <BuddyArt key={`${buddy.id}-${motion.n}`} buddy={buddy} action={motion.action} className={className} />
+      <BuddyArt
+        key={`${buddy.id}-${motion.n}`}
+        buddy={buddy}
+        action={motion.action}
+        outfit={outfit ?? game.equipped}
+        className={className}
+      />
       {motion.chatter && (
         <span
           key={`c-${motion.n}`}
@@ -203,7 +214,8 @@ export function LivelyBuddy({ action = 'idle', lively = true, onTap, pulse, budd
 /** ผู้ช่วยแบบนิ่ง (ท่าเดียว ไม่ขยับเอง) เช่น ภาพประกอบในบทเรียน */
 export function Buddy({ action = 'idle', className = '' }: { action?: BuddyAction; className?: string }) {
   const { buddy } = useBuddy()
-  return <BuddyArt key={`${buddy.id}-${action}`} buddy={buddy} action={action} className={className} />
+  const { game } = useGame()
+  return <BuddyArt key={`${buddy.id}-${action}`} buddy={buddy} action={action} outfit={game.equipped} className={className} />
 }
 
 interface TipProps {
@@ -296,6 +308,7 @@ function BuddyPicker({
 }) {
   const [selected, setSelected] = useState(current)
   const confirmRef = useRef<HTMLButtonElement>(null)
+  const { game } = useGame()
   const pick = buddies.find((b) => b.id === selected) ?? buddies[0]
 
   useEffect(() => {
@@ -341,7 +354,7 @@ function BuddyPicker({
                 {on ? (
                   <LivelyBuddy buddy={b} action="wave" className="size-20 sm:size-28" />
                 ) : (
-                  <BuddyArt buddy={b} action="idle" className="size-20 sm:size-28" />
+                  <BuddyArt buddy={b} action="idle" outfit={game.equipped} className="size-20 sm:size-28" />
                 )}
                 <span
                   className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${

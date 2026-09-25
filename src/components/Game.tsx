@@ -2,17 +2,24 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import { badges } from '../data'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { celebrate } from '../lib/confetti'
-import { applyAward, emptyGame, reviveGame, type Award, type GameState } from '../lib/game'
+import { applyAward, buyItem, emptyGame, equipItem, reviveGame, type Award, type GameState, type ShopItem, type Slot } from '../lib/game'
 import { BadgeIcon } from './BadgeIcon'
 import { Buddy, useBuddy } from './Buddy'
 
 interface GameApi {
   game: GameState
-  /** ให้เหรียญ/ตรารางวัล ครั้งเดียวต่อ key */
+  /** ให้เหรียญ/ตรารางวัล (มี key = ครั้งเดียว) */
   award: (award: Award) => void
+  /** ซื้อของ คืน true ถ้าซื้อสำเร็จ */
+  buy: (item: ShopItem) => boolean
+  /** ใส่/ถอดของที่มีแล้ว */
+  equip: (slot: Slot, id: string | null) => void
   reset: () => void
-  /** เหรียญที่เพิ่งได้ล่าสุด ใช้ทำแอนิเมชัน +N */
+  /** เหรียญที่เพิ่งได้/ใช้ล่าสุด ใช้ทำแอนิเมชัน +N / -N */
   lastGain: { id: number; amount: number } | null
+  /** ตรารางวัลที่เพิ่งได้ (แสดงป๊อปอัป) */
+  newBadge: string | null
+  clearBadge: () => void
 }
 
 const GameContext = createContext<GameApi | null>(null)
@@ -44,14 +51,42 @@ export function GameProvider({ children }: { children: ReactNode }) {
     [setGame],
   )
 
+  const buy = useCallback(
+    (item: ShopItem) => {
+      const prev = latest.current
+      const next = buyItem(prev, item)
+      if (next === prev) return false
+      latest.current = next
+      setGame(next)
+      setLastGain({ id: Date.now(), amount: -item.price })
+      return true
+    },
+    [setGame],
+  )
+
+  const equip = useCallback(
+    (slot: Slot, id: string | null) => {
+      const next = equipItem(latest.current, slot, id)
+      latest.current = next
+      setGame(next)
+    },
+    [setGame],
+  )
+
   const reset = useCallback(() => setGame(emptyGame), [setGame])
+  const clearBadge = useCallback(() => setNewBadge(null), [])
 
   return (
-    <GameContext.Provider value={{ game, award, reset, lastGain }}>
+    <GameContext.Provider value={{ game, award, buy, equip, reset, lastGain, newBadge, clearBadge }}>
       {children}
-      {newBadge && <BadgePopup id={newBadge} onClose={() => setNewBadge(null)} />}
     </GameContext.Provider>
   )
+}
+
+/** ป๊อปอัปตรารางวัลใหม่ (วางไว้ใน App ใต้ BuddyProvider เพื่อให้ผู้ช่วยแต่งตัวตามของที่ใส่) */
+export function BadgePopupHost() {
+  const { newBadge, clearBadge } = useGame()
+  return newBadge ? <BadgePopup id={newBadge} onClose={clearBadge} /> : null
 }
 
 function BadgePopup({ id, onClose }: { id: string; onClose: () => void }) {
@@ -95,11 +130,11 @@ function BadgePopup({ id, onClose }: { id: string; onClose: () => void }) {
   )
 }
 
-/** ตัวนับเหรียญบนหัวเว็บ เด้งและมี +N ลอยขึ้นเมื่อได้เหรียญ */
-export function CoinCounter() {
+/** ตัวนับเหรียญบนหัวเว็บ เด้งและมี +N ลอยขึ้นเมื่อได้เหรียญ กดแล้วไปร้านค้า */
+export function CoinCounter({ onClick }: { onClick?: () => void }) {
   const { game, lastGain } = useGame()
   return (
-    <div className="relative" aria-live="polite">
+    <button type="button" onClick={onClick} aria-label={`${game.coins} เหรียญ เปิดร้านค้า`} className="relative rounded-2xl active:scale-95">
       <div
         key={lastGain?.id}
         className={`flex h-10 items-center gap-1.5 rounded-2xl bg-linear-to-r from-[#ffd23f] to-accent-300 px-3 font-bold text-[#3b2400] shadow-soft ${
@@ -117,10 +152,10 @@ export function CoinCounter() {
           aria-hidden="true"
           className="pointer-events-none absolute -bottom-6 right-1 animate-rise font-bold text-accent-600"
         >
-          +{lastGain.amount}
+          {lastGain.amount > 0 ? `+${lastGain.amount}` : lastGain.amount}
         </span>
       )}
-    </div>
+    </button>
   )
 }
 

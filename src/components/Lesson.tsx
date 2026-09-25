@@ -325,7 +325,7 @@ function SlideBody({
       return (
         <div className="space-y-4">
           <h2 className="text-2xl font-bold sm:text-4xl">เกม: ประโยคนี้คือส่วนไหน?</h2>
-          <p className="text-muted">อ่านประโยค แล้วกด R, T, C หรือ F ตอบถูกได้ 10 เหรียญ</p>
+          <p className="text-muted">อ่านประโยค แล้วกด R, T, C หรือ F · ตอบถูกได้เหรียญ ถูกติดกันได้มากขึ้น เล่นซ้ำได้</p>
           <QuizSort />
         </div>
       )
@@ -334,7 +334,7 @@ function SlideBody({
       return (
         <div className="space-y-4">
           <h2 className="text-2xl font-bold sm:text-4xl">เกม: แบบไหนดีกว่า?</h2>
-          <p className="text-muted">เลือก prompt ที่ AI จะตอบได้ตรงใจกว่า ตอบถูกได้ 10 เหรียญ</p>
+          <p className="text-muted">เลือก prompt ที่ AI จะตอบได้ตรงใจกว่า · ตอบถูกได้เหรียญ เล่นซ้ำได้</p>
           <QuizPick />
         </div>
       )
@@ -361,11 +361,11 @@ function SlideBody({
           <button
             type="button"
             onClick={() => {
-              if (window.confirm('ล้างเหรียญและตรารางวัลทั้งหมด (สำหรับให้คนถัดไปใช้เครื่องนี้)?')) onReset()
+              if (window.confirm('ล้างเหรียญ ตรารางวัล และของที่ซื้อทั้งหมด (สำหรับให้คนถัดไปใช้เครื่องนี้)?')) onReset()
             }}
             className="min-h-10 w-full rounded-xl text-sm text-muted underline underline-offset-4 hover:text-ink"
           >
-            ล้างเหรียญและตรารางวัล (ใช้เครื่องร่วมกัน)
+            ล้างเหรียญ ตรารางวัล และของที่ซื้อ (ใช้เครื่องร่วมกัน)
           </button>
         </div>
       )

@@ -4,10 +4,10 @@ import { BuddyButton } from './Buddy'
 import { CoinCounter } from './Game'
 import { container } from './layout'
 
-export type View = 'lesson' | 'wizard'
+export type View = 'lesson' | 'wizard' | 'shop'
 
 /** เมนูด้านบน: "สร้างภาพ" คือ wizard ที่เลือกหัวข้อสร้างภาพไว้แล้ว */
-export type Menu = 'lesson' | 'create' | 'image'
+export type Menu = 'lesson' | 'create' | 'image' | 'shop'
 
 const icon = (d: ReactNode) => (
   <svg viewBox="0 0 24 24" className="size-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -19,6 +19,7 @@ const tabs: { id: Menu; label: string; short: string; icon: ReactNode }[] = [
   { id: 'lesson', label: 'เรียนรู้ RTCF', short: 'เรียนรู้', icon: icon(<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5zM4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5" />) },
   { id: 'create', label: 'สร้าง prompt', short: 'สร้าง', icon: icon(<path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4" />) },
   { id: 'image', label: 'สร้างภาพ', short: 'สร้างภาพ', icon: icon(<><rect x="3" y="4" width="18" height="16" rx="3" /><circle cx="9" cy="10" r="2" /><path d="M21 16l-5-5-9 9" /></>) },
+  { id: 'shop', label: 'ร้านค้า', short: 'ร้านค้า', icon: icon(<><path d="M5 8h14l-1.2 11.1a2 2 0 0 1-2 1.9H8.2a2 2 0 0 1-2-1.9z" /><path d="M9 8V6a3 3 0 0 1 6 0v2" /></>) },
 ]
 
 interface Props {
@@ -44,7 +45,7 @@ export function Header({ active, onMenu }: Props) {
 
   const nav = (
     <nav aria-label="เมนูหลัก" className="w-full md:w-auto">
-      <ul className="grid grid-cols-3 gap-1 rounded-2xl bg-sunken p-1 md:flex">
+      <ul className="grid grid-cols-4 gap-1 rounded-2xl bg-sunken p-1 md:flex">
         {tabs.map((tab) => {
           const on = active === tab.id
           return (
@@ -86,7 +87,7 @@ export function Header({ active, onMenu }: Props) {
           </span>
         </button>
         <div className="order-3 w-full md:order-none md:mx-auto md:w-auto">{nav}</div>
-        <CoinCounter />
+        <CoinCounter onClick={() => onMenu('shop')} />
         <BuddyButton />
         <button
           type="button"

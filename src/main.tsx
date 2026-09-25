@@ -7,10 +7,10 @@ import { GameProvider } from './components/Game'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BuddyProvider>
-      <GameProvider>
+    <GameProvider>
+      <BuddyProvider>
         <App />
-      </GameProvider>
-    </BuddyProvider>
+      </BuddyProvider>
+    </GameProvider>
   </StrictMode>,
 )

@@ -1,4 +1,6 @@
 import type { BuddyInfo } from '../data'
+import type { Equipped } from '../lib/game'
+import { FaceItem, HeadItem, NeckItem } from './BuddyOutfit'
 
 /** ท่าตามสถานการณ์ (event/state) */
 export type EventAction = 'idle' | 'wave' | 'cheer' | 'think' | 'oops' | 'love'
@@ -38,7 +40,18 @@ const eyesFor: Partial<Record<BuddyAction, Eyes>> = {
 }
 
 /** ตัวการ์ตูนผู้ช่วย วาดด้วย SVG แยกชิ้น (หาง หูซ้าย/ขวา แขน ตา ปาก) ขยับตามท่า ดูแอนิเมชันที่ index.css (.buddy) */
-export function BuddyArt({ buddy, action = 'idle', className = '' }: { buddy: BuddyInfo; action?: BuddyAction; className?: string }) {
+export function BuddyArt({
+  buddy,
+  action = 'idle',
+  outfit = {},
+  className = '',
+}: {
+  buddy: BuddyInfo
+  action?: BuddyAction
+  /** ของแต่งตัวที่ใส่อยู่ */
+  outfit?: Equipped
+  className?: string
+}) {
   const { kind, color, dark, belly } = buddy
   const eyes = eyesFor[action] ?? 'open'
   const stroke = { stroke: dark, strokeWidth: 1.5 }
@@ -72,6 +85,8 @@ export function BuddyArt({ buddy, action = 'idle', className = '' }: { buddy: Bu
         <g className="b-arm-r">
           <ellipse cx="88" cy="93" rx="7" ry="11" transform="rotate(-25 88 93)" fill={color} {...stroke} />
         </g>
+
+        <NeckItem id={outfit.neck} />
 
         {/* หู / เสาอากาศ / หนาม (อยู่หลังหัว) */}
         <g className="b-ears">
@@ -140,6 +155,8 @@ export function BuddyArt({ buddy, action = 'idle', className = '' }: { buddy: Bu
         )}
         {kind === 'bear' && <ellipse cx="60" cy="66" rx="12" ry="9" fill={belly} />}
 
+        <HeadItem id={outfit.head} />
+
         {/* ตา */}
         {eyes === 'happy' && (
           <g stroke={INK} strokeWidth="3" strokeLinecap="round" fill="none">
@@ -163,6 +180,8 @@ export function BuddyArt({ buddy, action = 'idle', className = '' }: { buddy: Bu
             </g>
           </g>
         )}
+
+        <FaceItem id={outfit.face} />
 
         {/* แก้ม */}
         <g className="b-cheeks">

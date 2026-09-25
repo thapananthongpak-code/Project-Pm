@@ -1,0 +1,74 @@
+[
+  {
+    "id": "bow",
+    "slot": "head",
+    "name": "โบว์น่ารัก",
+    "price": 30
+  },
+  {
+    "id": "flower",
+    "slot": "head",
+    "name": "ดอกไม้ทัดหู",
+    "price": 30
+  },
+  {
+    "id": "party-hat",
+    "slot": "head",
+    "name": "หมวกปาร์ตี้",
+    "price": 40
+  },
+  {
+    "id": "beanie",
+    "slot": "head",
+    "name": "หมวกไหมพรม",
+    "price": 50
+  },
+  {
+    "id": "grad-cap",
+    "slot": "head",
+    "name": "หมวกรับปริญญา",
+    "price": 80
+  },
+  {
+    "id": "crown",
+    "slot": "head",
+    "name": "มงกุฎ",
+    "price": 120
+  },
+  {
+    "id": "round-glasses",
+    "slot": "face",
+    "name": "แว่นกลม",
+    "price": 40
+  },
+  {
+    "id": "heart-glasses",
+    "slot": "face",
+    "name": "แว่นหัวใจ",
+    "price": 60
+  },
+  {
+    "id": "sunglasses",
+    "slot": "face",
+    "name": "แว่นกันแดด",
+    "price": 70
+  },
+  {
+    "id": "bowtie",
+    "slot": "neck",
+    "name": "โบว์ไท",
+    "price": 30
+  },
+  {
+    "id": "scarf",
+    "slot": "neck",
+    "name": "ผ้าพันคอ",
+    "price": 50
+  },
+  {
+    "id": "star-necklace",
+    "slot": "neck",
+    "name": "สร้อยดาว",
+    "price": 90
+  }
+]

@@ -1,4 +1,5 @@
 import type { BuddyAction, MoveAction } from '../components/BuddyArt'
+import type { ShopItem } from '../lib/game'
 import type { Goal, PromptTemplate, Question, RtcfPart, Tool, ToolId } from '../types'
 import goalsJson from './goals.json'
 import questionsJson from './questions.json'
@@ -10,6 +11,7 @@ import rtcfJson from './rtcf.json'
 import lessonJson from './lesson.json'
 import badgesJson from './badges.json'
 import buddiesJson from './buddies.json'
+import shopJson from './shop.json'
 
 export interface Refinement {
   id: string
@@ -133,3 +135,5 @@ export interface BuddyLines {
 
 export const buddies = buddiesJson.buddies as unknown as BuddyInfo[]
 export const buddyLines: BuddyLines = buddiesJson
+
+export const shopItems = shopJson as ShopItem[]

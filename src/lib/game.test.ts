@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { badges, lesson } from '../data'
-import { applyAward, emptyGame, reviveGame } from './game'
+import { applyAward, buyItem, emptyGame, equipItem, fingerprint, quizCoins, reviveGame, type ShopItem } from './game'
 import { splitSections } from './rtcf'
 
 describe('ระบบเหรียญและตรารางวัล', () => {
@@ -24,8 +24,11 @@ describe('ระบบเหรียญและตรารางวัล', (
       coins: 120,
       badges: ['learner'],
       claimed: ['a'],
+      owned: [],
+      equipped: {},
     })
-    expect(reviveGame({ badges: ['artist'] })).toEqual({ coins: 0, badges: ['artist'], claimed: [] })
+    // ใส่ของที่ไม่ได้ซื้อไม่ได้
+    expect(reviveGame({ owned: ['crown'], equipped: { head: 'crown', face: 'sunglasses' } }).equipped).toEqual({ head: 'crown' })
   })
 })
 
@@ -94,5 +97,66 @@ describe('บุคลิกผู้ช่วย', () => {
     expect(favourite('bunny')).toContain('earflop')
     expect(favourite('robot')).toContain('scan')
     expect(favourite('dino')).toContain('roar')
+  })
+})
+
+describe('เหรียญเล่นซ้ำได้', () => {
+  it('รางวัลที่ไม่มี key ได้ทุกครั้ง', () => {
+    const a = applyAward(emptyGame, { coins: 5 })
+    const b = applyAward(a, { coins: 5 })
+    expect(b.coins).toBe(10)
+    expect(b.claimed).toEqual([])
+  })
+
+  it('ถูกติดกันยิ่งได้เหรียญเยอะ', () => {
+    expect([1, 2, 3, 4, 5, 9].map(quizCoins)).toEqual([5, 5, 8, 8, 10, 10])
+  })
+
+  it('prompt เดิมได้เหรียญครั้งเดียว prompt ใหม่ได้อีก', () => {
+    const k1 = `done:m4:${fingerprint('prompt A')}`
+    const k2 = `done:m4:${fingerprint('prompt B')}`
+    expect(k1).not.toBe(k2)
+    const once = applyAward(emptyGame, { key: k1, coins: 30 })
+    expect(applyAward(once, { key: k1, coins: 30 }).coins).toBe(30)
+    expect(applyAward(once, { key: k2, coins: 30 }).coins).toBe(60)
+  })
+})
+
+describe('ร้านค้า', () => {
+  const crown: ShopItem = { id: 'crown', slot: 'head', name: 'มงกุฎ', price: 120 }
+  const bow: ShopItem = { id: 'bow', slot: 'head', name: 'โบว์', price: 30 }
+  const rich = { ...emptyGame, coins: 150 }
+
+  it('ซื้อแล้วหักเหรียญ เก็บเข้าคลัง และใส่ให้เลย', () => {
+    const s = buyItem(rich, crown)
+    expect(s.coins).toBe(30)
+    expect(s.owned).toEqual(['crown'])
+    expect(s.equipped.head).toBe('crown')
+  })
+
+  it('เหรียญไม่พอหรือมีแล้ว ซื้อไม่ได้', () => {
+    expect(buyItem(emptyGame, bow)).toBe(emptyGame)
+    const s = buyItem(rich, crown)
+    expect(buyItem(s, crown)).toBe(s)
+  })
+
+  it('ช่องเดียวใส่ได้ชิ้นเดียว ถอดได้ และใส่ของที่ไม่มีไม่ได้', () => {
+    let s = buyItem(buyItem(rich, bow), crown)
+    expect(s.equipped.head).toBe('crown')
+    s = equipItem(s, 'head', 'bow')
+    expect(s.equipped.head).toBe('bow')
+    s = equipItem(s, 'head', null)
+    expect(s.equipped.head).toBeUndefined()
+    expect(equipItem(s, 'face', 'sunglasses')).toBe(s)
+  })
+
+  it('ของในร้านถูกต้อง: id ไม่ซ้ำ ช่องถูก ราคาเป็นบวก และมีของแต่ละช่อง', async () => {
+    const { shopItems } = await import('../data')
+    expect(new Set(shopItems.map((i) => i.id)).size).toBe(shopItems.length)
+    for (const i of shopItems) {
+      expect(['head', 'face', 'neck']).toContain(i.slot)
+      expect(i.price).toBeGreaterThan(0)
+    }
+    for (const slot of ['head', 'face', 'neck']) expect(shopItems.some((i) => i.slot === slot)).toBe(true)
   })
 })

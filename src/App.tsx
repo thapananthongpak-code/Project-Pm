@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Backdrop } from './components/Backdrop'
-import { useGame } from './components/Game'
+import { BadgePopupHost, useGame } from './components/Game'
 import { Header, type Menu, type View } from './components/Header'
 import { container, SCHOOL } from './components/layout'
 import { Lesson } from './components/Lesson'
+import { Shop } from './components/Shop'
 import { ToastProvider } from './components/Toast'
 import { Wizard } from './components/Wizard'
 import { BuddyGallery } from './dev/BuddyGallery'
@@ -19,7 +20,7 @@ export default function App() {
   const inImage = state.goal === 'image' && state.step > 0
   // หน้าที่มีแถบปุ่มติดล่างจอ (ตอบคำถาม/เลือก AI) ไม่แสดง footer เพราะแถบจะบัง
   const showFooter = view !== 'wizard' || state.step === 0 || state.step === 3
-  const active: Menu = view === 'lesson' ? 'lesson' : inImage ? 'image' : 'create'
+  const active: Menu = view === 'lesson' ? 'lesson' : view === 'shop' ? 'shop' : inImage ? 'image' : 'create'
 
   function navigate(next: View) {
     setView(next)
@@ -28,6 +29,7 @@ export default function App() {
 
   function openMenu(menu: Menu) {
     if (menu === 'lesson') return navigate('lesson')
+    if (menu === 'shop') return navigate('shop')
     if (menu === 'image') {
       // เข้าหัวข้อสร้างภาพทันที (ถ้าทำค้างอยู่ ทำต่อจากเดิม)
       if (!inImage) wizard.selectGoal('image')
@@ -43,6 +45,7 @@ export default function App() {
 
   return (
     <ToastProvider>
+      <BadgePopupHost />
       <Backdrop />
       <a
         href="#main"
@@ -54,6 +57,7 @@ export default function App() {
       <main id="main" className={`${container} flex-1 pb-10 pt-6 lg:pt-8`}>
         {view === 'lesson' && <Lesson onGo={openMenu} />}
         {view === 'wizard' && <Wizard wizard={wizard} />}
+        {view === 'shop' && <Shop />}
       </main>
       {showFooter && (
       <footer className="relative mt-6 bg-sunken/80 pb-5 pt-8 text-center text-sm text-muted">
