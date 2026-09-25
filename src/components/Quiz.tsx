@@ -32,7 +32,7 @@ function Finished({ score, total, pass, onRetry }: { score: number; total: numbe
         ได้ {score}/{total} ข้อ
       </p>
       <p className="text-muted">
-        {pass ? 'เก่งมาก! ได้เหรียญด้วย' : 'เกือบแล้ว ลองอีกรอบได้เลย'} {buddy.ending}
+        {pass ? 'เก่งมาก! ได้ตรารางวัลด้วย' : 'เกือบแล้ว ลองอีกรอบได้เลย'} {buddy.ending}
       </p>
       <button type="button" onClick={onRetry} className="btn-ghost">
         เล่นอีกรอบ
@@ -59,6 +59,7 @@ export function QuizSort() {
     if (p === item.answer) {
       setScore((s) => s + 1)
       setStreak((s) => s + 1)
+      award({ key: `sort:${i}`, coins: 10 })
     } else {
       setStreak(0)
     }
@@ -66,7 +67,7 @@ export function QuizSort() {
 
   function next() {
     const last = i === items.length - 1
-    if (last && score >= 8) award('sorter')
+    if (last && score >= 8) award({ key: 'sort:badge', badge: 'sorter' })
     setPicked(null)
     setI(i + 1)
   }
@@ -156,11 +157,12 @@ export function QuizPick() {
     setPicked(n)
     if (n === item.better) {
       setScore((s) => s + 1)
+      award({ key: `pick:${i}`, coins: 10 })
     }
   }
 
   function next() {
-    if (i === items.length - 1 && score === items.length) award('sharp-eye')
+    if (i === items.length - 1 && score === items.length) award({ key: 'pick:badge', badge: 'sharp-eye' })
     setPicked(null)
     setI(i + 1)
   }

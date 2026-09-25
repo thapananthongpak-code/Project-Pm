@@ -103,7 +103,6 @@ export type BuddyKind = 'cat' | 'bear' | 'bunny' | 'robot' | 'dino'
 
 export interface BuddyInfo {
   id: string
-  name: string
   kind: BuddyKind
   intro: string
   /** คำลงท้ายประจำตัว ต่อท้ายข้อความให้กำลังใจ */

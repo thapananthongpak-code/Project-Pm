@@ -1,6 +1,6 @@
 import { badges } from '../data'
 import { BadgeIcon } from './BadgeIcon'
-import { useGame } from './Game'
+import { CoinIcon, useGame } from './Game'
 
 /** ชั้นวางเหรียญ: เหรียญที่ยังไม่ได้เป็นสีเทา */
 export function BadgeShelf() {
@@ -9,8 +9,14 @@ export function BadgeShelf() {
 
   return (
     <div>
-      <p className="font-semibold">
-        เหรียญของฉัน {earned}/{badges.length}
+      <p className="flex items-center justify-between font-semibold">
+        <span>
+          ตรารางวัลของฉัน {earned}/{badges.length}
+        </span>
+        <span className="flex items-center gap-1 text-accent-700 dark:text-accent-300">
+          <CoinIcon className="size-6" />
+          {game.coins} เหรียญ
+        </span>
       </p>
       <ul className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-5">
         {badges.map((b, i) => {

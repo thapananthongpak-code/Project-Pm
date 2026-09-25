@@ -2,15 +2,17 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import { badges } from '../data'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { celebrate } from '../lib/confetti'
-import { applyBadge, emptyGame, reviveGame, type GameState } from '../lib/game'
+import { applyAward, emptyGame, reviveGame, type Award, type GameState } from '../lib/game'
 import { BadgeIcon } from './BadgeIcon'
 import { Buddy, useBuddy } from './Buddy'
 
 interface GameApi {
   game: GameState
-  /** ให้เหรียญ (ได้ครั้งเดียว) */
-  award: (badge: string) => void
+  /** ให้เหรียญ/ตรารางวัล ครั้งเดียวต่อ key */
+  award: (award: Award) => void
   reset: () => void
+  /** เหรียญที่เพิ่งได้ล่าสุด ใช้ทำแอนิเมชัน +N */
+  lastGain: { id: number; amount: number } | null
 }
 
 const GameContext = createContext<GameApi | null>(null)
@@ -24,17 +26,20 @@ export function useGame() {
 export function GameProvider({ children }: { children: ReactNode }) {
   const [game, setGame] = useLocalStorage<GameState>('promptfolio:game:v1', emptyGame, reviveGame)
   const [newBadge, setNewBadge] = useState<string | null>(null)
-  // อ่าน state ล่าสุดได้ทันที ไม่ต้องรอ render (กันให้เหรียญซ้ำเมื่อเรียกติดกัน)
+  const [lastGain, setLastGain] = useState<GameApi['lastGain']>(null)
+  // อ่าน state ล่าสุดได้ทันที ไม่ต้องรอ render (กันให้รางวัลซ้ำเมื่อเรียกติดกัน)
   const latest = useRef(game)
   latest.current = game
 
   const award = useCallback(
-    (badge: string) => {
-      const next = applyBadge(latest.current, badge)
-      if (next === latest.current) return
+    (a: Award) => {
+      const prev = latest.current
+      const next = applyAward(prev, a)
+      if (next === prev) return
       latest.current = next
       setGame(next)
-      setNewBadge(badge)
+      if (a.coins) setLastGain({ id: Date.now(), amount: a.coins })
+      if (a.badge && !prev.badges.includes(a.badge)) setNewBadge(a.badge)
     },
     [setGame],
   )
@@ -42,7 +47,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const reset = useCallback(() => setGame(emptyGame), [setGame])
 
   return (
-    <GameContext.Provider value={{ game, award, reset }}>
+    <GameContext.Provider value={{ game, award, reset, lastGain }}>
       {children}
       {newBadge && <BadgePopup id={newBadge} onClose={() => setNewBadge(null)} />}
     </GameContext.Provider>
@@ -71,7 +76,7 @@ function BadgePopup({ id, onClose }: { id: string; onClose: () => void }) {
       onClick={onClose}
     >
       <div className="card w-full max-w-sm animate-bounce-in p-6 text-center" onClick={(e) => e.stopPropagation()}>
-        <p className="text-sm font-semibold text-muted">ได้เหรียญใหม่!</p>
+        <p className="text-sm font-semibold text-muted">ได้ตรารางวัลใหม่!</p>
         <div className="mt-3 flex items-end justify-center gap-2">
           <Buddy action="cheer" className="size-24" />
           <BadgeIcon part={badge.color} className="size-24 animate-wiggle" />
@@ -80,12 +85,51 @@ function BadgePopup({ id, onClose }: { id: string; onClose: () => void }) {
           {badge.name}
         </h2>
         <p className="text-muted">
-          {badge.desc} · {buddy.name}ดีใจด้วย {buddy.ending}
+          {badge.desc} · ผู้ช่วยดีใจด้วย {buddy.ending}
         </p>
         <button ref={closeRef} type="button" onClick={onClose} className="btn-primary mt-5 w-full">
           เยี่ยมเลย
         </button>
       </div>
     </div>
+  )
+}
+
+/** ตัวนับเหรียญบนหัวเว็บ เด้งและมี +N ลอยขึ้นเมื่อได้เหรียญ */
+export function CoinCounter() {
+  const { game, lastGain } = useGame()
+  return (
+    <div className="relative" aria-live="polite">
+      <div
+        key={lastGain?.id}
+        className={`flex h-10 items-center gap-1.5 rounded-2xl bg-linear-to-r from-[#ffd23f] to-accent-300 px-3 font-bold text-[#3b2400] shadow-soft ${
+          lastGain ? 'animate-bounce-in' : ''
+        }`}
+        title="เหรียญที่สะสมได้"
+      >
+        <CoinIcon className="size-6" />
+        <span className="tabular-nums">{game.coins}</span>
+        <span className="sr-only">เหรียญ</span>
+      </div>
+      {lastGain && (
+        <span
+          key={`gain-${lastGain.id}`}
+          aria-hidden="true"
+          className="pointer-events-none absolute -bottom-6 right-1 animate-rise font-bold text-accent-600"
+        >
+          +{lastGain.amount}
+        </span>
+      )}
+    </div>
+  )
+}
+
+export function CoinIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
+      <circle cx="12" cy="12" r="10" fill="#ffc21a" stroke="#c98a00" strokeWidth="1.5" />
+      <circle cx="12" cy="12" r="6.8" fill="none" stroke="#fff3c4" strokeWidth="1.3" />
+      <path d="M12 8.2l1.2 2.5 2.7.3-2 1.9.5 2.7-2.4-1.3-2.4 1.3.5-2.7-2-1.9 2.7-.3z" fill="#fff3c4" />
+    </svg>
   )
 }

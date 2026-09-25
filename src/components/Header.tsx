@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { useTheme } from '../hooks/useTheme'
 import { BuddyButton } from './Buddy'
+import { CoinCounter } from './Game'
 import { container } from './layout'
 
 export type View = 'lesson' | 'wizard'
@@ -78,9 +79,12 @@ export function Header({ active, onMenu }: Props) {
           className="mr-auto flex items-center gap-2 rounded-xl font-display text-lg font-bold md:mr-0"
         >
           <img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" className="size-8 shrink-0" />
-          <span aria-hidden="true">PromptFolio</span>
+          <span aria-hidden="true" className="hidden min-[400px]:inline">
+            PromptFolio
+          </span>
         </button>
         <div className="order-3 w-full md:order-none md:mx-auto md:w-auto">{nav}</div>
+        <CoinCounter />
         <BuddyButton />
         <button
           type="button"

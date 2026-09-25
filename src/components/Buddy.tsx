@@ -99,7 +99,7 @@ export function BuddyTip({ action = 'idle', lead, children, size = 'md', classNa
       <button
         type="button"
         onClick={tap}
-        aria-label={`แตะ${buddy.name}เพื่อฟังทริค`}
+        aria-label={`แตะผู้ช่วย (${buddy.intro}) เพื่อฟังทริค`}
         className="shrink-0 rounded-full transition active:scale-95"
       >
         <Buddy action={tapped?.action ?? action} className={art} />
@@ -110,7 +110,6 @@ export function BuddyTip({ action = 'idle', lead, children, size = 'md', classNa
         key={tapped?.tip ?? `${action}-${lead}`}
         className="relative mb-3 min-w-0 flex-1 animate-bounce-in rounded-2xl rounded-bl-sm border border-line bg-surface px-4 py-3 text-[15px] shadow-soft"
       >
-        <span className="block text-xs font-bold text-brand-700 dark:text-brand-300">{buddy.name}</span>
         {tapped ? (
           <>
             <span className="font-semibold">ทริค: </span>
@@ -138,7 +137,7 @@ export function BuddyButton() {
     <button
       type="button"
       onClick={openPicker}
-      aria-label={`เปลี่ยนผู้ช่วย (ตอนนี้: ${buddy.name})`}
+      aria-label={`เปลี่ยนผู้ช่วย (ตอนนี้: ${buddy.intro})`}
       title="เปลี่ยนผู้ช่วย"
       className="grid size-11 shrink-0 place-items-center rounded-2xl bg-sunken transition hover:-translate-y-0.5 active:scale-95"
     >
@@ -193,22 +192,21 @@ function BuddyPicker({
                 type="button"
                 role="radio"
                 aria-checked={on}
+                aria-label={b.intro}
                 onClick={() => setSelected(b.id)}
                 style={{ animationDelay: `${i * 80}ms` }}
-                className={`flex animate-fly-in flex-col items-center rounded-3xl border-2 p-3 text-center transition duration-200 hover:-translate-y-1 active:scale-95 ${
+                className={`flex animate-fly-in flex-col items-center justify-center rounded-3xl border-2 p-3 text-center transition duration-200 hover:-translate-y-1 active:scale-95 ${
                   on ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/40' : 'border-line bg-surface'
                 } ${i === buddies.length - 1 ? 'col-span-2 sm:col-span-1' : ''}`}
               >
-                <BuddyArt key={`${b.id}-${on}`} buddy={b} action={on ? 'wave' : 'idle'} className="size-24" />
-                <span className="mt-1 font-display font-bold">{b.name}</span>
-                <span className="text-xs text-muted">{b.intro}</span>
+                <BuddyArt key={`${b.id}-${on}`} buddy={b} action={on ? 'wave' : 'idle'} className="size-24 sm:size-28" />
               </button>
             )
           })}
         </div>
 
         <p key={pick.id} className="mt-4 animate-fly-in text-center font-semibold" aria-live="polite">
-          “สวัสดี! เรา{pick.name} มาเป็นทีมเดียวกันนะ {pick.ending}”
+          “สวัสดี! มาเป็นทีมเดียวกันนะ {pick.ending}”
         </p>
         <div className="mt-4 flex gap-2">
           {canClose && (
@@ -217,7 +215,7 @@ function BuddyPicker({
             </button>
           )}
           <button ref={confirmRef} type="button" onClick={() => onChoose(selected)} className="btn-primary flex-1 text-lg">
-            เลือก{pick.name}
+            เลือกผู้ช่วยตัวนี้
           </button>
         </div>
       </div>

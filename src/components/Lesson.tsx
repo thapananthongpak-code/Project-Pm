@@ -49,10 +49,11 @@ export function Lesson({ onGo }: Props) {
   const { award, reset } = useGame()
   const slide = slides[index]
 
-  // ดูบทเรียนถึงสไลด์สุดท้าย ได้เหรียญ
+  // ดูสไลด์ใหม่ได้ 5 เหรียญ ดูครบได้ตรารางวัล
   useEffect(() => {
-    if (index === slides.length - 1) award('learner')
-  }, [index, award])
+    award({ key: `slide:${slide.id}`, coins: 5 })
+    if (index === slides.length - 1) award({ key: 'lesson:done', coins: 20, badge: 'learner' })
+  }, [slide.id, index, award])
 
   const go = useCallback(
     (to: number) => {
@@ -195,7 +196,7 @@ function SlideBody({
             ))}
           </div>
           <p className="text-muted">
-            สวัสดี! เรา{buddy.name} จะพาไปรู้จัก 4 ส่วนของ prompt ที่ดี {buddy.ending}
+            สวัสดี! วันนี้เราจะไปรู้จัก 4 ส่วนของ prompt ที่ดีกัน {buddy.ending}
           </p>
         </div>
       )
@@ -324,7 +325,7 @@ function SlideBody({
       return (
         <div className="space-y-4">
           <h2 className="text-2xl font-bold sm:text-4xl">เกม: ประโยคนี้คือส่วนไหน?</h2>
-          <p className="text-muted">อ่านประโยค แล้วกด R, T, C หรือ F ถูก 8 ข้อขึ้นไปได้เหรียญ</p>
+          <p className="text-muted">อ่านประโยค แล้วกด R, T, C หรือ F ตอบถูกได้ 10 เหรียญ</p>
           <QuizSort />
         </div>
       )
@@ -333,7 +334,7 @@ function SlideBody({
       return (
         <div className="space-y-4">
           <h2 className="text-2xl font-bold sm:text-4xl">เกม: แบบไหนดีกว่า?</h2>
-          <p className="text-muted">เลือก prompt ที่ AI จะตอบได้ตรงใจกว่า</p>
+          <p className="text-muted">เลือก prompt ที่ AI จะตอบได้ตรงใจกว่า ตอบถูกได้ 10 เหรียญ</p>
           <QuizPick />
         </div>
       )
@@ -360,11 +361,11 @@ function SlideBody({
           <button
             type="button"
             onClick={() => {
-              if (window.confirm('ล้างเหรียญทั้งหมด (สำหรับให้คนถัดไปใช้เครื่องนี้)?')) onReset()
+              if (window.confirm('ล้างเหรียญและตรารางวัลทั้งหมด (สำหรับให้คนถัดไปใช้เครื่องนี้)?')) onReset()
             }}
             className="min-h-10 w-full rounded-xl text-sm text-muted underline underline-offset-4 hover:text-ink"
           >
-            ล้างเหรียญ (ใช้เครื่องร่วมกัน)
+            ล้างเหรียญและตรารางวัล (ใช้เครื่องร่วมกัน)
           </button>
         </div>
       )

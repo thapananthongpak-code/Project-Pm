@@ -5,6 +5,7 @@ import type { Answers, GoalId } from '../types'
 import { ActionBar } from './ActionBar'
 import { FieldInput } from './FieldInput'
 import { BuddyTip, randomLine } from './Buddy'
+import { useGame } from './Game'
 import { RtcfTag } from './Rtcf'
 
 interface Props {
@@ -24,6 +25,7 @@ export function StepForm({ goal, page, answers, onAnswer, onPage, onBack, onDone
   const fields = visibleFields(question, goal, answers)
   const isLast = index === pages.length - 1
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const { award } = useGame()
   const hasError = Object.values(errors).some(Boolean)
   // ผู้ช่วยให้กำลังใจเมื่อผ่านหน้าก่อน และทำท่าเหงื่อตกเมื่อลืมกรอก
   const lead = useMemo(
@@ -42,6 +44,8 @@ export function StepForm({ goal, page, answers, onAnswer, onPage, onBack, onDone
       return
     }
     setErrors({})
+    // ตอบครบ 1 หน้า ได้ 10 เหรียญ (ครั้งเดียวต่อหน้า)
+    award({ key: `page:${goal}:${question.id}`, coins: 10 })
     if (isLast) onDone()
     else onPage(index + 1)
   }

@@ -1,19 +1,31 @@
 import { describe, expect, it } from 'vitest'
 import { badges, lesson } from '../data'
-import { applyBadge, emptyGame, reviveGame } from './game'
+import { applyAward, emptyGame, reviveGame } from './game'
 import { splitSections } from './rtcf'
 
-describe('ระบบเหรียญ', () => {
-  it('ได้เหรียญครั้งเดียว ไม่ซ้ำ', () => {
-    const once = applyBadge(emptyGame, 'first-prompt')
-    expect(once.badges).toEqual(['first-prompt'])
-    expect(applyBadge(once, 'first-prompt')).toBe(once)
-    expect(applyBadge(once, 'artist').badges).toEqual(['first-prompt', 'artist'])
+describe('ระบบเหรียญและตรารางวัล', () => {
+  it('ได้เหรียญครั้งเดียวต่อ key', () => {
+    const once = applyAward(emptyGame, { key: 'page:m4:role', coins: 10 })
+    expect(once.coins).toBe(10)
+    expect(applyAward(once, { key: 'page:m4:role', coins: 10 })).toBe(once)
+    expect(applyAward(once, { key: 'page:m4:target', coins: 10 }).coins).toBe(20)
   })
 
-  it('อ่านข้อมูลเสียหรือข้อมูลเก่า (มีดาว) แล้วเหลือแค่เหรียญ', () => {
+  it('ได้ตรารางวัลไม่ซ้ำ', () => {
+    const a = applyAward(emptyGame, { key: 'done:m4', coins: 50, badge: 'first-prompt' })
+    const b = applyAward(a, { key: 'done:present', coins: 50, badge: 'first-prompt' })
+    expect(b.badges).toEqual(['first-prompt'])
+    expect(b.coins).toBe(100)
+  })
+
+  it('อ่านข้อมูลเสียเป็นค่าเริ่มต้น และอ่านดาวจากเวอร์ชันก่อนเป็นเหรียญ', () => {
     expect(reviveGame('xx')).toEqual(emptyGame)
-    expect(reviveGame({ stars: 120, badges: [1, 'learner'], claimed: ['a'] })).toEqual({ badges: ['learner'] })
+    expect(reviveGame({ stars: 120, badges: [1, 'learner'], claimed: ['a'] })).toEqual({
+      coins: 120,
+      badges: ['learner'],
+      claimed: ['a'],
+    })
+    expect(reviveGame({ badges: ['artist'] })).toEqual({ coins: 0, badges: ['artist'], claimed: [] })
   })
 })
 
@@ -46,12 +58,15 @@ describe('บทเรียน', () => {
 })
 
 describe('ผู้ช่วย', () => {
-  it('มีผู้ช่วย 3-5 ตัว ไม่ซ้ำกัน และมีคำลงท้าย', async () => {
+  it('มีผู้ช่วย 3-5 ตัว ไม่ซ้ำกัน ไม่มีชื่อ และมีคำลงท้าย', async () => {
     const { buddies } = await import('../data')
     expect(buddies.length).toBeGreaterThanOrEqual(3)
     expect(buddies.length).toBeLessThanOrEqual(5)
     expect(new Set(buddies.map((b) => b.id)).size).toBe(buddies.length)
-    for (const b of buddies) expect(b.ending.length).toBeGreaterThan(0)
+    for (const b of buddies) {
+      expect(b.ending.length).toBeGreaterThan(0)
+      expect('name' in b).toBe(false)
+    }
   })
 
   it('มีข้อความทุกหมวด', async () => {

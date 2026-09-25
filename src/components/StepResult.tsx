@@ -47,10 +47,10 @@ export function StepResult({ goal, answers, toolId, onAnswer, onGoTo, onReset }:
   const { award } = useGame()
   const [cheer] = useState(() => randomLine('done'))
 
-  // ภารกิจสำเร็จ: พลุกระดาษ + เหรียญ (เหรียญได้ครั้งเดียว)
+  // ภารกิจสำเร็จ: พลุกระดาษ + 50 เหรียญ + ตรารางวัล (ได้ครั้งเดียว)
   useEffect(() => {
     celebrate('big')
-    award(goal === 'image' ? 'artist' : 'first-prompt')
+    award({ key: `done:${goal}`, coins: 50, badge: goal === 'image' ? 'artist' : 'first-prompt' })
   }, [goal, award])
 
   let body
