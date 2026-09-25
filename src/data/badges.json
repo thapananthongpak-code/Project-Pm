@@ -1,0 +1,8 @@
+[
+  { "id": "learner", "name": "รู้จัก RTCF", "desc": "เรียนบทเรียนครบทุกหน้า", "color": "R" },
+  { "id": "sorter", "name": "นักแยก RTCF", "desc": "เกมแยกประเภทได้ 8 ข้อขึ้นไป", "color": "T" },
+  { "id": "sharp-eye", "name": "ตาไว", "desc": "เลือก prompt ที่ดีกว่าถูกทุกข้อ", "color": "C" },
+  { "id": "first-prompt", "name": "prompt แรกของฉัน", "desc": "สร้าง prompt ทำสไลด์สำเร็จ", "color": "F" },
+  { "id": "artist", "name": "นักสร้างภาพ", "desc": "สร้าง prompt ภาพสำเร็จ", "color": "C" },
+  { "id": "checker", "name": "นักตรวจ", "desc": "ตรวจ prompt ได้ครบ RTCF", "color": "R" }
+]

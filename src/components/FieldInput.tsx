@@ -33,7 +33,7 @@ export function FieldInput({ field, goal, value, error, hideOptional, onChange }
   )
 
   return (
-    <div>
+    <div className={error ? 'animate-shake' : ''}>
       {field.type === 'chips' ? (
         <fieldset id={id} aria-describedby={error ? errorId : undefined}>
           <legend className="font-semibold">{labelText}</legend>
@@ -47,9 +47,9 @@ export function FieldInput({ field, goal, value, error, hideOptional, onChange }
                   aria-pressed={selected}
                   // กดซ้ำเพื่อยกเลิก
                   onClick={() => onChange(selected ? '' : option)}
-                  className={`min-h-11 rounded-2xl border-2 px-3.5 font-medium transition ${
+                  className={`min-h-11 rounded-2xl border-2 px-3.5 font-medium transition duration-200 hover:-translate-y-0.5 active:scale-95 ${
                     selected
-                      ? 'border-brand-600 bg-brand-600 text-white'
+                      ? 'animate-pop border-brand-600 bg-brand-600 text-white shadow-soft'
                       : 'border-line bg-surface hover:border-brand-300 hover:bg-brand-50 dark:hover:bg-brand-900/40'
                   }`}
                 >

@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { copyText } from '../lib/clipboard'
 import type { Tool } from '../types'
 import { CopyButton } from './CopyButton'
+import { RtcfText } from './Rtcf'
 import { useToast } from './Toast'
 
 interface Props {
@@ -13,19 +14,6 @@ interface Props {
   /** ถ้ากำหนด ปุ่มหลักจะคัดลอกแล้วเปิดแชทใหม่ใน AI ตัวนี้ */
   openTool?: Tool
   children?: ReactNode
-}
-
-/** ไฮไลต์ช่องที่ต้องเติม เช่น [__] */
-function highlight(text: string) {
-  return text.split(/(\[[^\]\n]*\])/g).map((part, i) =>
-    /^\[[^\]\n]*\]$/.test(part) ? (
-      <mark key={i} className="rounded-md bg-accent-100 px-1 text-accent-700 dark:bg-accent-700/40 dark:text-accent-200">
-        {part}
-      </mark>
-    ) : (
-      part
-    ),
-  )
 }
 
 export function PromptCard({ step, title, subtitle, text, openTool, children }: Props) {
@@ -47,13 +35,14 @@ export function PromptCard({ step, title, subtitle, text, openTool, children }: 
 
       {children}
 
-      <pre
+      <div
         tabIndex={0}
+        role="region"
         aria-label={`ข้อความ prompt: ${title}`}
-        className="mt-3 max-h-64 overflow-auto whitespace-pre-wrap wrap-break-word rounded-2xl border border-line bg-sunken p-4 font-sans text-[15px] leading-relaxed"
+        className="mt-3 max-h-96 overflow-auto rounded-2xl border border-line bg-sunken p-3 text-[15px] leading-relaxed"
       >
-        {highlight(text)}
-      </pre>
+        <RtcfText text={text} animate />
+      </div>
 
       {openTool ? (
         <div className="mt-3 flex flex-col items-center gap-1">

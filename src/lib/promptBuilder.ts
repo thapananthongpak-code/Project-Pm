@@ -22,8 +22,16 @@ export interface FillOptions {
   dropEmptyOptional?: boolean
 }
 
+/** หัวข้อส่วน เช่น "บริบท (Context):" ที่ไม่มีข้อความต่อท้าย */
+const SECTION_HEADER = /^[^-\s].*\):\s*$/
+
+/** ตัดหัวข้อส่วนที่ไม่เหลือรายการ "- ..." ข้างใต้ทิ้ง (เช่น ไม่ได้ตอบข้อไหนในส่วนนั้นเลย) */
+function dropEmptySections(lines: string[]): string[] {
+  return lines.filter((line, i) => !SECTION_HEADER.test(line) || lines[i + 1]?.startsWith('- '))
+}
+
 export function fillTemplate(body: string, values: Answers, { dropEmptyOptional = true }: FillOptions = {}): string {
-  return body
+  const lines = body
     .split('\n')
     .flatMap((line) => {
       const ids = [...line.matchAll(PLACEHOLDER)].map((m) => m[1])
@@ -36,7 +44,17 @@ export function fillTemplate(body: string, values: Answers, { dropEmptyOptional 
       if (dropEmptyOptional) out = out.replace(/\s?\(\[__\]\)/g, '')
       return [out]
     })
-    .join('\n')
+  return (dropEmptyOptional ? dropEmptySections(lines) : lines).join('\n')
+}
+
+/** ช่องบทบาท (R) ของแต่ละหัวข้อ */
+const roleField: Record<GoalId, string> = { m4: 'roleM4', present: 'rolePresent', image: 'roleImage' }
+
+/** บทบาทที่เลือก ถ้ายังไม่เลือกใช้ตัวเลือกแรกของหัวข้อนั้น */
+export function roleFor(goal: GoalId | null, answers: Answers): string {
+  if (!goal) return ''
+  const field = questions.flatMap((q) => q.fields).find((f) => f.id === roleField[goal])
+  return answers[roleField[goal]]?.trim() || field?.options?.[0] || ''
 }
 
 export function audienceFor(goal: GoalId | null): string {
@@ -53,6 +71,7 @@ export function withDefaults(goal: GoalId | null, answers: Answers): Answers {
     slideStyle: 'เรียบง่าย อ่านง่าย',
     colors: 'ที่เข้ากับเนื้อหา',
     ...filled,
+    role: roleFor(goal, answers),
     subjectLabel: filled.subject === 'อื่นๆ' ? (filled.subjectOther ?? '') : (filled.subject ?? ''),
     deckType: info?.deckType ?? '',
     photoHint: info?.photoHint ?? '',
@@ -87,9 +106,9 @@ export interface BuiltPrompts {
 
 export function buildPrompts(goal: GoalId, answers: Answers, toolId: ToolId | null): BuiltPrompts {
   const tool = toolById(toolId)
-  const values = { ...withDefaults(goal, answers), slideSuffix: tool.slideSuffix }
+  const values = { ...withDefaults(goal, answers), slideSuffix: tool.slideSuffix, answerFormat: tool.promptSuffix }
   return {
-    content: `${fillTemplate(contentTemplateFor(goal).body, values)}\n${tool.promptSuffix}`,
+    content: fillTemplate(contentTemplateFor(goal).body, values),
     design: fillTemplate(designTemplate.body, values),
     tool,
   }
@@ -144,8 +163,9 @@ export function buildImagePrompt(goal: GoalId, answers: Answers, toolId: ToolId 
   const { subject, style, tool } = imageChoice(goal, answers, toolId)
   const values = withDefaults(goal, answers)
   const look = answers.imageLook?.trim()
-  const text = fillTemplate(templateFor('image', goal).body, {
+  return fillTemplate(templateFor('image', goal).body, {
     ...values,
+    imageToolSuffix: tool.suffix,
     imageSubjectDesc: subject.desc,
     imageStyleDesc: style.desc,
     imageCharacter: subject.character
@@ -154,7 +174,6 @@ export function buildImagePrompt(goal: GoalId, answers: Answers, toolId: ToolId 
     imageTheme: imageTheme(goal, values, subject),
     imageRatio: subject.ratio,
   })
-  return `${text}\n${tool.suffix}`
 }
 
 /** หัวข้อ "สร้างภาพ": ภาพตามที่นักเรียนบรรยาย */
@@ -162,13 +181,13 @@ export function buildFreeImagePrompt(answers: Answers, toolId: ToolId | null): s
   const style = imageStyles.find((s) => s.label === answers.imageStyle)
   const purpose = imagePurposes.find((p) => p.label === answers.imagePurpose)
   const tool = imageTools.find((t) => t.id === toolId) ?? imageTools[0]
-  const text = fillTemplate(templateFor('image', 'image').body, {
+  return fillTemplate(templateFor('image', 'image').body, {
     ...withDefaults('image', answers),
+    imageToolSuffix: tool.suffix,
     imageStyleDesc: style?.desc ?? '',
     imagePurposeExtra: purpose?.extra ?? '',
     imageRatio: purpose?.ratio ?? '',
   })
-  return `${text}\n${tool.suffix}`
 }
 
 export function buildImageRefinePrompt(refinementId: string): string {

@@ -1,21 +1,29 @@
+import type { ReactNode } from 'react'
 import { useTheme } from '../hooks/useTheme'
+import { StarCounter } from './Game'
 import { container } from './layout'
 
-export type View = 'wizard' | 'checker'
+export type View = 'lesson' | 'wizard' | 'checker'
 
 /** เมนูด้านบน: "สร้างภาพ" คือ wizard ที่เลือกหัวข้อสร้างภาพไว้แล้ว */
-export type Menu = 'create' | 'image' | 'checker'
+export type Menu = 'lesson' | 'create' | 'image' | 'checker'
 
-const tabs: { id: Menu; label: string }[] = [
-  { id: 'create', label: 'สร้าง' },
-  { id: 'image', label: 'สร้างภาพ' },
-  { id: 'checker', label: 'ตรวจ prompt' },
+const icon = (d: ReactNode) => (
+  <svg viewBox="0 0 24 24" className="size-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    {d}
+  </svg>
+)
+
+const tabs: { id: Menu; label: string; short: string; icon: ReactNode }[] = [
+  { id: 'lesson', label: 'เรียนรู้ RTCF', short: 'เรียนรู้', icon: icon(<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5zM4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5" />) },
+  { id: 'create', label: 'สร้าง prompt', short: 'สร้าง', icon: icon(<path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4" />) },
+  { id: 'image', label: 'สร้างภาพ', short: 'สร้างภาพ', icon: icon(<><rect x="3" y="4" width="18" height="16" rx="3" /><circle cx="9" cy="10" r="2" /><path d="M21 16l-5-5-9 9" /></>) },
+  { id: 'checker', label: 'ตรวจ prompt', short: 'ตรวจ', icon: icon(<><circle cx="11" cy="11" r="7" /><path d="M8 11l2 2 4-4M21 21l-5-5" /></>) },
 ]
 
 interface Props {
   active: Menu
   onMenu: (menu: Menu) => void
-  onHome: () => void
 }
 
 function ThemeIcon({ dark }: { dark: boolean }) {
@@ -31,46 +39,54 @@ function ThemeIcon({ dark }: { dark: boolean }) {
   )
 }
 
-export function Header({ active, onMenu, onHome }: Props) {
+export function Header({ active, onMenu }: Props) {
   const { dark, toggle } = useTheme()
 
+  const nav = (
+    <nav aria-label="เมนูหลัก" className="w-full md:w-auto">
+      <ul className="grid grid-cols-4 gap-1 rounded-2xl bg-sunken p-1 md:flex">
+        {tabs.map((tab) => {
+          const on = active === tab.id
+          return (
+            <li key={tab.id}>
+              <button
+                type="button"
+                onClick={() => onMenu(tab.id)}
+                aria-current={on ? 'page' : undefined}
+                aria-label={tab.label}
+                className={`flex min-h-11 w-full flex-col items-center justify-center gap-0.5 rounded-xl px-2 text-xs font-semibold transition duration-200 active:scale-95 sm:flex-row sm:gap-1.5 sm:text-[15px] md:px-3 ${
+                  on ? 'bg-surface text-brand-700 shadow-soft dark:text-brand-200' : 'text-muted hover:text-ink'
+                }`}
+              >
+                <span className={on ? 'animate-pop' : ''}>{tab.icon}</span>
+                <span className="whitespace-nowrap lg:hidden">{tab.short}</span>
+                <span className="hidden whitespace-nowrap lg:inline">{tab.label}</span>
+              </button>
+            </li>
+          )
+        })}
+      </ul>
+    </nav>
+  )
+
   return (
-    <header className="sticky top-0 z-20 border-b border-line bg-bg/90 pt-[env(safe-area-inset-top)] backdrop-blur">
-      <div className={`${container} flex h-14 items-center gap-1 sm:gap-2 lg:h-16`}>
+    <header className="sticky top-0 z-20 border-b border-line bg-bg/85 pt-[env(safe-area-inset-top)] backdrop-blur-md">
+      <div className={`${container} flex flex-wrap items-center gap-2 py-2 md:flex-nowrap md:gap-3`}>
         <button
           type="button"
-          onClick={onHome}
-          aria-label="PromptFolio หน้าแรก"
-          // จอแคบมาก (ต่ำกว่า 360px) ซ่อนโลโก้ ให้เมนูมีที่พอ
-          className="mr-auto flex items-center gap-2 rounded-xl font-display text-lg font-bold max-[359px]:hidden"
+          onClick={() => onMenu('lesson')}
+          aria-label="PromptFolio หน้าบทเรียน"
+          className="mr-auto flex items-center gap-2 rounded-xl font-display text-lg font-bold md:mr-0"
         >
-          <img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" className="size-7 shrink-0" />
-          <span aria-hidden="true" className="hidden min-[420px]:inline">
-            PromptFolio
-          </span>
+          <img src={`${import.meta.env.BASE_URL}favicon.svg`} alt="" className="size-8 shrink-0" />
+          <span aria-hidden="true">PromptFolio</span>
         </button>
-        <nav aria-label="เมนูหลัก" className="max-[359px]:mr-auto">
-          <ul className="flex rounded-2xl bg-sunken p-1">
-            {tabs.map((tab) => (
-              <li key={tab.id}>
-                <button
-                  type="button"
-                  onClick={() => onMenu(tab.id)}
-                  aria-current={active === tab.id ? 'page' : undefined}
-                  className={`min-h-10 whitespace-nowrap rounded-xl px-2.5 text-sm font-semibold transition sm:px-3 sm:text-[15px] ${
-                    active === tab.id ? 'bg-surface text-ink shadow-soft' : 'text-muted hover:text-ink'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </nav>
+        <div className="order-3 w-full md:order-none md:mx-auto md:w-auto">{nav}</div>
+        <StarCounter />
         <button
           type="button"
           onClick={toggle}
-          className="grid size-10 shrink-0 place-items-center rounded-xl text-muted hover:bg-sunken hover:text-ink sm:size-11"
+          className="grid size-10 shrink-0 place-items-center rounded-xl text-muted hover:bg-sunken hover:text-ink"
           aria-label={dark ? 'เปลี่ยนเป็นโหมดสว่าง' : 'เปลี่ยนเป็นโหมดมืด'}
         >
           <ThemeIcon dark={dark} />

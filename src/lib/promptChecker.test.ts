@@ -20,11 +20,27 @@ describe('analyzePrompt', () => {
   })
 })
 
+describe('ส่วน RTCF', () => {
+  it('prompt สั้นๆ ยังไม่ครบ 4 ส่วน', () => {
+    const a = analyzePrompt(weakSample)
+    expect(a.complete).toBe(false)
+    expect(a.parts.R).toBe('none')
+  })
+
+  it('ตรวจเจอแต่ละส่วนแยกกัน', () => {
+    const a = analyzePrompt('คุณคือครู ช่วยสรุปเรื่องน้ำ ฉันเป็นนักเรียน ม.3 ตอบเป็นตาราง')
+    expect(a.parts).toMatchObject({ R: 'all', T: 'all', C: 'some', F: 'some' })
+    expect(a.complete).toBe(true)
+  })
+})
+
 describe('improvePrompt', () => {
   it('เติมประโยคของข้อที่ขาดต่อท้าย แล้วคะแนนเต็ม', () => {
     const improved = improvePrompt(weakSample, analyzePrompt(weakSample))
     expect(improved.startsWith(weakSample)).toBe(true)
     const again = analyzePrompt(improved)
     expect(again.passed).toBe(again.total)
+    // ส่วนที่เติมจัดเป็นหัวข้อ RTCF
+    expect(improved).toContain('บทบาท (Role): คุณคือ')
   })
 })

@@ -53,8 +53,8 @@ describe('buildPrompts', () => {
   it('สื่อนำเสนอ ใส่วิชาและหัวข้อ', () => {
     const { content, design } = buildPrompts('present', present, 'chatgpt')
     expect(countBlanks(content)).toBe(0)
-    expect(content).toContain('วิชา/กิจกรรม: วิทยาศาสตร์')
-    expect(content).toContain('เรื่อง: ระบบสุริยะ')
+    expect(content).toContain('- วิชา/กิจกรรม: วิทยาศาสตร์')
+    expect(content).toContain('เรื่อง "ระบบสุริยะ"')
     expect(content).toContain('ภาษาสุภาพ เข้าใจง่าย')
     expect(content).not.toContain('เวลานำเสนอ') // ไม่ได้เลือก จึงตัดทิ้ง
     expect(design).toContain('ทำเป็นสไลด์นำเสนอ 8 หน้า')
@@ -86,15 +86,16 @@ describe('buildRefinePrompt', () => {
 
 describe('หน้าคำถาม', () => {
   it('ช่อง "ระบุวิชา" แสดงเฉพาะเมื่อเลือก "อื่นๆ"', () => {
-    const q = visibleQuestions('present')[0]
+    const q = visibleQuestions('present').find((x) => x.id === 'subject')!
     expect(visibleFields(q, 'present', { subject: 'ศิลปะ' }).map((f) => f.id)).not.toContain('subjectOther')
     expect(visibleFields(q, 'present', { subject: 'อื่นๆ' }).map((f) => f.id)).toContain('subjectOther')
   })
 
   it('ชี้หน้าแรกที่ช่องบังคับยังว่าง', () => {
     expect(firstIncompletePage('m4', {})).toBe(0)
-    expect(firstIncompletePage('m4', m4)).toBe(-1)
-    expect(firstIncompletePage('present', { ...present, subject: 'อื่นๆ' })).toBe(0)
+    expect(firstIncompletePage('m4', { ...m4, roleM4: 'ที่ปรึกษาการทำพอร์ตโฟลิโอสำหรับนักเรียนไทย' })).toBe(-1)
+    // หน้าแรกคือเลือกบทบาท (R) ถัดมาคือวิชา
+    expect(firstIncompletePage('present', { ...present, rolePresent: 'ครูที่สอนวิชานี้ให้เข้าใจง่าย', subject: 'อื่นๆ' })).toBe(1)
   })
 
   it('"กลับไปเติม" ชี้หน้าที่มีช่องซึ่งกลายเป็น [__]', () => {
@@ -159,16 +160,18 @@ describe('หัวข้อสร้างภาพ', () => {
     imageStyle: 'สีน้ำ',
   }
 
-  it('มีคำถาม 2 หน้า ไม่ถามชื่อหรือจำนวนหน้า', () => {
-    expect(visibleQuestions('image').map((q) => q.id)).toEqual(['imageWhat', 'imageLookAndFeel'])
+  it('มีคำถาม 4 หน้า เรียง R → T → C → F ไม่ถามชื่อหรือจำนวนหน้า', () => {
+    expect(visibleQuestions('image').map((q) => q.id)).toEqual(['role', 'imageWhat', 'imageUse', 'imageStyle'])
   })
 
   it('สร้าง prompt จากคำบรรยาย การใช้งาน และสไตล์', async () => {
     const { buildFreeImagePrompt } = await import('./promptBuilder')
     const text = buildFreeImagePrompt(answers, 'chatgpt')
-    expect(text).toContain('สร้างภาพ: แมวใส่ชุดนักเรียน / นั่งอ่านหนังสือ')
-    expect(text).toContain('สไตล์: ภาพวาดสีน้ำ')
-    expect(text).toContain('ใช้สำหรับ: ปกรายงาน (เว้นพื้นที่ว่างด้านบนไว้ใส่ชื่อเรื่องทีหลัง)')
+    expect(text).toContain('บทบาท (Role): คุณคือนักวาดภาพประกอบการ์ตูน') // ยังไม่เลือก ใช้บทบาทแรก
+    expect(text).toContain('งาน (Task): สร้างภาพ แมวใส่ชุดนักเรียน / นั่งอ่านหนังสือ')
+    expect(text).toContain('- สไตล์: ภาพวาดสีน้ำ')
+    expect(text).toContain('- ใช้สำหรับ: ปกรายงาน (เว้นพื้นที่ว่างด้านบนไว้ใส่ชื่อเรื่องทีหลัง)')
+    expect(text).not.toContain('คนดูภาพ') // ไม่ได้เลือก จึงตัดทิ้ง
     expect(text).toContain('สัดส่วนภาพ 3:4 (แนวตั้ง)')
     expect(text).not.toContain('อารมณ์ของภาพ') // ไม่ได้เลือก จึงตัดทิ้ง
     expect(text).toContain('ห้ามใส่ตัวหนังสือ')
@@ -181,5 +184,41 @@ describe('หัวข้อสร้างภาพ', () => {
     const fields = questions.flatMap((q) => q.fields)
     expect(fields.find((f) => f.id === 'imagePurpose')?.options).toEqual(imagePurposes.map((p) => p.label))
     expect(fields.find((f) => f.id === 'imageStyle')?.options).toEqual(imageStyles.map((s) => s.label))
+  })
+})
+
+describe('โครงสร้าง RTCF', () => {
+  it('prompt ทุกแบบมีครบ 4 ส่วน และเรียง R → T → C → F', async () => {
+    const { buildFreeImagePrompt, buildImagePrompt } = await import('./promptBuilder')
+    const { splitSections } = await import('./rtcf')
+    const texts = [
+      buildPrompts('m4', m4, 'chatgpt').content,
+      buildPrompts('m4', m4, 'chatgpt').design,
+      buildPrompts('present', present, 'gemini').content,
+      buildImagePrompt('present', present, 'chatgpt'),
+      buildFreeImagePrompt({ imageDesc: 'แมว', imagePurpose: 'สไลด์', imageStyle: 'อนิเมะ' }, 'chatgpt'),
+    ]
+    for (const t of texts) {
+      expect(splitSections(t).map((sec) => sec.part)).toEqual(['R', 'T', 'C', 'F'])
+    }
+  })
+
+  it('ใช้บทบาทที่นักเรียนเลือก', () => {
+    const { content } = buildPrompts('present', { ...present, rolePresent: 'ยูทูบเบอร์สายความรู้ที่เล่าเรื่องสนุก' }, 'chatgpt')
+    expect(content.split('\n')[0]).toBe('บทบาท (Role): คุณคือยูทูบเบอร์สายความรู้ที่เล่าเรื่องสนุก')
+  })
+
+  it('ตัดหัวข้อส่วนที่ไม่มีรายการเหลือทิ้ง', () => {
+    expect(fillTemplate('บริบท (Context):\n- รางวัล: {{awards}}\nรูปแบบ (Format):\n- สั้นๆ', {})).toBe('รูปแบบ (Format):\n- สั้นๆ')
+  })
+
+  it('ทุกหน้าคำถามบอกส่วน RTCF และแต่ละหัวข้อเริ่มด้วยบทบาท (R)', async () => {
+    const { questions } = await import('../data')
+    for (const q of questions) expect(['R', 'T', 'C', 'F']).toContain(q.part)
+    for (const goal of ['m4', 'present', 'image'] as const) {
+      const parts = visibleQuestions(goal).map((q) => q.part)
+      expect(parts[0], goal).toBe('R')
+      expect(new Set(parts), goal).toEqual(new Set(['R', 'T', 'C', 'F']))
+    }
   })
 })

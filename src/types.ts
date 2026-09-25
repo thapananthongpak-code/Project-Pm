@@ -1,5 +1,8 @@
 export type GoalId = 'm4' | 'present' | 'image'
 
+/** 4 ส่วนของ prompt ที่ดี: Role, Task, Context, Format */
+export type RtcfPart = 'R' | 'T' | 'C' | 'F'
+
 export interface Goal {
   id: GoalId
   title: string
@@ -38,8 +41,12 @@ export interface Field {
 
 export interface Question {
   id: string
+  /** หน้านี้เติมส่วนไหนของ RTCF */
+  part: RtcfPart
   title: string | ByGoal
   subtitle: string | ByGoal
+  /** มาสคอตอธิบายว่าทำไมต้องใส่ข้อมูลหน้านี้ */
+  why: string | ByGoal
   fields: Field[]
   goals?: GoalId[]
 }

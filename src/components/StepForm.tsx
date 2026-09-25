@@ -4,6 +4,9 @@ import { visibleFields, visibleQuestions } from '../lib/visible'
 import type { Answers, GoalId } from '../types'
 import { ActionBar } from './ActionBar'
 import { FieldInput } from './FieldInput'
+import { useGame } from './Game'
+import { MascotTip } from './Mascot'
+import { RtcfTag } from './Rtcf'
 
 interface Props {
   goal: GoalId
@@ -22,6 +25,7 @@ export function StepForm({ goal, page, answers, onAnswer, onPage, onBack, onDone
   const fields = visibleFields(question, goal, answers)
   const isLast = index === pages.length - 1
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const { award } = useGame()
 
   function handleNext() {
     const missing = fields.filter((f) => f.required && !answers[f.id]?.trim())
@@ -34,6 +38,8 @@ export function StepForm({ goal, page, answers, onAnswer, onPage, onBack, onDone
       return
     }
     setErrors({})
+    // ตอบครบ 1 หน้า ได้ 10 ดาว (ครั้งเดียวต่อหน้า)
+    award({ key: `page:${goal}:${question.id}`, stars: 10 })
     if (isLast) onDone()
     else onPage(index + 1)
   }
@@ -46,10 +52,21 @@ export function StepForm({ goal, page, answers, onAnswer, onPage, onBack, onDone
 
   return (
     <section key={question.id} aria-labelledby="step-heading" className="animate-step-in">
-      <h2 id="step-heading" tabIndex={-1} className="text-2xl font-bold">
-        {byGoal(question.title, goal)}
-      </h2>
-      <p className="mt-1 text-muted">{byGoal(question.subtitle, goal)}</p>
+      <div className="flex items-center gap-3">
+        <span className="animate-bounce-in">
+          <RtcfTag part={question.part} size="lg" />
+        </span>
+        <div>
+          <h2 id="step-heading" tabIndex={-1} className="text-2xl font-bold lg:text-3xl">
+            {byGoal(question.title, goal)}
+          </h2>
+          <p className="text-muted">{byGoal(question.subtitle, goal)}</p>
+        </div>
+      </div>
+
+      <MascotTip mood={Object.keys(errors).some((k) => errors[k]) ? 'think' : 'idle'} className="mt-4">
+        {byGoal(question.why, goal)}
+      </MascotTip>
 
       <form
         id="step-form"

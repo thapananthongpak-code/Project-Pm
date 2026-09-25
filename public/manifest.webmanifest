@@ -1,7 +1,7 @@
 {
   "name": "PromptFolio",
   "short_name": "PromptFolio",
-  "description": "ตอบคำถามง่ายๆ ได้ prompt ทำสไลด์และสร้างภาพ สำหรับนักเรียน ม.3",
+  "description": "สื่อการสอนการเขียน Prompt ตามหลัก RTCF สำหรับนักเรียน ม.3",
   "lang": "th",
   "start_url": "./",
   "scope": "./",

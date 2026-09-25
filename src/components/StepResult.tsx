@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { goals, imageRefinements, imageTools, refinements } from '../data'
 import type { Step } from '../hooks/useWizard'
 import {
@@ -9,10 +10,15 @@ import {
   firstBlankPage,
   toolById,
 } from '../lib/promptBuilder'
+import { celebrate } from '../lib/confetti'
+import { PARTS } from '../lib/rtcf'
 import type { Answers, GoalId, ToolId } from '../types'
+import { useGame } from './Game'
+import { Mascot } from './Mascot'
 import { ImagePrompt } from './ImagePrompt'
 import { PromptCard } from './PromptCard'
 import { RefinePanel } from './RefinePanel'
+import { RtcfTag } from './Rtcf'
 
 interface Props {
   goal: GoalId
@@ -38,6 +44,17 @@ function BlankWarning({ blanks, onFix }: { blanks: number; onFix: () => void }) 
 export function StepResult({ goal, answers, toolId, onAnswer, onGoTo, onReset }: Props) {
   const tool = toolById(toolId)
   const goalInfo = goals.find((g) => g.id === goal)
+  const { award } = useGame()
+
+  // ภารกิจสำเร็จ: พลุกระดาษ + ดาว + เหรียญ (ดาว/เหรียญได้ครั้งเดียว)
+  useEffect(() => {
+    celebrate('big')
+    award(
+      goal === 'image'
+        ? { key: 'done:image', stars: 50, badge: 'artist' }
+        : { key: `done:${goal}`, stars: 50, badge: 'first-prompt' },
+    )
+  }, [goal, award])
 
   let body
   if (goal === 'image') {
@@ -85,10 +102,22 @@ export function StepResult({ goal, answers, toolId, onAnswer, onGoTo, onReset }:
 
   return (
     <section aria-labelledby="step-heading" className="animate-step-in">
-      <h2 id="step-heading" tabIndex={-1} className="text-2xl font-bold lg:text-3xl">
-        Prompt พร้อมแล้ว
-      </h2>
-      <p className="mt-1 text-muted">ทำตามทีละขั้นใน {tool.name}</p>
+      <div className="flex items-center gap-4">
+        <Mascot mood="happy" className="size-20 shrink-0 sm:size-24" />
+        <div>
+          <h2 id="step-heading" tabIndex={-1} className="animate-bounce-in text-2xl font-bold lg:text-3xl">
+            ภารกิจสำเร็จ!
+          </h2>
+          <p className="text-muted">prompt ของคุณมีครบทั้ง 4 ส่วน นำไปใช้ใน {tool.name} ได้เลย</p>
+          <div className="mt-2 flex gap-1.5">
+            {PARTS.map((p, i) => (
+              <span key={p} className="animate-bounce-in" style={{ animationDelay: `${300 + i * 150}ms` }}>
+                <RtcfTag part={p} size="md" />
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
 
       {body}
 
