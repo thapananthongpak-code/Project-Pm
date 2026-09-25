@@ -4,7 +4,6 @@ import { visibleFields, visibleQuestions } from '../lib/visible'
 import type { Answers, GoalId } from '../types'
 import { ActionBar } from './ActionBar'
 import { FieldInput } from './FieldInput'
-import { useGame } from './Game'
 import { MascotTip } from './Mascot'
 import { RtcfTag } from './Rtcf'
 
@@ -25,7 +24,6 @@ export function StepForm({ goal, page, answers, onAnswer, onPage, onBack, onDone
   const fields = visibleFields(question, goal, answers)
   const isLast = index === pages.length - 1
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const { award } = useGame()
 
   function handleNext() {
     const missing = fields.filter((f) => f.required && !answers[f.id]?.trim())
@@ -38,8 +36,6 @@ export function StepForm({ goal, page, answers, onAnswer, onPage, onBack, onDone
       return
     }
     setErrors({})
-    // ตอบครบ 1 หน้า ได้ 10 ดาว (ครั้งเดียวต่อหน้า)
-    award({ key: `page:${goal}:${question.id}`, stars: 10 })
     if (isLast) onDone()
     else onPage(index + 1)
   }

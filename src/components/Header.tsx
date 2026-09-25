@@ -1,12 +1,11 @@
 import type { ReactNode } from 'react'
 import { useTheme } from '../hooks/useTheme'
-import { StarCounter } from './Game'
 import { container } from './layout'
 
-export type View = 'lesson' | 'wizard' | 'checker'
+export type View = 'lesson' | 'wizard'
 
 /** เมนูด้านบน: "สร้างภาพ" คือ wizard ที่เลือกหัวข้อสร้างภาพไว้แล้ว */
-export type Menu = 'lesson' | 'create' | 'image' | 'checker'
+export type Menu = 'lesson' | 'create' | 'image'
 
 const icon = (d: ReactNode) => (
   <svg viewBox="0 0 24 24" className="size-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -18,7 +17,6 @@ const tabs: { id: Menu; label: string; short: string; icon: ReactNode }[] = [
   { id: 'lesson', label: 'เรียนรู้ RTCF', short: 'เรียนรู้', icon: icon(<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5zM4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5" />) },
   { id: 'create', label: 'สร้าง prompt', short: 'สร้าง', icon: icon(<path d="M4 20h4L19 9l-4-4L4 16zM14 6l4 4" />) },
   { id: 'image', label: 'สร้างภาพ', short: 'สร้างภาพ', icon: icon(<><rect x="3" y="4" width="18" height="16" rx="3" /><circle cx="9" cy="10" r="2" /><path d="M21 16l-5-5-9 9" /></>) },
-  { id: 'checker', label: 'ตรวจ prompt', short: 'ตรวจ', icon: icon(<><circle cx="11" cy="11" r="7" /><path d="M8 11l2 2 4-4M21 21l-5-5" /></>) },
 ]
 
 interface Props {
@@ -44,7 +42,7 @@ export function Header({ active, onMenu }: Props) {
 
   const nav = (
     <nav aria-label="เมนูหลัก" className="w-full md:w-auto">
-      <ul className="grid grid-cols-4 gap-1 rounded-2xl bg-sunken p-1 md:flex">
+      <ul className="grid grid-cols-3 gap-1 rounded-2xl bg-sunken p-1 md:flex">
         {tabs.map((tab) => {
           const on = active === tab.id
           return (
@@ -82,7 +80,6 @@ export function Header({ active, onMenu }: Props) {
           <span aria-hidden="true">PromptFolio</span>
         </button>
         <div className="order-3 w-full md:order-none md:mx-auto md:w-auto">{nav}</div>
-        <StarCounter />
         <button
           type="button"
           onClick={toggle}

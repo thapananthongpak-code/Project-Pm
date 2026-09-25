@@ -1,26 +1,19 @@
 import { describe, expect, it } from 'vitest'
 import { badges, lesson } from '../data'
-import { applyAward, emptyGame, reviveGame } from './game'
+import { applyBadge, emptyGame, reviveGame } from './game'
 import { splitSections } from './rtcf'
 
-describe('ระบบดาวและเหรียญ', () => {
-  it('ให้ดาวครั้งเดียวต่อ key', () => {
-    const once = applyAward(emptyGame, { key: 'page:m4:role', stars: 10 })
-    expect(once.stars).toBe(10)
-    expect(applyAward(once, { key: 'page:m4:role', stars: 10 })).toBe(once)
-    expect(applyAward(once, { key: 'page:m4:target', stars: 10 }).stars).toBe(20)
+describe('ระบบเหรียญ', () => {
+  it('ได้เหรียญครั้งเดียว ไม่ซ้ำ', () => {
+    const once = applyBadge(emptyGame, 'first-prompt')
+    expect(once.badges).toEqual(['first-prompt'])
+    expect(applyBadge(once, 'first-prompt')).toBe(once)
+    expect(applyBadge(once, 'artist').badges).toEqual(['first-prompt', 'artist'])
   })
 
-  it('ได้เหรียญไม่ซ้ำ', () => {
-    const a = applyAward(emptyGame, { key: 'done:m4', stars: 50, badge: 'first-prompt' })
-    const b = applyAward(a, { key: 'done:present', stars: 50, badge: 'first-prompt' })
-    expect(b.badges).toEqual(['first-prompt'])
-    expect(b.stars).toBe(100)
-  })
-
-  it('อ่านข้อมูลเสียแล้วกลับเป็นค่าเริ่มต้น', () => {
+  it('อ่านข้อมูลเสียหรือข้อมูลเก่า (มีดาว) แล้วเหลือแค่เหรียญ', () => {
     expect(reviveGame('xx')).toEqual(emptyGame)
-    expect(reviveGame({ stars: -5, badges: [1, 'learner'] })).toEqual({ stars: 0, badges: ['learner'], claimed: [] })
+    expect(reviveGame({ stars: 120, badges: [1, 'learner'], claimed: ['a'] })).toEqual({ badges: ['learner'] })
   })
 })
 
@@ -39,8 +32,7 @@ describe('บทเรียน', () => {
   })
 
   it('เหรียญที่เว็บให้มีอยู่ในรายการเหรียญ', () => {
-    const ids = badges.map((b) => b.id)
-    for (const id of ['learner', 'sorter', 'sharp-eye', 'first-prompt', 'artist', 'checker']) expect(ids).toContain(id)
+    expect(badges.map((b) => b.id).sort()).toEqual(['artist', 'first-prompt', 'learner', 'sharp-eye', 'sorter'])
   })
 
   it('แยกส่วน prompt ตามหัวข้อ', () => {

@@ -46,14 +46,10 @@ export function StepResult({ goal, answers, toolId, onAnswer, onGoTo, onReset }:
   const goalInfo = goals.find((g) => g.id === goal)
   const { award } = useGame()
 
-  // ภารกิจสำเร็จ: พลุกระดาษ + ดาว + เหรียญ (ดาว/เหรียญได้ครั้งเดียว)
+  // ภารกิจสำเร็จ: พลุกระดาษ + เหรียญ (เหรียญได้ครั้งเดียว)
   useEffect(() => {
     celebrate('big')
-    award(
-      goal === 'image'
-        ? { key: 'done:image', stars: 50, badge: 'artist' }
-        : { key: `done:${goal}`, stars: 50, badge: 'first-prompt' },
-    )
+    award(goal === 'image' ? 'artist' : 'first-prompt')
   }, [goal, award])
 
   let body

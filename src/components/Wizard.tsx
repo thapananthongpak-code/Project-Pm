@@ -44,7 +44,7 @@ export function Wizard({ wizard }: { wizard: WizardApi }) {
                   <RtcfTag part={p} size="sm" />
                 </span>
               ))}
-              <span className="ml-1 self-center text-sm text-muted">ผ่านทีละด่าน เก็บดาวไปด้วย</span>
+              <span className="ml-1 self-center text-sm text-muted">ผ่านทีละด่าน สะสมเหรียญ</span>
             </div>
           </div>
         </div>

@@ -55,7 +55,6 @@ export function QuizSort() {
     if (p === item.answer) {
       setScore((s) => s + 1)
       setStreak((s) => s + 1)
-      award({ key: `sort:${i}`, stars: 10 })
     } else {
       setStreak(0)
     }
@@ -63,7 +62,7 @@ export function QuizSort() {
 
   function next() {
     const last = i === items.length - 1
-    if (last && score >= 8) award({ key: 'sort:badge', badge: 'sorter' })
+    if (last && score >= 8) award('sorter')
     setPicked(null)
     setI(i + 1)
   }
@@ -152,12 +151,11 @@ export function QuizPick() {
     setPicked(n)
     if (n === item.better) {
       setScore((s) => s + 1)
-      award({ key: `pick:${i}`, stars: 10 })
     }
   }
 
   function next() {
-    if (i === items.length - 1 && score === items.length) award({ key: 'pick:badge', badge: 'sharp-eye' })
+    if (i === items.length - 1 && score === items.length) award('sharp-eye')
     setPicked(null)
     setI(i + 1)
   }

@@ -6,7 +6,7 @@ import type { RtcfPart } from '../types'
 import { BadgeShelf } from './BadgeShelf'
 import { useGame } from './Game'
 import type { Menu } from './Header'
-import { Mascot, MascotTip } from './Mascot'
+import { Mascot, MASCOT_NAME, MascotTip } from './Mascot'
 import { QuizPick, QuizSort } from './Quiz'
 import { RtcfTag, RtcfText } from './Rtcf'
 import { SCHOOL } from './layout'
@@ -49,11 +49,10 @@ export function Lesson({ onGo }: Props) {
   const { award, reset } = useGame()
   const slide = slides[index]
 
-  // ดูสไลด์ใหม่ได้ 5 ดาว ดูครบได้เหรียญ
+  // ดูบทเรียนถึงสไลด์สุดท้าย ได้เหรียญ
   useEffect(() => {
-    award({ key: `slide:${slide.id}`, stars: 5 })
-    if (index === slides.length - 1) award({ key: 'lesson:done', stars: 20, badge: 'learner' })
-  }, [slide.id, index, award])
+    if (index === slides.length - 1) award('learner')
+  }, [index, award])
 
   const go = useCallback(
     (to: number) => {
@@ -194,7 +193,7 @@ function SlideBody({
               </span>
             ))}
           </div>
-          <p className="text-muted">สวัสดี! ฉันชื่อน้องพรอมต์ จะพาไปรู้จัก 4 ส่วนของ prompt ที่ดี</p>
+          <p className="text-muted">สวัสดีน้องๆ! {MASCOT_NAME}จะพาไปรู้จัก 4 ส่วนของ prompt ที่ดี</p>
         </div>
       )
 
@@ -318,7 +317,7 @@ function SlideBody({
       return (
         <div className="space-y-4">
           <h2 className="text-2xl font-bold sm:text-4xl">เกม: ประโยคนี้คือส่วนไหน?</h2>
-          <p className="text-muted">อ่านประโยค แล้วกด R, T, C หรือ F ตอบถูกได้ 10 ดาว</p>
+          <p className="text-muted">อ่านประโยค แล้วกด R, T, C หรือ F ถูก 8 ข้อขึ้นไปได้เหรียญ</p>
           <QuizSort />
         </div>
       )
@@ -343,25 +342,22 @@ function SlideBody({
             </div>
           </div>
           <BadgeShelf />
-          <div className="grid gap-2 sm:grid-cols-3">
+          <div className="grid gap-2 sm:grid-cols-2">
             <button type="button" onClick={() => onGo('create')} className="btn-primary">
               ภารกิจทำสไลด์
             </button>
             <button type="button" onClick={() => onGo('image')} className="btn-ghost">
               ภารกิจสร้างภาพ
             </button>
-            <button type="button" onClick={() => onGo('checker')} className="btn-ghost">
-              ตรวจ prompt
-            </button>
           </div>
           <button
             type="button"
             onClick={() => {
-              if (window.confirm('ล้างดาวและเหรียญทั้งหมด (สำหรับให้คนถัดไปใช้เครื่องนี้)?')) onReset()
+              if (window.confirm('ล้างเหรียญทั้งหมด (สำหรับให้คนถัดไปใช้เครื่องนี้)?')) onReset()
             }}
             className="min-h-10 w-full rounded-xl text-sm text-muted underline underline-offset-4 hover:text-ink"
           >
-            ล้างดาวและเหรียญ (ใช้เครื่องร่วมกัน)
+            ล้างเหรียญ (ใช้เครื่องร่วมกัน)
           </button>
         </div>
       )
