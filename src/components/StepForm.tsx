@@ -31,8 +31,15 @@ export function StepForm({ goal, page, answers, onAnswer, onPage, onBack, onDone
   const [typing, setTyping] = useState(0)
   // ผู้ช่วยให้กำลังใจเมื่อผ่านหน้าก่อน และทำท่าเหงื่อตกเมื่อลืมกรอก
   const lead = useMemo(
-    () => (hasError ? randomLine('oops') : index === 0 ? 'เริ่มภารกิจกันเลย!' : randomLine('cheers')),
-    [hasError, index],
+    () =>
+      hasError
+        ? randomLine('oops')
+        : index === 0
+          ? 'เริ่มภารกิจกันเลย!'
+          : isLast
+            ? randomLine('almost')
+            : randomLine('cheers'),
+    [hasError, index, isLast],
   )
 
   function handleNext() {

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { lesson, rtcf } from '../data'
-import { PERFECT_BONUS, quizCoins } from '../lib/game'
+import { dailyCount, FULL_ROUNDS_PER_DAY, perfectBonus, quizCoins } from '../lib/game'
 import { PARTS, partStyle } from '../lib/rtcf'
 import type { RtcfPart } from '../types'
 import { CoinIcon, useGame } from './Game'
@@ -52,6 +52,7 @@ function Finished({
   total,
   earned,
   perfect,
+  tired,
   badgeText,
   onRetry,
 }: {
@@ -59,9 +60,13 @@ function Finished({
   total: number
   earned: number
   perfect: boolean
+  /** รอบนี้เกินจำนวนรอบเต็มต่อวันแล้ว */
+  tired: boolean
   badgeText?: string
   onRetry: () => void
 }) {
+  const { game } = useGame()
+  const nextTired = dailyCount(game, 'quizRounds') >= FULL_ROUNDS_PER_DAY
   const { buddy } = useBuddy()
   return (
     <div className="flex animate-bounce-in flex-col items-center gap-3 py-4 text-center">
@@ -72,12 +77,18 @@ function Finished({
       <p className="flex items-center gap-1 text-lg font-bold text-accent-700 dark:text-accent-300">
         <CoinIcon className="size-6" />
         รอบนี้ได้ +{earned} เหรียญ
-        {perfect && <span className="text-sm">(รวมโบนัสถูกหมด +{PERFECT_BONUS})</span>}
+        {perfect && <span className="text-sm">(รวมโบนัสถูกหมด +{perfectBonus(tired)})</span>}
       </p>
       <p className="text-muted">
         {perfect ? 'ถูกหมดเลย เก่งสุดๆ' : 'เล่นอีกรอบ ได้เหรียญเพิ่มอีกนะ'}
         {badgeText && ` · ${badgeText}`} {buddy.ending}
       </p>
+      {nextTired && (
+        <p className="max-w-sm rounded-2xl bg-sunken px-3 py-2 text-sm text-muted">
+          วันนี้เล่นครบ {FULL_ROUNDS_PER_DAY} รอบแล้ว รอบต่อไปได้เหรียญครึ่งเดียว พรุ่งนี้กลับมาได้เต็มเหมือนเดิม
+          ลองไปสร้าง prompt ในภารกิจดูไหม ได้เหรียญเยอะกว่านะ
+        </p>
+      )}
       <button type="button" onClick={onRetry} className="btn-primary">
         เล่นอีกรอบ
       </button>
@@ -90,7 +101,9 @@ export const quizDoneKey = (id: 'sort' | 'pick') => `quizdone:${id}`
 
 /** ติดตามคะแนน/ติดกัน/เหรียญของ 1 รอบ */
 function useRound(total: number, id: 'sort' | 'pick') {
-  const { award } = useGame()
+  const { game, award } = useGame()
+  // ดูตอนเริ่มรอบ: เล่นเกินรอบเต็มของวันนี้แล้วหรือยัง (ไม่เปลี่ยนกลางรอบ)
+  const [tired, setTired] = useState(() => dailyCount(game, 'quizRounds') >= FULL_ROUNDS_PER_DAY)
   const [score, setScore] = useState(0)
   const [streak, setStreak] = useState(0)
   const [earned, setEarned] = useState(0)
@@ -103,7 +116,7 @@ function useRound(total: number, id: 'sort' | 'pick') {
       return
     }
     const nextStreak = streak + 1
-    const coins = quizCoins(nextStreak)
+    const coins = quizCoins(nextStreak, tired)
     // ไม่มี key = ได้เหรียญทุกครั้งที่ตอบถูก (เล่นซ้ำได้เหรียญเพิ่ม)
     award({ coins })
     if (nextStreak >= 5) award({ key: 'combo-5', badge: 'combo-5' })
@@ -116,21 +129,22 @@ function useRound(total: number, id: 'sort' | 'pick') {
   /** จบรอบ: นับรอบ ปลดล็อกสไลด์ถัดไป และถูกหมดได้โบนัส */
   function finish(finalScore: number) {
     award({ key: quizDoneKey(id) })
-    award({ count: 'quizRounds' })
+    award({ count: 'quizRounds', daily: 'quizRounds' })
     if (finalScore === total) {
-      award({ coins: PERFECT_BONUS })
-      setEarned((e) => e + PERFECT_BONUS)
+      award({ coins: perfectBonus(tired) })
+      setEarned((e) => e + perfectBonus(tired))
     }
   }
 
   function reset() {
+    setTired(dailyCount(game, 'quizRounds') >= FULL_ROUNDS_PER_DAY)
     setScore(0)
     setStreak(0)
     setEarned(0)
     setLastGain(0)
   }
 
-  return { score, streak, earned, lastGain, answer, finish, reset }
+  return { score, streak, earned, lastGain, tired, answer, finish, reset }
 }
 
 /** เกมแยกประเภท: ประโยคนี้คือ R, T, C หรือ F */
@@ -167,6 +181,7 @@ export function QuizSort() {
         total={items.length}
         earned={round.earned}
         perfect={round.score === items.length}
+        tired={round.tired}
         badgeText={round.score >= 8 ? 'ได้ตรารางวัลนักแยก RTCF' : undefined}
         onRetry={() => {
           setItems(shuffled(lesson.sort))
@@ -273,6 +288,7 @@ export function QuizPick() {
         total={items.length}
         earned={round.earned}
         perfect={perfect}
+        tired={round.tired}
         badgeText={perfect ? 'ได้ตรารางวัลตาไว' : undefined}
         onRetry={() => {
           setItems(shuffledPick())

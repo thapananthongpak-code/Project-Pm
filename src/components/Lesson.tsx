@@ -60,6 +60,12 @@ export function Lesson({ onGo }: Props) {
   const current = Math.min(index, maxIndex)
   const locked = current === lockAt
 
+  // หน้าที่บันทึกไว้เลยจุดล็อก (เช่น เคยเรียนจบก่อนมีระบบล็อก) ให้ถอยมาที่จุดล็อก
+  // ไม่อย่างนั้นพอทำแบบทดสอบจบ สไลด์จะเด้งข้ามไปเองก่อนได้ดูคะแนน
+  useEffect(() => {
+    if (index > maxIndex) setIndex(maxIndex)
+  }, [index, maxIndex, setIndex])
+
   // ดูสไลด์ใหม่ได้ 5 เหรียญ ดูครบได้ตรารางวัล
   useEffect(() => {
     award({ key: `slide:${slide.id}`, coins: 5 })
@@ -82,6 +88,8 @@ export function Lesson({ onGo }: Props) {
     function onKey(e: KeyboardEvent) {
       const t = e.target as HTMLElement
       if (t.closest('input, textarea')) return
+      // มีหน้าต่างเปิดอยู่ (เลือกผู้ช่วย/ตรารางวัล) ไม่ต้องเปลี่ยนสไลด์ข้างหลัง
+      if (document.querySelector('[role="dialog"]')) return
       if (e.key === 'ArrowRight' || e.key === 'PageDown') go(current + 1)
       if (e.key === 'ArrowLeft' || e.key === 'PageUp') go(current - 1)
       if (e.key === 'Escape') setPresent(false)
@@ -152,7 +160,16 @@ export function Lesson({ onGo }: Props) {
           }`}
         >
           <div className="mx-auto max-w-5xl" style={present ? { zoom } : undefined}>
-            <SlideBody kind={slide.kind} part={slide.part} onGo={onGo} onReset={reset} />
+            <SlideBody
+            kind={slide.kind}
+            part={slide.part}
+            onGo={onGo}
+            onReset={() => {
+              reset()
+              setDir('prev')
+              setIndex(0)
+            }}
+          />
           </div>
         </div>
 

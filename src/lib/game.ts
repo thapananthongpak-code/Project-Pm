@@ -20,12 +20,22 @@ export interface ShopItem {
 /** ตัวนับสะสม ใช้ปลดล็อกตรารางวัล */
 export type Counter = 'prompts' | 'quizRounds' | 'taps'
 
+/** ตัวนับรายวัน ใช้ลดเหรียญเมื่อเล่นซ้ำเยอะในวันเดียว (กันปั่นเหรียญ) */
+export type DailyCounter = 'quizRounds' | 'prompts'
+export interface Daily {
+  /** วันที่แบบ YYYY-MM-DD ตามเวลาเครื่อง */
+  day: string
+  quizRounds: number
+  prompts: number
+}
+
 export interface GameState {
   /** เหรียญที่มีอยู่ (ใช้ซื้อของในร้านได้) */
   coins: number
   /** เหรียญที่เคยได้ทั้งหมด (ไม่ลดเมื่อซื้อของ) */
   earned: number
   counts: Partial<Record<Counter, number>>
+  daily: Daily
   /** ตรารางวัลที่ได้แล้ว */
   badges: string[]
   /** รางวัลที่รับไปแล้ว กันได้เหรียญซ้ำจากเรื่องเดิม */
@@ -42,9 +52,31 @@ export interface Award {
   badge?: string
   /** เพิ่มตัวนับ 1 ครั้ง */
   count?: Counter
+  /** เพิ่มตัวนับรายวัน 1 ครั้ง */
+  daily?: DailyCounter
 }
 
-export const emptyGame: GameState = { coins: 0, earned: 0, counts: {}, badges: [], claimed: [], owned: [], equipped: {} }
+/** วันนี้ (YYYY-MM-DD ตามเวลาเครื่อง) */
+export function todayKey(date = new Date()): string {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+}
+
+/** ทำไปกี่ครั้งแล้ววันนี้ */
+export function dailyCount(state: GameState, counter: DailyCounter, day = todayKey()): number {
+  return state.daily.day === day ? state.daily[counter] : 0
+}
+
+export const emptyGame: GameState = {
+  coins: 0,
+  earned: 0,
+  counts: {},
+  daily: { day: '', quizRounds: 0, prompts: 0 },
+  badges: [],
+  claimed: [],
+  owned: [],
+  equipped: {},
+}
 
 /** ให้รางวัล: ถ้ามี key ได้ครั้งเดียวต่อ key (คืน state เดิมถ้าเคยได้แล้ว) ถ้าไม่มี key ได้ทุกครั้ง */
 export function applyAward(state: GameState, award: Award): GameState {
@@ -55,22 +87,45 @@ export function applyAward(state: GameState, award: Award): GameState {
     coins: state.coins + coins,
     earned: state.earned + Math.max(coins, 0),
     counts: award.count ? { ...state.counts, [award.count]: (state.counts[award.count] ?? 0) + 1 } : state.counts,
+    daily: award.daily ? bumpDaily(state.daily, award.daily) : state.daily,
     badges: award.badge && !state.badges.includes(award.badge) ? [...state.badges, award.badge] : state.badges,
     claimed: award.key ? [...state.claimed, award.key] : state.claimed,
   }
 }
 
-/** เหรียญต่อข้อที่ตอบถูก: ยิ่งถูกติดกันยิ่งได้เยอะ (streak = จำนวนข้อที่ถูกติดกันรวมข้อนี้) */
-export function quizCoins(streak: number): number {
-  if (streak >= 5) return 10
-  if (streak >= 3) return 8
-  return 5
+function bumpDaily(daily: Daily, counter: DailyCounter): Daily {
+  const day = todayKey()
+  const base = daily.day === day ? daily : { day, quizRounds: 0, prompts: 0 }
+  return { ...base, [counter]: base[counter] + 1 }
 }
 
+// ---------- สมดุลเหรียญ (ปรับตัวเลขได้ที่นี่) ----------
+
+/** เล่นแบบทดสอบได้เหรียญเต็มกี่รอบต่อวัน หลังจากนั้นได้ครึ่งเดียว */
+export const FULL_ROUNDS_PER_DAY = 4
 /** โบนัสเมื่อตอบถูกทุกข้อในรอบ */
 export const PERFECT_BONUS = 10
 /** เหรียญเมื่อสร้าง prompt ใหม่ที่ไม่ซ้ำเดิมสำเร็จ */
 export const MISSION_COINS = 30
+/** สร้าง prompt ใหม่ได้เหรียญเต็มกี่ครั้งต่อวัน */
+export const FULL_PROMPTS_PER_DAY = 5
+/** เหรียญต่อ prompt ใหม่ เมื่อเกินจำนวนต่อวันแล้ว */
+export const MISSION_COINS_TIRED = 5
+
+/** เหรียญต่อข้อที่ตอบถูก: ยิ่งถูกติดกันยิ่งได้เยอะ (streak = จำนวนข้อที่ถูกติดกันรวมข้อนี้) tired = เล่นเกินรอบต่อวันแล้ว */
+export function quizCoins(streak: number, tired = false): number {
+  const coins = streak >= 5 ? 10 : streak >= 3 ? 8 : 5
+  return tired ? Math.ceil(coins / 2) : coins
+}
+
+export function perfectBonus(tired = false): number {
+  return tired ? Math.ceil(PERFECT_BONUS / 2) : PERFECT_BONUS
+}
+
+/** เหรียญจาก prompt ใหม่ ตามจำนวนที่สร้างไปแล้ววันนี้ */
+export function missionCoins(promptsToday: number): number {
+  return promptsToday >= FULL_PROMPTS_PER_DAY ? MISSION_COINS_TIRED : MISSION_COINS
+}
 
 /** ลายนิ้วมือสั้นๆ ของข้อความ ใช้แยกว่า prompt นี้เคยได้เหรียญแล้วหรือยัง */
 export function fingerprint(text: string): string {
@@ -124,5 +179,11 @@ export function reviveGame(raw: unknown): GameState {
   const safeCoins = coins >= 0 ? coins : 0
   // เวอร์ชันก่อนไม่ได้เก็บยอดรวม: เริ่มจากเหรียญที่มีอยู่
   const earned = typeof r.earned === 'number' && r.earned >= safeCoins ? r.earned : safeCoins
-  return { coins: safeCoins, earned, counts, badges: strings(r.badges), claimed: strings(r.claimed), owned, equipped }
+  const d = (r.daily ?? {}) as Partial<Daily>
+  const daily: Daily = {
+    day: typeof d.day === 'string' ? d.day : '',
+    quizRounds: typeof d.quizRounds === 'number' ? d.quizRounds : 0,
+    prompts: typeof d.prompts === 'number' ? d.prompts : 0,
+  }
+  return { coins: safeCoins, earned, counts, daily, badges: strings(r.badges), claimed: strings(r.claimed), owned, equipped }
 }

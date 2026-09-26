@@ -61,6 +61,15 @@ export function audienceFor(goal: GoalId | null): string {
   return goal === 'present' ? 'เพื่อนและครู' : 'กรรมการ'
 }
 
+/** ประโยคระดับ/แผนการเรียน ให้อ่านถูกทุกตัวเลือก (เช่น ปวช. ไม่ใช่แผนการเรียน ม.4) */
+export function trackPhrase(track: string | undefined): string {
+  const t = track?.trim()
+  if (!t) return ''
+  if (t === 'ยังไม่แน่ใจ') return 'ม.4 (ยังไม่แน่ใจแผนการเรียน)'
+  if (t === 'ปวช.') return 'ระดับ ปวช.'
+  return `ม.4 แผนการเรียน ${t}`
+}
+
 /** รวมคำตอบกับค่าเริ่มต้น และค่าพิเศษที่เทมเพลตใช้ */
 export function withDefaults(goal: GoalId | null, answers: Answers): Answers {
   const filled = Object.fromEntries(Object.entries(answers).filter(([, v]) => v?.trim()))
@@ -72,6 +81,7 @@ export function withDefaults(goal: GoalId | null, answers: Answers): Answers {
     colors: 'ที่เข้ากับเนื้อหา',
     ...filled,
     role: roleFor(goal, answers),
+    trackPhrase: trackPhrase(filled.track),
     subjectLabel: filled.subject === 'อื่นๆ' ? (filled.subjectOther ?? '') : (filled.subject ?? ''),
     deckType: info?.deckType ?? '',
     photoHint: info?.photoHint ?? '',
@@ -138,8 +148,10 @@ function imageTheme(goal: GoalId, values: Answers, subject: ImageSubject): strin
     return [values.subjectLabel, values.topic && `เรื่อง ${values.topic}`].filter(Boolean).join(' ')
   }
   const strength = lines(values.strengths)[0]
-  const track = values.track && values.track !== 'ยังไม่แน่ใจ' ? values.track : ''
-  return [strength && `ท่าทางที่บอกว่าฉัน${strength}`, track && `กำลังจะเรียนต่อสาย${track}`].filter(Boolean).join(' และ')
+  const track = values.track && values.track !== 'ยังไม่แน่ใจ' ? trackPhrase(values.track) : ''
+  return [strength && `ท่าทางที่แสดงความสามารถ: ${strength}`, track && `กำลังจะเรียนต่อ ${track}`]
+    .filter(Boolean)
+    .join(' และ')
 }
 
 export interface ImageChoice {

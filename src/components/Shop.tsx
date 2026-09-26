@@ -1,7 +1,19 @@
 import { useState } from 'react'
 import { buddies, shopItems, type BuddyInfo } from '../data'
 import { celebrate } from '../lib/confetti'
-import { buddyItemId, MISSION_COINS, PERFECT_BONUS, quizCoins, type Equipped, type ShopItem, type ShopSlot, type Slot } from '../lib/game'
+import {
+  buddyItemId,
+  FULL_PROMPTS_PER_DAY,
+  FULL_ROUNDS_PER_DAY,
+  MISSION_COINS,
+  MISSION_COINS_TIRED,
+  PERFECT_BONUS,
+  quizCoins,
+  type Equipped,
+  type ShopItem,
+  type ShopSlot,
+  type Slot,
+} from '../lib/game'
 import { LivelyBuddy, useBuddy } from './Buddy'
 import { BuddyArt } from './BuddyArt'
 import { CoinIcon, useGame } from './Game'
@@ -59,7 +71,7 @@ export function Shop() {
           <h1 id="page-heading" className="text-2xl font-bold lg:text-3xl">
             ร้านค้า
           </h1>
-          <p className="text-muted">ใช้เหรียญซื้อของแต่งตัวให้ผู้ช่วย แตะที่ของเพื่อลองใส่ก่อนได้</p>
+          <p className="text-muted">ใช้เหรียญปลดล็อกตัวละครพิเศษ และซื้อของแต่งตัวให้ผู้ช่วย (แตะที่ของเพื่อลองใส่ก่อนได้)</p>
         </div>
         <p className="flex items-center gap-2 rounded-2xl bg-linear-to-r from-[#ffd23f] to-accent-300 px-4 py-2 text-lg font-bold text-[#3b2400] shadow-soft">
           <CoinIcon className="size-7" />
@@ -177,16 +189,18 @@ export function Shop() {
                 <CoinIcon className="size-5 shrink-0" />
                 <span>
                   เกมในบทเรียน: ตอบถูก +{quizCoins(1)} · ถูกติดกัน 3 ข้อ +{quizCoins(3)} · ติดกัน 5 ข้อ +{quizCoins(5)} ·
-                  ถูกหมดรอบ +{PERFECT_BONUS} (เล่นซ้ำได้)
+                  ถูกหมดรอบ +{PERFECT_BONUS} · เล่นซ้ำได้ ({FULL_ROUNDS_PER_DAY} รอบแรกของวันได้เต็ม หลังจากนั้นได้ครึ่งเดียว)
                 </span>
               </li>
               <li className="flex gap-2">
                 <CoinIcon className="size-5 shrink-0" />
-                <span>สร้าง prompt ใหม่ในภารกิจ +{MISSION_COINS} ทุกครั้งที่ไม่ซ้ำเดิม</span>
+                <span>
+                  สร้าง prompt ใหม่ในภารกิจ +{MISSION_COINS} ({FULL_PROMPTS_PER_DAY} ครั้งแรกของวัน หลังจากนั้น +{MISSION_COINS_TIRED})
+                </span>
               </li>
               <li className="flex gap-2">
                 <CoinIcon className="size-5 shrink-0" />
-                <span>ดูบทเรียนหน้าใหม่ +5 · ตอบคำถามภารกิจครั้งแรก +10 ต่อหน้า</span>
+                <span>ดูบทเรียนหน้าใหม่ +5 · เรียนจบบทเรียน +20 · ตอบคำถามภารกิจครั้งแรก +10 ต่อหน้า</span>
               </li>
             </ul>
           </div>

@@ -142,6 +142,8 @@ export interface BuddyInfo {
 export interface BuddyLines {
   greetings: string[]
   cheers: string[]
+  /** ใช้ในหน้าคำถามสุดท้าย */
+  almost: string[]
   oops: string[]
   done: string[]
   tips: string[]

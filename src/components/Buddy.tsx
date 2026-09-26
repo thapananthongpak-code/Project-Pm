@@ -191,7 +191,7 @@ export function LivelyBuddy({ action = 'idle', lively = true, onTap, pulse, budd
         <span
           key={`c-${motion.n}`}
           aria-hidden="true"
-          className="pointer-events-none absolute -top-3 left-1/2 w-max max-w-40 -translate-x-1/2 animate-bounce-in rounded-full border border-line bg-surface px-2.5 py-1 text-xs font-semibold shadow-soft"
+          className="pointer-events-none absolute -top-3 left-0 z-10 w-max max-w-44 animate-bounce-in rounded-2xl border border-line bg-surface px-2.5 py-1 text-xs font-semibold shadow-soft"
         >
           {motion.chatter} {buddy.ending}
         </span>

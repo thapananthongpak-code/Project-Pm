@@ -12,7 +12,7 @@ import {
 } from '../lib/promptBuilder'
 import { celebrate } from '../lib/confetti'
 import { missionKey } from '../lib/badges'
-import { fingerprint, MISSION_COINS } from '../lib/game'
+import { dailyCount, fingerprint, FULL_PROMPTS_PER_DAY, missionCoins } from '../lib/game'
 import { PARTS } from '../lib/rtcf'
 import type { Answers, GoalId, ToolId } from '../types'
 import { CoinIcon, useGame } from './Game'
@@ -51,13 +51,15 @@ export function StepResult({ goal, answers, toolId, onAnswer, onGoTo, onReset }:
   // prompt ใหม่ที่ไม่ซ้ำเดิมได้เหรียญทุกครั้ง (ไม่ขึ้นกับ AI ที่เลือก กันการสลับ AI เพื่อเก็บเหรียญ)
   const doneKey = `done:${goal}:${fingerprint(goal === 'image' ? buildFreeImagePrompt(answers, null) : buildPrompts(goal, answers, null).content)}`
   const [fresh] = useState(() => !game.claimed.includes(doneKey))
+  // prompt ใหม่วันนี้เกิน 5 ครั้งแล้ว ได้เหรียญน้อยลง (กันเปลี่ยนตัวเลือกนิดเดียวแล้วเก็บเหรียญซ้ำๆ)
+  const [coins] = useState(() => missionCoins(dailyCount(game, 'prompts')))
 
   // ภารกิจสำเร็จ: พลุกระดาษ + เหรียญ (prompt ใหม่) + ตรารางวัล (ครั้งแรก)
   useEffect(() => {
     celebrate('big')
-    award({ key: doneKey, coins: MISSION_COINS, count: 'prompts' })
+    award({ key: doneKey, coins, count: 'prompts', daily: 'prompts' })
     award({ key: missionKey(goal) })
-  }, [doneKey, goal, award])
+  }, [doneKey, coins, goal, award])
 
   let body
   if (goal === 'image') {
@@ -121,9 +123,11 @@ export function StepResult({ goal, answers, toolId, onAnswer, onGoTo, onReset }:
         prompt ของเธอมีครบทั้ง 4 ส่วน นำไปใช้ใน {tool.name} ได้เลย
         <span className="mt-1 flex items-center gap-1 text-sm font-semibold text-accent-700 dark:text-accent-300">
           <CoinIcon className="size-5" />
-          {fresh
-            ? `ได้ +${MISSION_COINS} เหรียญ จาก prompt ใหม่นี้`
-            : 'prompt นี้ได้เหรียญไปแล้ว ลองสร้าง prompt แบบใหม่เพื่อรับเหรียญเพิ่ม'}
+          {!fresh
+            ? 'prompt นี้ได้เหรียญไปแล้ว ลองสร้าง prompt แบบใหม่เพื่อรับเหรียญเพิ่ม'
+            : coins === missionCoins(0)
+              ? `ได้ +${coins} เหรียญ จาก prompt ใหม่นี้`
+              : `ได้ +${coins} เหรียญ (วันนี้สร้าง prompt ใหม่ครบ ${FULL_PROMPTS_PER_DAY} ครั้งแล้ว พรุ่งนี้ได้เต็มอีกนะ)`}
         </span>
       </BuddyTip>
 

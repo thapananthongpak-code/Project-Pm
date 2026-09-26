@@ -1,6 +1,21 @@
 import { describe, expect, it } from 'vitest'
 import { badges, lesson } from '../data'
-import { applyAward, buddyItemId, buyItem, emptyGame, equipItem, fingerprint, quizCoins, reviveGame, type ShopItem } from './game'
+import {
+  applyAward,
+  buddyItemId,
+  buyItem,
+  dailyCount,
+  emptyGame,
+  equipItem,
+  fingerprint,
+  FULL_PROMPTS_PER_DAY,
+  missionCoins,
+  perfectBonus,
+  quizCoins,
+  reviveGame,
+  todayKey,
+  type ShopItem,
+} from './game'
 import { splitSections } from './rtcf'
 
 describe('ระบบเหรียญและตรารางวัล', () => {
@@ -24,6 +39,7 @@ describe('ระบบเหรียญและตรารางวัล', (
       coins: 120,
       earned: 120,
       counts: {},
+      daily: { day: '', quizRounds: 0, prompts: 0 },
       badges: ['learner'],
       claimed: ['a'],
       owned: [],
@@ -114,7 +130,7 @@ describe('เหรียญเล่นซ้ำได้', () => {
   })
 
   it('ถูกติดกันยิ่งได้เหรียญเยอะ', () => {
-    expect([1, 2, 3, 4, 5, 9].map(quizCoins)).toEqual([5, 5, 8, 8, 10, 10])
+    expect([1, 2, 3, 4, 5, 9].map((n) => quizCoins(n))).toEqual([5, 5, 8, 8, 10, 10])
   })
 
   it('prompt เดิมได้เหรียญครั้งเดียว prompt ใหม่ได้อีก', () => {
@@ -242,5 +258,30 @@ describe('ตัวละครพิเศษ', () => {
     expect(newlyEarned(s, badges)).toContain('special-buddy')
     expect(newlyEarned(s, badges)).not.toContain('shopper') // ช้อปครั้งแรกนับเฉพาะของแต่งตัว
     expect(badgeProgress(s, { type: 'buddies', goal: 3 })).toEqual({ value: 1, goal: 3 })
+  })
+})
+
+describe('สมดุลเหรียญรายวัน (กันปั่นเหรียญ)', () => {
+  it('เล่นเกินรอบต่อวันได้เหรียญครึ่งเดียว', () => {
+    expect([1, 3, 5].map((n) => quizCoins(n, true))).toEqual([3, 4, 5])
+    expect(perfectBonus(true)).toBe(5)
+  })
+
+  it('prompt ใหม่เกิน 5 ครั้งต่อวันได้เหรียญน้อยลง', () => {
+    expect(missionCoins(0)).toBe(30)
+    expect(missionCoins(FULL_PROMPTS_PER_DAY - 1)).toBe(30)
+    expect(missionCoins(FULL_PROMPTS_PER_DAY)).toBe(5)
+  })
+
+  it('นับรายวัน และเริ่มนับใหม่เมื่อเปลี่ยนวัน', () => {
+    let s = applyAward(emptyGame, { daily: 'prompts' })
+    s = applyAward(s, { daily: 'prompts' })
+    expect(dailyCount(s, 'prompts')).toBe(2)
+    expect(dailyCount(s, 'quizRounds')).toBe(0)
+    // วันอื่น
+    expect(dailyCount(s, 'prompts', '1999-01-01')).toBe(0)
+    const yesterday = { ...s, daily: { day: '1999-01-01', quizRounds: 9, prompts: 9 } }
+    const today = applyAward(yesterday, { daily: 'quizRounds' })
+    expect(today.daily).toEqual({ day: todayKey(), quizRounds: 1, prompts: 0 })
   })
 })

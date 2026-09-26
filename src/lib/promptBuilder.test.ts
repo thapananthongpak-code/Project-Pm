@@ -42,7 +42,7 @@ describe('buildPrompts', () => {
   it('พอร์ต ม.4 ครบ ไม่มีช่องว่าง', () => {
     const { content, design } = buildPrompts('m4', m4, 'chatgpt')
     expect(countBlanks(content) + countBlanks(design)).toBe(0)
-    expect(content).toContain('เพื่อสมัคร ม.4 แผนการเรียนวิทย์-คณิต โรงเรียนสวนกุหลาบวิทยาลัย')
+    expect(content).toContain('เพื่อสมัครเรียนต่อ ม.4 แผนการเรียน วิทย์-คณิต ที่โรงเรียนสวนกุหลาบวิทยาลัย')
     expect(content).toContain('นักเรียน ม.3')
     expect(content).not.toContain('รางวัล:') // ไม่ได้ตอบ จึงตัดทิ้ง
     expect(design).toContain('นำเนื้อหาข้างต้นมาทำเป็นสไลด์พอร์ตโฟลิโอ 10 หน้า')
@@ -126,7 +126,7 @@ describe('buildImagePrompt', () => {
     expect(text).toContain('ตัวละครการ์ตูนครึ่งตัว')
     expect(text).toContain('การ์ตูนชิบิน่ารัก')
     expect(text).toContain('นักเรียนไทย ม.3 ใส่ชุดนักเรียน')
-    expect(text).toContain('ฉันชอบทดลองวิทยาศาสตร์ และกำลังจะเรียนต่อสายวิทย์-คณิต')
+    expect(text).toContain('ท่าทางที่แสดงความสามารถ: ชอบทดลองวิทยาศาสตร์ และกำลังจะเรียนต่อ ม.4 แผนการเรียน วิทย์-คณิต')
     expect(text).toContain('ห้ามใส่ตัวหนังสือ')
     expect(text).toContain('สร้างเป็นรูปภาพ 1 รูป')
     expect(countBlanks(text)).toBe(0)
@@ -249,5 +249,17 @@ describe('ตัวเลือกในภารกิจ', () => {
     const { buildImagePrompt } = await import('./promptBuilder')
     expect(buildImagePrompt('m4', { ...m4, imageSubject: 'ชุดสติกเกอร์' }, 'chatgpt')).toContain('- ตัวละคร:')
     expect(buildImagePrompt('m4', { ...m4, imageSubject: 'พื้นหลังสไลด์' }, 'chatgpt')).not.toContain('ตัวละคร:')
+  })
+})
+
+describe('ประโยคแผนการเรียน', () => {
+  it('อ่านถูกทุกตัวเลือก รวม ปวช. และยังไม่แน่ใจ', async () => {
+    const { trackPhrase, buildPrompts } = await import('./promptBuilder')
+    expect(trackPhrase('วิทย์-คณิต')).toBe('ม.4 แผนการเรียน วิทย์-คณิต')
+    expect(trackPhrase('ปวช.')).toBe('ระดับ ปวช.')
+    expect(trackPhrase('ยังไม่แน่ใจ')).toBe('ม.4 (ยังไม่แน่ใจแผนการเรียน)')
+    const content = buildPrompts('m4', { ...m4, track: 'ปวช.' }, 'chatgpt').content
+    expect(content).toContain('เพื่อสมัครเรียนต่อ ระดับ ปวช. ที่')
+    expect(content).not.toContain('แผนการเรียนปวช')
   })
 })
