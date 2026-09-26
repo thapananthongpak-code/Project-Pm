@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { badges } from '../data'
+import { badges, type Badge } from '../data'
 import { badgeProgress } from '../lib/badges'
 import { BadgeIcon } from './BadgeIcon'
 import { CoinIcon, useGame } from './Game'
@@ -52,12 +52,7 @@ export function BadgeShelf() {
                     className="flex animate-fly-in flex-col items-center text-center"
                     style={{ animationDelay: `${i * 60}ms` }}
                   >
-                    <BadgeIcon
-                      part={b.color}
-                      icon={b.icon}
-                      locked={!has}
-                      className={`size-16 transition ${has ? 'hover:animate-wiggle' : ''}`}
-                    />
+                    <WiggleBadge has={has} part={b.color} icon={b.icon} />
                     <span className={`mt-1 text-sm font-semibold leading-tight ${has ? '' : 'text-muted'}`}>{b.name}</span>
                     <span className="text-xs leading-snug text-muted">{b.desc}</span>
                     {!has && p && p.goal > 1 && (
@@ -81,6 +76,23 @@ export function BadgeShelf() {
         </section>
       ))}
     </div>
+  )
+}
+
+/**
+ * ตราที่ได้แล้วส่ายเมื่อเอาเมาส์ชี้ ส่ายจนจบรอบทุกครั้ง
+ * (ใช้ :hover ตรงๆ ตราจะส่ายหนีเมาส์ แล้วหยุด-เริ่มสลับกันจนดูกระพริบ)
+ */
+function WiggleBadge({ has, part, icon }: { has: boolean; part: Badge['color']; icon: Badge['icon'] }) {
+  const [wiggle, setWiggle] = useState(false)
+  return (
+    <span
+      className="rounded-2xl"
+      onPointerEnter={() => has && setWiggle(true)}
+      onAnimationEnd={() => setWiggle(false)}
+    >
+      <BadgeIcon part={part} icon={icon} locked={!has} className={`size-16 ${wiggle ? 'animate-wiggle-once' : ''}`} />
+    </span>
   )
 }
 
@@ -121,12 +133,13 @@ function BadgesDialog({ onClose }: { onClose: () => void }) {
   }, [onClose])
 
   // วางที่ body: หัวเว็บมี backdrop-blur ทำให้ position: fixed ข้างในไม่เต็มจอ
+  // พื้นหลังไม่เบลอ: เบลอทั้งจอบนกล่องที่เลื่อนได้ ทำให้จอกระพริบใน Chrome เวลาขยับเมาส์
   return createPortal(
     <div
       role="dialog"
       aria-modal="true"
       aria-labelledby="badges-title"
-      className="fixed inset-0 z-50 overflow-y-auto bg-ink/40 backdrop-blur-sm"
+      className="fixed inset-0 z-50 overflow-y-auto bg-ink/55"
       onClick={onClose}
     >
       <div className="flex min-h-full items-center justify-center p-4">

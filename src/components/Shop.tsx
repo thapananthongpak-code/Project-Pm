@@ -140,9 +140,9 @@ export function Shop() {
                     onClick={() => (previewing ? clearTry(item.slot) : setTryOn((t) => ({ ...t, [item.slot]: item.id })))}
                     aria-label={`ลองใส่${item.name}`}
                     aria-pressed={previewing}
-                    className="rounded-2xl transition hover:-translate-y-1 active:scale-95"
+                    className="group rounded-2xl active:scale-95"
                   >
-                    <BuddyArt buddy={buddy} outfit={{ [item.slot]: item.id }} className="size-20 sm:size-24" />
+                    <BuddyArt buddy={buddy} outfit={{ [item.slot]: item.id }} className="size-20 transition group-hover:-translate-y-1 sm:size-24" />
                   </button>
                   <p className="mt-1 font-semibold">{item.name}</p>
                   {owned ? (

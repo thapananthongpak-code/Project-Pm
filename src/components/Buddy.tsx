@@ -343,7 +343,7 @@ function BuddyPicker({
       role="dialog"
       aria-modal="true"
       aria-labelledby="picker-title"
-      className="fixed inset-0 z-50 overflow-y-auto bg-ink/40 backdrop-blur-sm"
+      className="fixed inset-0 z-50 overflow-y-auto bg-ink/55"
       onClick={canClose ? onClose : undefined}
     >
       {/* min-h-full + items-center: อยู่กลางจอถ้าพอดี และเลื่อนดูได้ถ้าจอเตี้ย (ไม่ถูกตัดด้านบน) */}

@@ -124,7 +124,7 @@ function BadgePopup({ id, onClose }: { id: string; onClose: () => void }) {
       role="dialog"
       aria-modal="true"
       aria-labelledby="badge-title"
-      className="fixed inset-0 z-50 grid place-items-center bg-ink/40 p-6 backdrop-blur-sm"
+      className="fixed inset-0 z-50 grid place-items-center bg-ink/55 p-6"
       onClick={onClose}
     >
       <div className="card w-full max-w-sm animate-bounce-in p-6 text-center" onClick={(e) => e.stopPropagation()}>

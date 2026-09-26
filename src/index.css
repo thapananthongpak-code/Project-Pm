@@ -62,6 +62,7 @@
   --animate-glow: glow 1.8s ease-in-out infinite;
   --animate-drift: drift 22s ease-in-out infinite alternate;
   --animate-wiggle: wiggle 2.6s ease-in-out infinite;
+  --animate-wiggle-once: wiggle-once 600ms ease-in-out;
   --animate-slide-next: slide-next 380ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
   --animate-slide-prev: slide-prev 380ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
   --animate-fly-in: fly-in 600ms cubic-bezier(0.2, 1.2, 0.4, 1) backwards;
@@ -107,6 +108,12 @@
   88% { transform: rotate(-10deg); }
   92% { transform: rotate(10deg); }
   96% { transform: rotate(-6deg); }
+}
+@keyframes wiggle-once {
+  0%, 100% { transform: rotate(0); }
+  20% { transform: rotate(-10deg); }
+  45% { transform: rotate(10deg); }
+  70% { transform: rotate(-6deg); }
 }
 @keyframes slide-next {
   from { opacity: 0; transform: translateX(40px); }
