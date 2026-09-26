@@ -78,7 +78,7 @@ export function Wizard({ wizard }: { wizard: WizardApi }) {
           onNext={() => goTo(3)}
         />
       ) : (
-        <StepResult goal={goal} answers={answers} toolId={toolId} onAnswer={setAnswer} onGoTo={goTo} onReset={reset} />
+        <StepResult goal={goal} answers={answers} toolId={toolId} onGoTo={goTo} onReset={reset} />
       )}
     </>
   )

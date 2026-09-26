@@ -12,10 +12,6 @@ export interface Goal {
   defaultPages?: string
   /** น้ำเสียงของเนื้อหา */
   voice?: string
-  /** ชนิดสไลด์ที่ใช้ใน prompt ทำสไลด์ เช่น "พอร์ตโฟลิโอ" */
-  deckType?: string
-  /** รูปที่ควรเว้นที่ไว้ เช่น "ผลงานจริง" */
-  photoHint?: string
   note?: string
 }
 
@@ -69,7 +65,7 @@ export interface Tool {
   slideSuffix: string
 }
 
-export type TemplateStage = 'content' | 'design' | 'image' | 'refine'
+export type TemplateStage = 'content' | 'image'
 
 export interface PromptTemplate {
   id: string

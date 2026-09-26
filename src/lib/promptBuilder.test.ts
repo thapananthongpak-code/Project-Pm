@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { templates } from '../data'
 import type { Answers } from '../types'
-import { BLANK, buildPrompts, buildRefinePrompt, countBlanks, fillTemplate, firstBlankPage, firstIncompletePage } from './promptBuilder'
+import { BLANK, buildPrompts, countBlanks, fillTemplate, firstBlankPage, firstIncompletePage } from './promptBuilder'
 import { visibleFields, visibleQuestions } from './visible'
 
 const m4: Answers = {
@@ -40,24 +40,25 @@ describe('fillTemplate', () => {
 
 describe('buildPrompts', () => {
   it('พอร์ต ม.4 ครบ ไม่มีช่องว่าง', () => {
-    const { content, design } = buildPrompts('m4', m4, 'chatgpt')
-    expect(countBlanks(content) + countBlanks(design)).toBe(0)
+    const { content } = buildPrompts('m4', m4, 'chatgpt')
+    expect(countBlanks(content)).toBe(0)
     expect(content).toContain('เพื่อสมัครเรียนต่อ ม.4 แผนการเรียน วิทย์-คณิต ที่โรงเรียนสวนกุหลาบวิทยาลัย')
     expect(content).toContain('นักเรียน ม.3')
     expect(content).not.toContain('รางวัล:') // ไม่ได้ตอบ จึงตัดทิ้ง
-    expect(design).toContain('นำเนื้อหาข้างต้นมาทำเป็นสไลด์พอร์ตโฟลิโอ 10 หน้า')
-    expect(design).toContain('โทนสีที่เข้ากับเนื้อหา') // ค่าเริ่มต้นเมื่อไม่ได้เลือก
-    expect(design).toContain('PowerPoint (.pptx)')
+    expect(content).toContain('ช่วยวางโครงพอร์ตโฟลิโอ 10 หน้า')
+    expect(content).toContain('- หน้าตาสไลด์: สไตล์เรียบง่าย อ่านง่าย โทนสีที่เข้ากับเนื้อหา') // ค่าเริ่มต้นเมื่อไม่ได้เลือก
+    expect(content).toContain('ให้เสนอว่าจะสร้างเป็นไฟล์ PowerPoint (.pptx)')
   })
 
   it('สื่อนำเสนอ ใส่วิชาและหัวข้อ', () => {
-    const { content, design } = buildPrompts('present', present, 'chatgpt')
+    const { content } = buildPrompts('present', { ...present, slideStyle: 'มินิมอล', colors: 'ฟ้า-ขาว' }, 'chatgpt')
     expect(countBlanks(content)).toBe(0)
     expect(content).toContain('- วิชา/กิจกรรม: วิทยาศาสตร์')
     expect(content).toContain('เรื่อง "ระบบสุริยะ"')
     expect(content).toContain('ภาษาสุภาพ เข้าใจง่าย')
     expect(content).not.toContain('เวลานำเสนอ') // ไม่ได้เลือก จึงตัดทิ้ง
-    expect(design).toContain('ทำเป็นสไลด์นำเสนอ 8 หน้า')
+    expect(content).toContain('ช่วยเขียนเนื้อหาสไลด์ 8 หน้า')
+    expect(content).toContain('- หน้าตาสไลด์: สไตล์มินิมอล โทนสีฟ้า-ขาว')
   })
 
   it('เลือกวิชา "อื่นๆ" ใช้ชื่อที่พิมพ์เอง', () => {
@@ -66,21 +67,12 @@ describe('buildPrompts', () => {
     expect(content).not.toContain('อื่นๆ')
   })
 
-  it('ขั้นทำสไลด์ปรับตาม AI ที่เลือก', () => {
-    expect(buildPrompts('m4', m4, 'gemini').design).toContain('Canvas')
-    expect(buildPrompts('m4', m4, 'claude').design).toContain('.pptx')
+  it('วิธีส่งออกสไลด์ปรับตาม AI ที่เลือก', () => {
+    expect(buildPrompts('m4', m4, 'gemini').content).toContain('Canvas')
+    expect(buildPrompts('m4', m4, 'claude').content).toContain('.pptx')
     const { content, tool } = buildPrompts('m4', m4, null)
     expect(tool.id).toBe('chatgpt') // ไม่ได้เลือก ใช้ตัวแรก
     expect(content).toContain('สไลด์ที่ 1, 2, 3')
-  })
-})
-
-describe('buildRefinePrompt', () => {
-  it('ใช้ข้อความต่อยอดและผู้ฟังตามเป้าหมาย', () => {
-    expect(buildRefinePrompt('m4', 'shorter')).toBe(
-      'ปรับเนื้อหาข้างต้นให้สั้นลง 30% โดยเก็บตัวเลขและผลลัพธ์สำคัญไว้ครบ\nและเพิ่มประโยคเปิดที่ทำให้กรรมการจำฉันได้',
-    )
-    expect(buildRefinePrompt('present', 'shorter')).toContain('เพื่อนและครู')
   })
 })
 
@@ -111,45 +103,10 @@ describe('หน้าคำถาม', () => {
 })
 
 describe('templates.json', () => {
-  it('มีเทมเพลตอย่างน้อย 4 แบบ และทุกเป้าหมายมีเทมเพลตเนื้อหา', () => {
-    expect(templates.length).toBeGreaterThanOrEqual(4)
+  it('ทุกเป้าหมายมีเทมเพลตเนื้อหา', () => {
     for (const goal of ['m4', 'present'] as const) {
       expect(templates.some((t) => t.stage === 'content' && t.goals.includes(goal))).toBe(true)
     }
-  })
-})
-
-describe('buildImagePrompt', () => {
-  it('ค่าเริ่มต้น: พอร์ต ม.4 ได้ตัวการ์ตูนของฉัน ใช้เรื่องราวจากคำตอบ', async () => {
-    const { buildImagePrompt } = await import('./promptBuilder')
-    const text = buildImagePrompt('m4', m4, 'chatgpt')
-    expect(text).toContain('ตัวละครการ์ตูนครึ่งตัว')
-    expect(text).toContain('การ์ตูนชิบิน่ารัก')
-    expect(text).toContain('นักเรียนไทย ม.3 ใส่ชุดนักเรียน')
-    expect(text).toContain('ท่าทางที่แสดงความสามารถ: ชอบทดลองวิทยาศาสตร์ และกำลังจะเรียนต่อ ม.4 แผนการเรียน วิทย์-คณิต')
-    expect(text).toContain('ห้ามใส่ตัวหนังสือ')
-    expect(text).toContain('สร้างเป็นรูปภาพ 1 รูป')
-    expect(countBlanks(text)).toBe(0)
-  })
-
-  it('สื่อนำเสนอ + ไอคอน + Claude: ไม่มีตัวละคร ใช้ประเด็นเป็นไอคอน และวาดเป็น SVG', async () => {
-    const { buildImagePrompt } = await import('./promptBuilder')
-    const text = buildImagePrompt(
-      'present',
-      { ...present, imageSubject: 'ไอคอนหัวข้อ', imageStyle: 'พิกเซลอาร์ต' },
-      'claude',
-    )
-    expect(text).not.toContain('ตัวละคร:')
-    expect(text).toContain('ไอคอนละ 1 เรื่อง: ดาวเคราะห์ 8 ดวง, ทำไมโลกมีสิ่งมีชีวิต')
-    expect(text).toContain('พิกเซลอาร์ต')
-    expect(text).toContain('SVG')
-  })
-
-  it('ใส่หน้าตาตัวละครที่ผู้ใช้พิมพ์', async () => {
-    const { buildImagePrompt } = await import('./promptBuilder')
-    const text = buildImagePrompt('present', { ...present, imageLook: 'ผมสั้น ใส่แว่น' }, 'gemini')
-    expect(text).toContain('ใส่ชุดนักเรียน ผมสั้น ใส่แว่น')
-    expect(text).toContain('วิทยาศาสตร์ เรื่อง ระบบสุริยะ')
   })
 })
 
@@ -189,13 +146,11 @@ describe('หัวข้อสร้างภาพ', () => {
 
 describe('โครงสร้าง RTCF', () => {
   it('prompt ทุกแบบมีครบ 4 ส่วน และเรียง R → T → C → F', async () => {
-    const { buildFreeImagePrompt, buildImagePrompt } = await import('./promptBuilder')
+    const { buildFreeImagePrompt } = await import('./promptBuilder')
     const { splitSections } = await import('./rtcf')
     const texts = [
       buildPrompts('m4', m4, 'chatgpt').content,
-      buildPrompts('m4', m4, 'chatgpt').design,
       buildPrompts('present', present, 'gemini').content,
-      buildImagePrompt('present', present, 'chatgpt'),
       buildFreeImagePrompt({ imageDesc: 'แมว', imagePurpose: 'สไลด์', imageStyle: 'อนิเมะ' }, 'chatgpt'),
     ]
     for (const t of texts) {
@@ -225,15 +180,12 @@ describe('โครงสร้าง RTCF', () => {
 
 describe('ตัวเลือกในภารกิจ', () => {
   it('มีตัวเลือกให้เลือกเยอะในทุกภารกิจ', async () => {
-    const { questions, imageStyles, imageSubjects, refinements, imageRefinements } = await import('../data')
+    const { questions, imageStyles } = await import('../data')
     const f = (id: string) => questions.flatMap((q) => q.fields).find((x) => x.id === id)!
     for (const id of ['roleM4', 'rolePresent', 'roleImage']) expect(f(id).options!.length, id).toBeGreaterThanOrEqual(7)
     for (const id of ['slideStyle', 'colors', 'track', 'subject']) expect(f(id).options!.length, id).toBeGreaterThanOrEqual(10)
     for (const id of ['strengths', 'works', 'keyPoints', 'imageDesc']) expect(f(id).suggestions!.length, id).toBeGreaterThanOrEqual(10)
     expect(imageStyles.length).toBeGreaterThanOrEqual(12)
-    expect(imageSubjects.length).toBeGreaterThanOrEqual(5)
-    expect(refinements.length).toBeGreaterThanOrEqual(8)
-    expect(imageRefinements.length).toBeGreaterThanOrEqual(8)
   })
 
   it('ไม่มีตัวเลือกซ้ำในช่องเดียวกัน', async () => {
@@ -243,12 +195,6 @@ describe('ตัวเลือกในภารกิจ', () => {
         if (list) expect(new Set(list).size, field.id).toBe(list.length)
       }
     }
-  })
-
-  it('ชุดสติกเกอร์มีตัวละคร พื้นหลังสไลด์ไม่มี', async () => {
-    const { buildImagePrompt } = await import('./promptBuilder')
-    expect(buildImagePrompt('m4', { ...m4, imageSubject: 'ชุดสติกเกอร์' }, 'chatgpt')).toContain('- ตัวละคร:')
-    expect(buildImagePrompt('m4', { ...m4, imageSubject: 'พื้นหลังสไลด์' }, 'chatgpt')).not.toContain('ตัวละคร:')
   })
 })
 

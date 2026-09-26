@@ -1,15 +1,7 @@
 import { useEffect, useState } from 'react'
-import { goals, imageRefinements, imageTools, refinements } from '../data'
+import { goals, imageTools } from '../data'
 import type { Step } from '../hooks/useWizard'
-import {
-  buildFreeImagePrompt,
-  buildImageRefinePrompt,
-  buildPrompts,
-  buildRefinePrompt,
-  countBlanks,
-  firstBlankPage,
-  toolById,
-} from '../lib/promptBuilder'
+import { buildFreeImagePrompt, buildPrompts, countBlanks, firstBlankPage, toolById } from '../lib/promptBuilder'
 import { celebrate } from '../lib/confetti'
 import { missionKey } from '../lib/badges'
 import { dailyCount, fingerprint, FULL_PROMPTS_PER_DAY, missionCoins } from '../lib/game'
@@ -17,16 +9,13 @@ import { PARTS } from '../lib/rtcf'
 import type { Answers, GoalId, ToolId } from '../types'
 import { CoinIcon, useGame } from './Game'
 import { BuddyTip, randomLine } from './Buddy'
-import { ImagePrompt } from './ImagePrompt'
 import { PromptCard } from './PromptCard'
-import { RefinePanel } from './RefinePanel'
 import { RtcfTag } from './Rtcf'
 
 interface Props {
   goal: GoalId
   answers: Answers
   toolId: ToolId
-  onAnswer: (id: string, value: string) => void
   onGoTo: (step: Step, page?: number) => void
   onReset: () => void
 }
@@ -43,7 +32,7 @@ function BlankWarning({ blanks, onFix }: { blanks: number; onFix: () => void }) 
   )
 }
 
-export function StepResult({ goal, answers, toolId, onAnswer, onGoTo, onReset }: Props) {
+export function StepResult({ goal, answers, toolId, onGoTo, onReset }: Props) {
   const tool = toolById(toolId)
   const goalInfo = goals.find((g) => g.id === goal)
   const { game, award } = useGame()
@@ -61,49 +50,9 @@ export function StepResult({ goal, answers, toolId, onAnswer, onGoTo, onReset }:
     award({ key: missionKey(goal) })
   }, [doneKey, coins, goal, award])
 
-  let body
-  if (goal === 'image') {
-    const prompt = buildFreeImagePrompt(answers, toolId)
-    const note = imageTools.find((t) => t.id === toolId)?.note
-    body = (
-      <>
-        <BlankWarning blanks={countBlanks(prompt)} onFix={() => onGoTo(1, 0)} />
-        <div className="mt-5 grid gap-4 lg:grid-cols-2 lg:items-start">
-          <PromptCard
-            title="สร้างภาพ"
-            subtitle={`เปิดแชทใหม่ใน ${tool.name} แล้ววาง`}
-            text={prompt}
-            openTool={tool}
-          >
-            {note && <p className="mt-3 rounded-2xl bg-sunken px-3 py-2 text-[15px] text-muted">{note}</p>}
-          </PromptCard>
-          <RefinePanel title="ปรับภาพเพิ่ม" options={imageRefinements} build={buildImageRefinePrompt} />
-        </div>
-      </>
-    )
-  } else {
-    const { content, design } = buildPrompts(goal, answers, toolId)
-    body = (
-      <>
-        <BlankWarning
-          blanks={countBlanks(content) + countBlanks(design)}
-          onFix={() => onGoTo(1, Math.max(firstBlankPage(goal, answers), 0))}
-        />
-        <div className="mt-5 grid gap-4 lg:grid-cols-2 lg:items-start">
-          <PromptCard
-            step={1}
-            title="เขียนเนื้อหา"
-            subtitle={`เปิดแชทใหม่ใน ${tool.name} แล้ววาง`}
-            text={content}
-            openTool={tool}
-          />
-          <PromptCard step={2} title="ทำเป็นสไลด์" subtitle="ได้เนื้อหาแล้ว วางต่อในแชทเดิม" text={design} />
-          <ImagePrompt goal={goal} answers={answers} tool={tool} onAnswer={onAnswer} />
-          <RefinePanel title="ปรับเนื้อหาเพิ่ม" options={refinements} build={(id) => buildRefinePrompt(goal, id)} />
-        </div>
-      </>
-    )
-  }
+  // หน้าสรุปมี prompt กล่องเดียว: คัดลอกแล้วเปิด AI ได้ทันที
+  const prompt = goal === 'image' ? buildFreeImagePrompt(answers, toolId) : buildPrompts(goal, answers, toolId).content
+  const note = goal === 'image' ? imageTools.find((t) => t.id === toolId)?.note : undefined
 
   return (
     <section aria-labelledby="step-heading" className="animate-step-in">
@@ -131,8 +80,22 @@ export function StepResult({ goal, answers, toolId, onAnswer, onGoTo, onReset }:
         </span>
       </BuddyTip>
 
-
-      {body}
+      <div className="mx-auto max-w-3xl">
+        <BlankWarning
+          blanks={countBlanks(prompt)}
+          onFix={() => onGoTo(1, goal === 'image' ? 0 : Math.max(firstBlankPage(goal, answers), 0))}
+        />
+        <div className="mt-5">
+          <PromptCard
+            title={goal === 'image' ? 'สร้างภาพ' : 'เขียนเนื้อหา'}
+            subtitle={`เปิดแชทใหม่ใน ${tool.name} แล้ววาง`}
+            text={prompt}
+            openTool={tool}
+          >
+            {note && <p className="mt-3 rounded-2xl bg-sunken px-3 py-2 text-[15px] text-muted">{note}</p>}
+          </PromptCard>
+        </div>
+      </div>
 
       <p className="mt-6 text-center text-[15px] text-muted">
         {goal === 'image' ? 'ภาพจาก AI อาจไม่ตรงใจในครั้งแรก ลองพิมพ์บอกต่อในแชทได้เลย' : 'AI อาจแต่งเรื่องเพิ่มเอง อ่านทวนก่อนใช้ทุกครั้ง'}

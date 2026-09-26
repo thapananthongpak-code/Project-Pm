@@ -1,5 +1,4 @@
-import { goals, imagePurposes, imageRefinements, imageStyles, imageSubjects, imageTools, questions, refinements, templates, tools } from '../data'
-import type { ImageStyle, ImageSubject, ImageTool } from '../data'
+import { goals, imagePurposes, imageStyles, imageTools, questions, templates, tools } from '../data'
 import type { Answers, GoalId, PromptTemplate, Tool, ToolId } from '../types'
 import { visibleFields, visibleQuestions } from './visible'
 
@@ -57,10 +56,6 @@ export function roleFor(goal: GoalId | null, answers: Answers): string {
   return answers[roleField[goal]]?.trim() || field?.options?.[0] || ''
 }
 
-export function audienceFor(goal: GoalId | null): string {
-  return goal === 'present' ? 'เพื่อนและครู' : 'กรรมการ'
-}
-
 const trackOptions = new Set(questions.flatMap((q) => q.fields.find((f) => f.id === 'track')?.options ?? []))
 
 /** ประโยคแผนการเรียน ม.4 ให้อ่านถูกทุกตัวเลือก (ค่าเก่าที่ไม่มีในตัวเลือกแล้ว ใช้แค่ "ม.4") */
@@ -84,9 +79,6 @@ export function withDefaults(goal: GoalId | null, answers: Answers): Answers {
     role: roleFor(goal, answers),
     trackPhrase: trackPhrase(filled.track),
     subjectLabel: filled.subject === 'อื่นๆ' ? (filled.subjectOther ?? '') : (filled.subject ?? ''),
-    deckType: info?.deckType ?? '',
-    photoHint: info?.photoHint ?? '',
-    audience: audienceFor(goal),
   }
 }
 
@@ -99,19 +91,14 @@ export function contentTemplateFor(goal: GoalId): PromptTemplate {
   return templateFor('content', goal)
 }
 
-export const designTemplate = templates.find((t) => t.stage === 'design')!
-export const refineTemplate = templates.find((t) => t.stage === 'refine')!
-
 /** AI ที่เลือก ถ้าไม่มีใช้ตัวแรก */
 export function toolById(id: ToolId | null): Tool {
   return tools.find((t) => t.id === id) ?? tools[0]
 }
 
 export interface BuiltPrompts {
-  /** ขั้นที่ 1: เขียนเนื้อหา (เปิดแชทใหม่) */
+  /** prompt เดียวครบ RTCF: เนื้อหา หน้าตาสไลด์ และวิธีส่งออกของ AI ที่เลือก */
   content: string
-  /** ขั้นที่ 2: ทำเป็นสไลด์ (วางต่อในแชทเดิม) */
-  design: string
   tool: Tool
 }
 
@@ -120,73 +107,8 @@ export function buildPrompts(goal: GoalId, answers: Answers, toolId: ToolId | nu
   const values = { ...withDefaults(goal, answers), slideSuffix: tool.slideSuffix, answerFormat: tool.promptSuffix }
   return {
     content: fillTemplate(contentTemplateFor(goal).body, values),
-    design: fillTemplate(designTemplate.body, values),
     tool,
   }
-}
-
-export function buildRefinePrompt(goal: GoalId | null, refinementId: string): string {
-  const refinement = refinements.find((r) => r.id === refinementId) ?? refinements[0]
-  return fillTemplate(refineTemplate.body, { audience: audienceFor(goal), refineMode: refinement.refineMode })
-}
-
-/** คำตอบหลายบรรทัด แยกเป็นรายการ */
-function lines(value: string | undefined): string[] {
-  return (value ?? '')
-    .split('\n')
-    .map((s) => s.trim())
-    .filter(Boolean)
-}
-
-/** เรื่องราวในรูป ดึงจากคำตอบที่มีอยู่แล้ว ผู้ใช้ไม่ต้องกรอกเพิ่ม */
-function imageTheme(goal: GoalId, values: Answers, subject: ImageSubject): string {
-  if (subject.id === 'icons') {
-    const items =
-      goal === 'm4' ? ['ข้อมูลส่วนตัว', 'จุดเด่น', 'ผลงาน', 'รางวัล', 'เป้าหมายการเรียน'] : lines(values.keyPoints).slice(0, 6)
-    return items.length ? `ไอคอนละ 1 เรื่อง: ${items.join(', ')}` : ''
-  }
-  if (goal === 'present') {
-    return [values.subjectLabel, values.topic && `เรื่อง ${values.topic}`].filter(Boolean).join(' ')
-  }
-  const strength = lines(values.strengths)[0]
-  const track = values.track && values.track !== 'ยังไม่แน่ใจ' ? trackPhrase(values.track) : ''
-  return [strength && `ท่าทางที่แสดงความสามารถ: ${strength}`, track && `กำลังจะเรียนต่อ ${track}`]
-    .filter(Boolean)
-    .join(' และ')
-}
-
-export interface ImageChoice {
-  subject: ImageSubject
-  style: ImageStyle
-  tool: ImageTool
-}
-
-/** ตัวเลือกรูปที่ผู้ใช้เลือกไว้ (เก็บในคำตอบ) หรือค่าเริ่มต้น */
-export function imageChoice(goal: GoalId, answers: Answers, toolId: ToolId | null): ImageChoice {
-  return {
-    subject:
-      imageSubjects.find((s) => s.label === answers.imageSubject) ??
-      imageSubjects.find((s) => s.id === (goal === 'm4' ? 'avatar' : 'scene'))!,
-    style: imageStyles.find((s) => s.label === answers.imageStyle) ?? imageStyles[0],
-    tool: imageTools.find((t) => t.id === toolId) ?? imageTools[0],
-  }
-}
-
-export function buildImagePrompt(goal: GoalId, answers: Answers, toolId: ToolId | null): string {
-  const { subject, style, tool } = imageChoice(goal, answers, toolId)
-  const values = withDefaults(goal, answers)
-  const look = answers.imageLook?.trim()
-  return fillTemplate(templateFor('image', goal).body, {
-    ...values,
-    imageToolSuffix: tool.suffix,
-    imageSubjectDesc: subject.desc,
-    imageStyleDesc: style.desc,
-    imageCharacter: subject.character
-      ? `นักเรียนไทย ม.3 ใส่ชุดนักเรียน${look ? ` ${look}` : ''} ยิ้มแย้ม ดูเป็นมิตร`
-      : '',
-    imageTheme: imageTheme(goal, values, subject),
-    imageRatio: subject.ratio,
-  })
 }
 
 /** หัวข้อ "สร้างภาพ": ภาพตามที่นักเรียนบรรยาย */
@@ -203,10 +125,6 @@ export function buildFreeImagePrompt(answers: Answers, toolId: ToolId | null): s
   })
 }
 
-export function buildImageRefinePrompt(refinementId: string): string {
-  return (imageRefinements.find((r) => r.id === refinementId) ?? imageRefinements[0]).text
-}
-
 export function countBlanks(text: string): number {
   return text.split(BLANK).length - 1
 }
@@ -214,8 +132,7 @@ export function countBlanks(text: string): number {
 /** หน้าคำถามแรกที่มีช่องซึ่งกลายเป็น [__] ใน prompt (-1 ถ้าไม่มี) */
 export function firstBlankPage(goal: GoalId, answers: Answers): number {
   const blanksWith = (a: Answers) => {
-    const { content, design } = buildPrompts(goal, a, null)
-    return countBlanks(content) + countBlanks(design)
+    return countBlanks(buildPrompts(goal, a, null).content)
   }
   const current = blanksWith(answers)
   if (current === 0) return -1
