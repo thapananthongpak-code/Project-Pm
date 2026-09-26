@@ -177,8 +177,8 @@ export function LivelyBuddy({ action = 'idle', lively = true, onTap, pulse, budd
       {/* เวทีแสงหลังตัวละคร */}
       <span
         aria-hidden="true"
-        className="absolute inset-x-[8%] bottom-[2%] top-[20%] -z-10 rounded-full opacity-45 blur-md"
-        style={{ background: `radial-gradient(circle at 50% 60%, ${buddy.color}, transparent 70%)` }}
+        className="absolute inset-x-[8%] bottom-[2%] top-[20%] -z-10 rounded-full opacity-45"
+        style={{ background: `radial-gradient(circle at 50% 60%, ${buddy.color}, transparent 65%)` }}
       />
       <BuddyArt
         key={`${buddy.id}-${motion.n}`}

@@ -132,7 +132,7 @@ function BadgesDialog({ onClose }: { onClose: () => void }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
 
-  // วางที่ body: หัวเว็บมี backdrop-blur ทำให้ position: fixed ข้างในไม่เต็มจอ
+  // วางที่ body: หัวเว็บ (sticky) ทำให้ position: fixed ข้างในไม่เต็มจอ
   // พื้นหลังไม่เบลอ: เบลอทั้งจอบนกล่องที่เลื่อนได้ ทำให้จอกระพริบใน Chrome เวลาขยับเมาส์
   return createPortal(
     <div

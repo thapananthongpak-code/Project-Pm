@@ -72,7 +72,7 @@ export function Header({ active, onMenu }: Props) {
   )
 
   return (
-    <header className="sticky top-0 z-20 bg-bg/85 pt-[env(safe-area-inset-top)] backdrop-blur-md">
+    <header className="sticky top-0 z-20 bg-bg/95 pt-[env(safe-area-inset-top)]">
       {/* เส้นไล่สี RTCF ใต้หัวเว็บ */}
       <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-[3px] bg-linear-to-r from-brand-500 via-sea-500 via-45% to-mint-500 opacity-70" />
       <div className={`${container} flex flex-wrap items-center gap-2 py-2 md:flex-nowrap md:gap-3`}>

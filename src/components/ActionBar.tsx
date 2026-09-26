@@ -10,7 +10,7 @@ export function ActionBar({ children }: { children: ReactNode }) {
       <div aria-hidden="true" className="h-24" />
       {/* ส่งไปที่ body: ถ้าอยู่ใต้ element ที่มี animation (transform) position: fixed จะไม่ยึดกับจอ */}
       {createPortal(
-        <div className="fixed inset-x-0 bottom-0 z-10 border-t border-line bg-bg/90 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur">
+        <div className="fixed inset-x-0 bottom-0 z-10 border-t border-line bg-bg/95 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3">
           <div className={`${container} flex gap-3`}>{children}</div>
         </div>,
         document.body,
