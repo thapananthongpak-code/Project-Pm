@@ -234,6 +234,9 @@
   background: radial-gradient(circle, rgb(47 139 255 / 0.11), transparent 70%);
 }
 
+/* มีหน้าต่างเปิดทับ: หยุดตัวละครและพื้นหลังที่อยู่ข้างหลัง ไม่ให้ขยับจนดูเหมือนจอกระพริบข้างหน้าต่าง (ตัวในหน้าต่างยังขยับได้) */
+body:has([role='dialog']) :is(.buddy, .buddy *, .animate-drift):not([role='dialog'] *) { animation-play-state: paused; }
+
 /* หางกล่องคำพูด ชี้ไปที่ผู้ช่วย */
 .bubble::before {
   content: '';

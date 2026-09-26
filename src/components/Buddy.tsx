@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
 import { buddies, buddyLines, shopItems, type BuddyInfo, type BuddyLines } from '../data'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { buddyItemId, type Equipped } from '../lib/game'
@@ -80,6 +80,12 @@ function usePrefersReducedMotion() {
   return reduced
 }
 
+/** ตัวละครอยู่หลังหน้าต่างที่เปิดทับ (เช่น ตรารางวัล) ขยับตอนนี้จะดูเหมือนจอกระพริบข้างหน้าต่าง */
+function behindDialog(el: Element | null) {
+  const dialog = document.querySelector('[role="dialog"]')
+  return !!dialog && !!el && !dialog.contains(el)
+}
+
 interface Motion {
   action: BuddyAction
   /** เปลี่ยนทุกครั้งที่เริ่มท่าใหม่ ใช้เป็น key ให้แอนิเมชันเล่นใหม่ */
@@ -91,7 +97,7 @@ interface Motion {
  * ท่าทางของผู้ช่วย: เล่นท่าตามสถานการณ์ (base) แล้ว ถ้า lively จะขยับเองตามนิสัยเป็นระยะ
  * ไม่ถี่เกินไป หยุดเมื่อแท็บถูกซ่อน และปิดเมื่อผู้ใช้ตั้งค่าลดการเคลื่อนไหว
  */
-export function useBuddyMotion(buddy: BuddyInfo, base: BuddyAction, lively: boolean) {
+export function useBuddyMotion(buddy: BuddyInfo, base: BuddyAction, lively: boolean, el?: RefObject<Element | null>) {
   const [m, setM] = useState<Motion>({ action: base, n: 0 })
   const back = useRef<number | undefined>(undefined)
   const reduced = usePrefersReducedMotion()
@@ -127,14 +133,15 @@ export function useBuddyMotion(buddy: BuddyInfo, base: BuddyAction, lively: bool
     const [min, max] = buddy.tempo
     const t = window.setTimeout(
       () => {
-        if (document.hidden) return setM((s) => ({ ...s, n: s.n + 1 })) // แท็บถูกซ่อน: รอรอบหน้า
+        // แท็บถูกซ่อน หรือมีหน้าต่างเปิดทับ: รอรอบหน้า
+        if (document.hidden || behindDialog(el?.current ?? null)) return setM((s) => ({ ...s, n: s.n + 1 }))
         const chatter = Math.random() < 0.35 ? pickOne(buddy.chatter) : undefined
         play(pickOne(buddy.moves), undefined, chatter)
       },
       (min + Math.random() * (max - min)) * 1000,
     )
     return () => window.clearTimeout(t)
-  }, [lively, reduced, m.action, m.n, buddy, play])
+  }, [lively, reduced, m.action, m.n, buddy, play, el])
 
   return { ...m, play }
 }
@@ -159,7 +166,8 @@ export function LivelyBuddy({ action = 'idle', lively = true, onTap, pulse, budd
   const { buddy: current } = useBuddy()
   const { game, award } = useGame()
   const buddy = own ?? current
-  const motion = useBuddyMotion(buddy, action, lively)
+  const artRef = useRef<HTMLSpanElement>(null)
+  const motion = useBuddyMotion(buddy, action, lively, artRef)
   const lastNod = useRef(0)
   const { play } = motion
 
@@ -173,7 +181,7 @@ export function LivelyBuddy({ action = 'idle', lively = true, onTap, pulse, budd
   }, [pulse]) // ตอบสนองเฉพาะตอน pulse เปลี่ยน
 
   const art = (
-    <span className="relative isolate inline-block">
+    <span ref={artRef} className="relative isolate inline-block">
       {/* เวทีแสงหลังตัวละคร */}
       <span
         aria-hidden="true"

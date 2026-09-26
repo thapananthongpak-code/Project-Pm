@@ -40,7 +40,7 @@ export function BadgeShelf() {
       {groups.map((group) => (
         <section key={group} className="mt-5">
           <h3 className="text-sm font-bold text-muted">{group}</h3>
-          <ul className="mt-2 grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+          <ul className="mt-2 grid cursor-default select-none grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-7">
             {badges
               .filter((b) => b.group === group)
               .map((b, i) => {
