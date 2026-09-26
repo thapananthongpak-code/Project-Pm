@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { badges, lesson } from '../data'
-import { applyAward, buyItem, emptyGame, equipItem, fingerprint, quizCoins, reviveGame, type ShopItem } from './game'
+import { applyAward, buddyItemId, buyItem, emptyGame, equipItem, fingerprint, quizCoins, reviveGame, type ShopItem } from './game'
 import { splitSections } from './rtcf'
 
 describe('ระบบเหรียญและตรารางวัล', () => {
@@ -67,8 +67,9 @@ describe('บทเรียน', () => {
 describe('ผู้ช่วย', () => {
   it('มีผู้ช่วย 3-5 ตัว ไม่ซ้ำกัน ไม่มีชื่อ และมีคำลงท้าย', async () => {
     const { buddies } = await import('../data')
-    expect(buddies.length).toBeGreaterThanOrEqual(3)
-    expect(buddies.length).toBeLessThanOrEqual(5)
+    const normal = buddies.filter((b) => !b.special)
+    expect(normal.length).toBeGreaterThanOrEqual(3)
+    expect(normal.length).toBeLessThanOrEqual(5)
     expect(new Set(buddies.map((b) => b.id)).size).toBe(buddies.length)
     for (const b of buddies) {
       expect(b.ending.length).toBeGreaterThan(0)
@@ -158,7 +159,7 @@ describe('ร้านค้า', () => {
     const { shopItems } = await import('../data')
     expect(new Set(shopItems.map((i) => i.id)).size).toBe(shopItems.length)
     for (const i of shopItems) {
-      expect(['head', 'face', 'neck']).toContain(i.slot)
+      expect(['head', 'face', 'neck', 'buddy']).toContain(i.slot)
       expect(i.price).toBeGreaterThan(0)
     }
     for (const slot of ['head', 'face', 'neck']) expect(shopItems.some((i) => i.slot === slot)).toBe(true)
@@ -207,5 +208,39 @@ describe('ตรารางวัลสะสม', () => {
     s = buyItem(s, { id: 'bow', slot: 'head', name: 'โบว์', price: 30 })
     expect(s.coins).toBe(20)
     expect(s.earned).toBe(50)
+  })
+})
+
+describe('ตัวละครพิเศษ', () => {
+  it('มีตัวพิเศษ 3 ตัว ทุกตัวมีราคา และขายในร้าน', async () => {
+    const { buddies, shopItems } = await import('../data')
+    const specials = buddies.filter((b) => b.special)
+    expect(specials.map((b) => b.id)).toEqual(['unicorn', 'dragon', 'fox'])
+    for (const b of specials) {
+      const item = shopItems.find((i) => i.id === buddyItemId(b.id))
+      expect(item?.slot, b.id).toBe('buddy')
+      expect(item?.price, b.id).toBe(b.price)
+    }
+  })
+
+  it('ตัวพิเศษมีท่าพิเศษของตัวเอง', async () => {
+    const { buddies } = await import('../data')
+    const moves = (id: string) => buddies.find((b) => b.id === id)!.moves
+    expect(moves('unicorn')).toContain('rainbow')
+    expect(moves('dragon')).toEqual(expect.arrayContaining(['fly', 'fire']))
+    expect(moves('fox')).toContain('magic')
+  })
+
+  it('ซื้อตัวพิเศษแล้วไม่ไปใส่เป็นของแต่งตัว และนับตราแยกจากของแต่งตัว', async () => {
+    const { badges } = await import('../data')
+    const { newlyEarned, badgeProgress } = await import('./badges')
+    const unicorn: ShopItem = { id: 'buddy:unicorn', slot: 'buddy', name: 'ยูนิคอร์น', price: 250 }
+    const s = buyItem({ ...emptyGame, coins: 300 }, unicorn)
+    expect(s.coins).toBe(50)
+    expect(s.owned).toEqual(['buddy:unicorn'])
+    expect(s.equipped).toEqual({})
+    expect(newlyEarned(s, badges)).toContain('special-buddy')
+    expect(newlyEarned(s, badges)).not.toContain('shopper') // ช้อปครั้งแรกนับเฉพาะของแต่งตัว
+    expect(badgeProgress(s, { type: 'buddies', goal: 3 })).toEqual({ value: 1, goal: 3 })
   })
 })

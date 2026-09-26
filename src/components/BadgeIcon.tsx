@@ -62,6 +62,8 @@ const glyphs: Record<BadgeIconName | 'lock', ReactNode> = {
   box: <path d="M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10" />,
   sparkle: <path d="M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2zM19 2v4M17 4h4" />,
   heart: <path d="M12 20s-8-5-8-11a4.5 4.5 0 0 1 8-3 4.5 4.5 0 0 1 8 3c0 6-8 11-8 11z" />,
+  wand: <path d="M4 20l11-11M15 9l2-2M17 3v3M15.5 4.5h3M20 8v3M18.5 9.5h3M10 4v2M9 5h2" />,
+  rainbow: <path d="M3 18a9 9 0 0 1 18 0M6.5 18a5.5 5.5 0 0 1 11 0M10 18a2 2 0 0 1 4 0" />,
   lock: <path d="M6 11h12v9H6zM8.5 11V8a3.5 3.5 0 0 1 7 0v3M12 15v2" />,
 }
 

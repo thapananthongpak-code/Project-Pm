@@ -1,7 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
-import { buddies, buddyLines, type BuddyInfo, type BuddyLines } from '../data'
+import { buddies, buddyLines, shopItems, type BuddyInfo, type BuddyLines } from '../data'
 import { useLocalStorage } from '../hooks/useLocalStorage'
-import type { Equipped } from '../lib/game'
+import { buddyItemId, type Equipped } from '../lib/game'
+import { celebrate } from '../lib/confetti'
 import { BuddyArt, type BuddyAction } from './BuddyArt'
 import { useGame } from './Game'
 
@@ -36,7 +37,10 @@ export function BuddyProvider({ children }: { children: ReactNode }) {
     typeof raw === 'string' && buddies.some((b) => b.id === raw) ? raw : '',
   )
   const [picking, setPicking] = useState(false)
-  const buddy = buddies.find((b) => b.id === id) ?? buddies[0]
+  const { game } = useGame()
+  // ตัวละครพิเศษต้องปลดล็อกก่อน (เช่น ล้างข้อมูลแล้ว) ไม่อย่างนั้นใช้ตัวแรก
+  const buddy =
+    buddies.find((b) => b.id === id && (!b.special || game.owned.includes(buddyItemId(b.id)))) ?? buddies[0]
 
   const choose = useCallback(
     (next: string) => {
@@ -309,8 +313,22 @@ function BuddyPicker({
 }) {
   const [selected, setSelected] = useState(current)
   const confirmRef = useRef<HTMLButtonElement>(null)
-  const { game } = useGame()
+  const { game, buy } = useGame()
   const pick = buddies.find((b) => b.id === selected) ?? buddies[0]
+  const normal = buddies.filter((b) => !b.special)
+  const specials = buddies.filter((b) => b.special)
+  const owns = (b: BuddyInfo) => !b.special || game.owned.includes(buddyItemId(b.id))
+  const pickLocked = !owns(pick)
+  const short = (pick.price ?? 0) - game.coins
+
+  function confirm() {
+    if (pickLocked) {
+      const item = shopItems.find((i) => i.id === buddyItemId(pick.id))
+      if (!item || !buy(item)) return
+      celebrate('big')
+    }
+    onChoose(pick.id)
+  }
 
   useEffect(() => {
     confirmRef.current?.focus()
@@ -336,37 +354,28 @@ function BuddyPicker({
         </h2>
         <p className="text-center text-muted">ผู้ช่วยจะคอยเล่นด้วย ให้กำลังใจ และบอกทริค เปลี่ยนได้ทุกเมื่อ</p>
 
-        <div role="radiogroup" aria-labelledby="picker-title" className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-5">
-          {buddies.map((b, i) => {
-            const on = b.id === selected
-            return (
-              <button
+        <div role="radiogroup" aria-labelledby="picker-title">
+          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-5">
+            {normal.map((b, i) => (
+              <PickCard key={b.id} buddy={b} on={b.id === selected} index={i} wide={i === normal.length - 1} onPick={setSelected} />
+            ))}
+          </div>
+          <p className="mt-5 flex items-center gap-2 font-semibold">
+            <span className="rounded-full bg-linear-to-r from-[#ffd23f] to-accent-300 px-3 py-0.5 text-xs font-bold text-[#3b2400]">พิเศษ</span>
+            ตัวละครพิเศษ ปลดล็อกด้วยเหรียญ
+          </p>
+          <div className="mt-2 grid grid-cols-3 gap-3">
+            {specials.map((b, i) => (
+              <PickCard
                 key={b.id}
-                type="button"
-                role="radio"
-                aria-checked={on}
-                aria-label={b.intro}
-                onClick={() => setSelected(b.id)}
-                style={{ animationDelay: `${i * 80}ms` }}
-                className={`flex animate-fly-in flex-col items-center justify-center gap-1 rounded-3xl border-2 p-3 pt-5 text-center transition duration-200 hover:-translate-y-1 active:scale-95 ${
-                  on ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/40' : 'border-line bg-surface'
-                } ${i === buddies.length - 1 ? 'col-span-2 sm:col-span-1' : ''}`}
-              >
-                {on ? (
-                  <LivelyBuddy buddy={b} action="wave" className="size-20 sm:size-28" />
-                ) : (
-                  <BuddyArt buddy={b} action="idle" outfit={game.equipped} className="size-20 sm:size-28" />
-                )}
-                <span
-                  className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                    on ? 'bg-brand-600 text-white' : 'bg-sunken text-muted'
-                  }`}
-                >
-                  {b.trait}
-                </span>
-              </button>
-            )
-          })}
+                buddy={b}
+                on={b.id === selected}
+                index={normal.length + i}
+                locked={!owns(b)}
+                onPick={setSelected}
+              />
+            ))}
+          </div>
         </div>
 
         <p key={pick.id} className="mt-4 animate-fly-in text-center text-muted" aria-live="polite">
@@ -378,12 +387,71 @@ function BuddyPicker({
               ยกเลิก
             </button>
           )}
-          <button ref={confirmRef} type="button" onClick={() => onChoose(selected)} className="btn-primary flex-1 text-lg">
-            เลือกผู้ช่วยตัวนี้
+          <button
+            ref={confirmRef}
+            type="button"
+            onClick={confirm}
+            disabled={pickLocked && short > 0}
+            className={`${pickLocked ? 'btn-accent' : 'btn-primary'} flex-1 text-lg`}
+          >
+            {!pickLocked
+              ? 'เลือกผู้ช่วยตัวนี้'
+              : short > 0
+                ? `ต้องใช้ ${pick.price} เหรียญ (ขาดอีก ${short})`
+                : `ปลดล็อก ${pick.price} เหรียญ แล้วใช้เลย`}
           </button>
         </div>
       </div>
       </div>
     </div>
+  )
+}
+
+/** การ์ดตัวเลือกผู้ช่วยในหน้าต่างเลือก */
+function PickCard({
+  buddy: b,
+  on,
+  index,
+  wide = false,
+  locked = false,
+  onPick,
+}: {
+  buddy: BuddyInfo
+  on: boolean
+  index: number
+  wide?: boolean
+  locked?: boolean
+  onPick: (id: string) => void
+}) {
+  const { game } = useGame()
+  return (
+    <button
+      type="button"
+      role="radio"
+      aria-checked={on}
+      aria-label={locked ? `${b.intro} (ล็อกอยู่ ${b.price} เหรียญ)` : b.intro}
+      onClick={() => onPick(b.id)}
+      style={{ animationDelay: `${index * 70}ms` }}
+      className={`relative flex animate-fly-in flex-col items-center justify-center gap-1 rounded-3xl border-2 p-3 pt-5 text-center transition duration-200 hover:-translate-y-1 active:scale-95 ${
+        on ? 'border-brand-500 bg-brand-50 dark:bg-brand-900/40' : 'border-line bg-surface'
+      } ${wide ? 'col-span-2 sm:col-span-1' : ''}`}
+    >
+      {locked && (
+        <span className="absolute right-2 top-2 flex items-center gap-0.5 rounded-full bg-ink/80 px-2 py-0.5 text-[11px] font-bold text-white">
+          <svg viewBox="0 0 24 24" className="size-3" fill="none" stroke="currentColor" strokeWidth="2.6" aria-hidden="true">
+            <path d="M6 11h12v9H6zM8.5 11V8a3.5 3.5 0 0 1 7 0v3" />
+          </svg>
+          {b.price}
+        </span>
+      )}
+      {on ? (
+        <LivelyBuddy buddy={b} action="wave" className="size-20 sm:size-28" />
+      ) : (
+        <BuddyArt buddy={b} action="idle" outfit={game.equipped} className={`size-20 sm:size-28 ${locked ? 'opacity-80 saturate-50' : ''}`} />
+      )}
+      <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${on ? 'bg-brand-600 text-white' : 'bg-sunken text-muted'}`}>
+        {b.trait}
+      </span>
+    </button>
   )
 }

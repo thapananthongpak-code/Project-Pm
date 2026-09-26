@@ -70,5 +70,23 @@
     "slot": "neck",
     "name": "สร้อยดาว",
     "price": 90
+  },
+  {
+    "id": "buddy:unicorn",
+    "slot": "buddy",
+    "name": "ยูนิคอร์นสายรุ้ง",
+    "price": 250
+  },
+  {
+    "id": "buddy:dragon",
+    "slot": "buddy",
+    "name": "มังกรน้อย",
+    "price": 350
+  },
+  {
+    "id": "buddy:fox",
+    "slot": "buddy",
+    "name": "จิ้งจอกเวทมนตร์",
+    "price": 450
   }
 ]

@@ -94,7 +94,7 @@ export interface Lesson {
 export type BadgeIconName =
   | 'book' | 'sort' | 'target' | 'eye' | 'fire' | 'repeat'
   | 'pencil' | 'folder' | 'slides' | 'palette' | 'trophy' | 'scroll' | 'crown'
-  | 'coins' | 'gem' | 'bag' | 'box' | 'sparkle' | 'heart'
+  | 'coins' | 'gem' | 'bag' | 'box' | 'sparkle' | 'heart' | 'wand' | 'rainbow'
 
 export interface Badge {
   id: string
@@ -113,11 +113,14 @@ export const rtcf = rtcfJson as RtcfInfo[]
 export const lesson = lessonJson as Lesson
 export const badges = badgesJson as unknown as Badge[]
 
-export type BuddyKind = 'cat' | 'bear' | 'bunny' | 'robot' | 'dino'
+export type BuddyKind = 'cat' | 'bear' | 'bunny' | 'robot' | 'dino' | 'unicorn' | 'dragon' | 'fox'
 
 export interface BuddyInfo {
   id: string
   kind: BuddyKind
+  /** ตัวละครพิเศษ: ต้องซื้อด้วยเหรียญ มีรัศมีเรืองแสงและท่าพิเศษ */
+  special?: boolean
+  price?: number
   /** นิสัยสั้นๆ แสดงในหน้าเลือกผู้ช่วย */
   trait: string
   intro: string

@@ -7,6 +7,7 @@ export type BadgeRule =
   | { type: 'missions' }
   | { type: 'earned'; goal: number }
   | { type: 'owned'; goal: number }
+  | { type: 'buddies'; goal: number }
   | { type: 'equipped'; goal: number }
 
 export interface BadgeDef {
@@ -33,7 +34,10 @@ export function badgeProgress(state: GameState, rule: BadgeRule): { value: numbe
     case 'earned':
       return { value: state.earned, goal: rule.goal }
     case 'owned':
-      return { value: state.owned.length, goal: rule.goal }
+      // นับเฉพาะของแต่งตัว (ไม่รวมตัวละครพิเศษ)
+      return { value: state.owned.filter((id) => !id.startsWith('buddy:')).length, goal: rule.goal }
+    case 'buddies':
+      return { value: state.owned.filter((id) => id.startsWith('buddy:')).length, goal: rule.goal }
     case 'equipped':
       return { value: Object.keys(state.equipped).length, goal: rule.goal }
   }

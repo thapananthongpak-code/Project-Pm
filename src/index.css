@@ -340,6 +340,54 @@
 .buddy .b-roar { animation: roar-lines 0.35s ease-in-out 4 alternate; }
 .buddy .b-signal { animation: dot-pulse 0.5s ease-in-out 4; }
 
+/* --- ตัวละครพิเศษ --- */
+.buddy .b-aura { transform-box: fill-box; transform-origin: center; animation: aura 3.2s ease-in-out infinite; }
+.buddy .b-orbit { transform-box: view-box; transform-origin: 60px 72px; animation: orbit 12s linear infinite; }
+.buddy .b-wing-l, .buddy .b-wing-r { transform-box: fill-box; animation: wing 1.6s ease-in-out infinite; }
+.buddy .b-wing-l { transform-origin: 100% 45%; }
+.buddy .b-wing-r { transform-origin: 0% 45%; animation-name: wing-r; }
+.buddy .b-horn { animation: horn-glow 2.6s ease-in-out infinite; }
+.buddy .b-mark { transform-box: fill-box; transform-origin: center; animation: twinkle 2.2s ease-in-out infinite; }
+.buddy[data-kind='fox'] .b-tail { filter: drop-shadow(0 0 5px rgb(165 180 252 / 0.95)); }
+.buddy[data-action='fly'] .b-all { animation: buddy-fly 1s ease-in-out 3; }
+.buddy[data-action='fly'] .b-wing-l, .buddy[data-action='fly'] .b-wing-r { animation-duration: 0.3s; }
+.buddy[data-action='fly'] .b-shadow { animation: shadow-shrink 1s ease-in-out 3; transform-box: fill-box; transform-origin: center; }
+.buddy[data-action='fire'] .b-all { animation: buddy-nod 0.5s ease-in-out 3; }
+.buddy .b-fire { transform-box: fill-box; transform-origin: center; animation: fire-puff 0.9s ease-out infinite; }
+.buddy .b-rainbow { transform-box: fill-box; transform-origin: 50% 100%; animation: rainbow-in 2.4s ease-out 1 both; }
+.buddy[data-action='rainbow'] .b-all { animation: buddy-hop 0.6s ease-out 2; }
+.buddy[data-action='rainbow'] .b-arm-l { transform: rotate(55deg); }
+.buddy[data-action='rainbow'] .b-arm-r { transform: rotate(-55deg); }
+.buddy .b-magic { transform-box: view-box; transform-origin: 60px 70px; animation: orbit 1.4s linear 2; }
+.buddy[data-action='magic'] .b-all { animation: buddy-squish 0.7s ease-in-out 3; }
+.buddy[data-action='magic'] .b-arm-r { transform: rotate(-120deg); }
+.buddy .b-wind { animation: dot-pulse 0.5s ease-in-out infinite; }
+
+@keyframes aura { 0%, 100% { opacity: 0.75; transform: scale(0.94); } 50% { opacity: 1; transform: scale(1.06); } }
+@keyframes orbit { to { transform: rotate(360deg); } }
+@keyframes wing { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(18deg); } }
+@keyframes wing-r { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-18deg); } }
+@keyframes horn-glow {
+  0%, 100% { filter: drop-shadow(0 0 1px rgb(255 210 63 / 0.4)); }
+  50% { filter: drop-shadow(0 0 6px rgb(255 210 63 / 1)); }
+}
+@keyframes buddy-fly {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-18px) rotate(-3deg); }
+}
+@keyframes shadow-shrink { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.6); opacity: 0.4; } }
+@keyframes fire-puff {
+  0% { opacity: 0; transform: translate(-6px, 4px) scale(0.4); }
+  30% { opacity: 1; }
+  100% { opacity: 0; transform: translate(8px, -6px) scale(1.3); }
+}
+@keyframes rainbow-in {
+  0% { opacity: 0; transform: scale(0.3); }
+  35% { opacity: 1; transform: scale(1.05); }
+  80% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1); }
+}
+
 @keyframes buddy-bob {
   0%, 100% { transform: translateY(0) scale(1, 1); }
   50% { transform: translateY(-3px) scale(1.02, 0.98); }

@@ -1,13 +1,14 @@
 import { useState } from 'react'
-import { shopItems } from '../data'
+import { buddies, shopItems, type BuddyInfo } from '../data'
 import { celebrate } from '../lib/confetti'
-import { MISSION_COINS, PERFECT_BONUS, quizCoins, type Equipped, type ShopItem, type Slot } from '../lib/game'
+import { buddyItemId, MISSION_COINS, PERFECT_BONUS, quizCoins, type Equipped, type ShopItem, type ShopSlot, type Slot } from '../lib/game'
 import { LivelyBuddy, useBuddy } from './Buddy'
 import { BuddyArt } from './BuddyArt'
 import { CoinIcon, useGame } from './Game'
 import { useToast } from './Toast'
 
-const slots: { id: Slot; label: string }[] = [
+const slots: { id: ShopSlot; label: string }[] = [
+  { id: 'buddy', label: 'ตัวละครพิเศษ' },
   { id: 'head', label: 'หมวก' },
   { id: 'face', label: 'แว่นตา' },
   { id: 'neck', label: 'ของคล้องคอ' },
@@ -31,7 +32,7 @@ export function Shop() {
   const { game, buy, equip } = useGame()
   const { buddy } = useBuddy()
   const notify = useToast()
-  const [slot, setSlot] = useState<Slot>('head')
+  const [slot, setSlot] = useState<ShopSlot>('buddy')
   const [tryOn, setTryOn] = useState<TryOn>({})
   const [party, setParty] = useState(0)
   const preview = withTryOn(game.equipped, tryOn)
@@ -41,7 +42,7 @@ export function Shop() {
     setTryOn(({ [s]: _removed, ...rest }) => rest)
   }
 
-  function onBuy(item: ShopItem) {
+  function onBuy(item: ShopItem & { slot: Slot }) {
     if (!buy(item)) return
     clearTry(item.slot)
     setParty((n) => n + 1)
@@ -49,7 +50,7 @@ export function Shop() {
     notify(`ซื้อ${item.name}แล้ว! ใส่ให้ผู้ช่วยเรียบร้อย`)
   }
 
-  const items = shopItems.filter((i) => i.slot === slot)
+  const items = shopItems.filter((i) => i.slot === slot) as (ShopItem & { slot: Slot })[]
 
   return (
     <section aria-labelledby="page-heading" className="animate-step-in">
@@ -88,7 +89,7 @@ export function Shop() {
 
         <div>
           {/* หมวดของ */}
-          <div role="tablist" aria-label="หมวดของ" className="flex gap-2">
+          <div role="tablist" aria-label="หมวดของ" className="flex flex-wrap gap-2">
             {slots.map((s) => (
               <button
                 key={s.id}
@@ -105,6 +106,9 @@ export function Shop() {
             ))}
           </div>
 
+          {slot === 'buddy' ? (
+            <SpecialBuddies onBought={() => setParty((n) => n + 1)} />
+          ) : (
           <ul role="tabpanel" className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
             {items.map((item, i) => {
               const owned = game.owned.includes(item.id)
@@ -163,6 +167,7 @@ export function Shop() {
               )
             })}
           </ul>
+          )}
 
           {/* วิธีได้เหรียญ */}
           <div className="card deco-card mt-5 p-4 sm:p-5">
@@ -188,5 +193,71 @@ export function Shop() {
         </div>
       </div>
     </section>
+  )
+}
+
+/** ตัวละครพิเศษ: ดูท่าจริงก่อนซื้อ ปลดล็อกด้วยเหรียญ แล้วเลือกใช้ได้ทันที */
+function SpecialBuddies({ onBought }: { onBought: () => void }) {
+  const { game, buy } = useGame()
+  const { buddy: current, choose } = useBuddy()
+  const notify = useToast()
+  const specials = buddies.filter((b) => b.special)
+
+  function unlock(b: BuddyInfo) {
+    const item = shopItems.find((i) => i.id === buddyItemId(b.id))
+    if (!item || !buy(item)) return
+    choose(b.id)
+    onBought()
+    celebrate('big')
+    notify('ปลดล็อกตัวละครพิเศษแล้ว! เปลี่ยนเป็นผู้ช่วยให้เรียบร้อย')
+  }
+
+  return (
+    <div role="tabpanel" className="mt-4 space-y-3">
+      <p className="text-[15px] text-muted">ตัวละครพิเศษมีรัศมีเรืองแสง ประกายดาววนรอบตัว และท่าพิเศษของตัวเอง</p>
+      <ul className="grid gap-3 sm:grid-cols-3">
+        {specials.map((b, i) => {
+          const owned = game.owned.includes(buddyItemId(b.id))
+          const using = current.id === b.id
+          const short = (b.price ?? 0) - game.coins
+          return (
+            <li
+              key={b.id}
+              className={`card deco-card flex animate-fly-in flex-col items-center p-4 text-center ${using ? 'ring-2 ring-brand-500' : ''}`}
+              style={{ animationDelay: `${i * 90}ms` }}
+            >
+              <span className="rounded-full bg-linear-to-r from-[#ffd23f] to-accent-300 px-3 py-0.5 text-xs font-bold text-[#3b2400]">
+                ตัวละครพิเศษ
+              </span>
+              <LivelyBuddy buddy={b} action="wave" className="mt-2 size-32" label={`แตะเล่นกับ${b.intro}`} />
+              <p className="mt-2 font-display text-lg font-bold">{b.trait}</p>
+              <p className="text-sm text-muted">{b.intro}</p>
+              <div className="mt-3 w-full">
+                {owned ? (
+                  <button
+                    type="button"
+                    onClick={() => choose(b.id)}
+                    disabled={using}
+                    className={`${using ? 'btn-ghost' : 'btn-primary'} min-h-11 w-full`}
+                  >
+                    {using ? 'ใช้อยู่' : 'ใช้ตัวนี้'}
+                  </button>
+                ) : short > 0 ? (
+                  <button type="button" disabled className="btn-ghost min-h-11 w-full">
+                    <CoinIcon className="size-5" />
+                    {b.price} · ขาดอีก {short}
+                  </button>
+                ) : (
+                  <button type="button" onClick={() => unlock(b)} className="btn-accent min-h-11 w-full">
+                    <CoinIcon className="size-5" />
+                    ปลดล็อก {b.price}
+                  </button>
+                )}
+              </div>
+            </li>
+          )
+        })}
+      </ul>
+    </div>
   )
 }

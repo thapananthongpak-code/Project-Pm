@@ -4,9 +4,15 @@ export const SLOTS: Slot[] = ['head', 'face', 'neck']
 /** ของที่ใส่อยู่ ช่องละ 1 ชิ้น */
 export type Equipped = Partial<Record<Slot, string>>
 
+/** ช่องของในร้าน: ของแต่งตัว หรือ ตัวละครพิเศษ ("buddy") */
+export type ShopSlot = Slot | 'buddy'
+
+/** id ของตัวละครพิเศษในคลัง เช่น "buddy:unicorn" */
+export const buddyItemId = (buddyId: string) => `buddy:${buddyId}`
+
 export interface ShopItem {
   id: string
-  slot: Slot
+  slot: ShopSlot
   name: string
   price: number
 }
@@ -80,7 +86,8 @@ export function buyItem(state: GameState, item: ShopItem): GameState {
     ...state,
     coins: state.coins - item.price,
     owned: [...state.owned, item.id],
-    equipped: { ...state.equipped, [item.slot]: item.id },
+    // ของแต่งตัวใส่ให้เลย ส่วนตัวละครพิเศษเลือกใช้ที่หน้าเลือกผู้ช่วย/ร้านค้า
+    equipped: item.slot === 'buddy' ? state.equipped : { ...state.equipped, [item.slot]: item.id },
   }
 }
 

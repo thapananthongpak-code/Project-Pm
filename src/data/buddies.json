@@ -164,6 +164,109 @@
       "color": "#86dcaa",
       "dark": "#16a970",
       "belly": "#ebfbf2"
+    },
+    {
+      "id": "unicorn",
+      "kind": "unicorn",
+      "special": true,
+      "price": 250,
+      "trait": "สดใส มีเวทมนตร์",
+      "intro": "ยูนิคอร์นสายรุ้ง เสกความสุขได้",
+      "ending": "ปิ๊ง~",
+      "tempo": [
+        5,
+        9
+      ],
+      "moves": [
+        "rainbow",
+        "hop",
+        "shy",
+        "look",
+        "rainbow",
+        "spin"
+      ],
+      "tap": [
+        "rainbow",
+        "love",
+        "spin"
+      ],
+      "chatter": [
+        "เสกสายรุ้งให้เลย",
+        "ความสุขมาแล้ว",
+        "วิบวับ~",
+        "ขอให้วันนี้สดใส"
+      ],
+      "color": "#fdf4ff",
+      "dark": "#c084fc",
+      "belly": "#ffffff"
+    },
+    {
+      "id": "dragon",
+      "kind": "dragon",
+      "special": true,
+      "price": 350,
+      "trait": "กล้าหาญ บินได้",
+      "intro": "มังกรน้อยบินได้ พ่นไฟอุ่นๆ เป็นกำลังใจ",
+      "ending": "ฟู่ว~",
+      "tempo": [
+        4,
+        8
+      ],
+      "moves": [
+        "fly",
+        "fire",
+        "dance",
+        "fly",
+        "nod"
+      ],
+      "tap": [
+        "fly",
+        "fire",
+        "cheer"
+      ],
+      "chatter": [
+        "บินสูงไปเลย!",
+        "พ่นไฟอุ่นๆ ให้กำลังใจ",
+        "มังกรไม่กลัวอะไร",
+        "ปีกพร้อม!"
+      ],
+      "color": "#7dd3c0",
+      "dark": "#0f766e",
+      "belly": "#fef3c7"
+    },
+    {
+      "id": "fox",
+      "kind": "fox",
+      "special": true,
+      "price": 450,
+      "trait": "ลึกลับ เรืองแสง",
+      "intro": "จิ้งจอกเวทมนตร์ หางเรืองแสง",
+      "ending": "วิ้ง~",
+      "tempo": [
+        5,
+        9
+      ],
+      "moves": [
+        "magic",
+        "tailwag",
+        "look",
+        "magic",
+        "spin"
+      ],
+      "tap": [
+        "magic",
+        "spin",
+        "love"
+      ],
+      "chatter": [
+        "เสกคาถาช่วยคิด",
+        "ดาววิบวับรอบตัวเลย",
+        "เวทมนตร์ prompt!",
+        "แสงดาวนำทาง"
+      ],
+      "color": "#a5b4fc",
+      "dark": "#4f46e5",
+      "belly": "#eef2ff"
     }
   ],
   "greetings": [
