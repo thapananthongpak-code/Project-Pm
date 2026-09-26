@@ -7,7 +7,7 @@ import { BadgeShelf } from './BadgeShelf'
 import { useGame } from './Game'
 import type { Menu } from './Header'
 import { Buddy, BuddyTip, LivelyBuddy, useBuddy } from './Buddy'
-import { QuizPick, QuizSort } from './Quiz'
+import { QuizPick, QuizSort, quizDoneKey } from './Quiz'
 import { RtcfTag, RtcfText } from './Rtcf'
 import { SCHOOL } from './layout'
 
@@ -46,24 +46,35 @@ export function Lesson({ onGo }: Props) {
     return () => window.removeEventListener('resize', fit)
   }, [present])
   const stageRef = useRef<HTMLDivElement>(null)
-  const { award, reset } = useGame()
-  const slide = slides[index]
+  const { game, award, reset } = useGame()
+
+  // ล็อก: สไลด์แบบทดสอบต้องเล่นจบอย่างน้อย 1 รอบ ถึงจะไปสไลด์ถัดไปได้
+  const quizOf: Partial<Record<SlideKind, 'sort' | 'pick'>> = { 'quiz-sort': 'sort', 'quiz-pick': 'pick' }
+  const lockAt = slides.findIndex((s) => {
+    const q = quizOf[s.kind]
+    return q !== undefined && !game.claimed.includes(quizDoneKey(q))
+  })
+  /** สไลด์สุดท้ายที่ไปถึงได้ตอนนี้ */
+  const maxIndex = lockAt === -1 ? slides.length - 1 : lockAt
+  const slide = slides[Math.min(index, maxIndex)]
+  const current = Math.min(index, maxIndex)
+  const locked = current === lockAt
 
   // ดูสไลด์ใหม่ได้ 5 เหรียญ ดูครบได้ตรารางวัล
   useEffect(() => {
     award({ key: `slide:${slide.id}`, coins: 5 })
-    if (index === slides.length - 1) award({ key: 'lesson:done', coins: 20, badge: 'learner' })
-  }, [slide.id, index, award])
+    if (current === slides.length - 1) award({ key: 'lesson:done', coins: 20, badge: 'learner' })
+  }, [slide.id, current, award])
 
   const go = useCallback(
     (to: number) => {
-      const next = Math.max(0, Math.min(slides.length - 1, to))
-      if (next === index) return
-      setDir(next > index ? 'next' : 'prev')
+      const next = Math.max(0, Math.min(maxIndex, to))
+      if (next === current) return
+      setDir(next > current ? 'next' : 'prev')
       setIndex(next)
       if (!present) window.scrollTo({ top: 0 })
     },
-    [index, present, setIndex],
+    [current, maxIndex, present, setIndex],
   )
 
   // ลูกศรซ้าย/ขวาเปลี่ยนสไลด์ (ไม่ทำงานตอนพิมพ์), Esc ออกจากโหมดนำเสนอ
@@ -71,13 +82,13 @@ export function Lesson({ onGo }: Props) {
     function onKey(e: KeyboardEvent) {
       const t = e.target as HTMLElement
       if (t.closest('input, textarea')) return
-      if (e.key === 'ArrowRight' || e.key === 'PageDown') go(index + 1)
-      if (e.key === 'ArrowLeft' || e.key === 'PageUp') go(index - 1)
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') go(current + 1)
+      if (e.key === 'ArrowLeft' || e.key === 'PageUp') go(current - 1)
       if (e.key === 'Escape') setPresent(false)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [go, index])
+  }, [go, current])
 
   // โหมดนำเสนอ: ขอเต็มจอจริงถ้าเบราว์เซอร์รองรับ (iPhone ไม่รองรับ จะใช้แบบเต็มหน้าเว็บแทน)
   useEffect(() => {
@@ -93,7 +104,7 @@ export function Lesson({ onGo }: Props) {
     return () => document.removeEventListener('fullscreenchange', onChange)
   }, [present])
 
-  const isLast = index === slides.length - 1
+  const isLast = current === slides.length - 1
   const title = slide.kind === 'part' ? `${slide.part} = ${rtcf.find((r) => r.id === slide.part)?.en}` : slideTitles[slide.kind]
 
   return (
@@ -122,11 +133,12 @@ export function Lesson({ onGo }: Props) {
               key={s.id}
               type="button"
               role="tab"
-              aria-selected={i === index}
-              aria-label={`สไลด์ ${i + 1}`}
+              aria-selected={i === current}
+              aria-label={i > maxIndex ? `สไลด์ ${i + 1} (ล็อกอยู่ ทำแบบทดสอบก่อน)` : `สไลด์ ${i + 1}`}
+              disabled={i > maxIndex}
               onClick={() => go(i)}
-              className={`h-2.5 rounded-full transition-all duration-300 ${
-                i === index ? 'w-8 bg-brand-600' : i < index ? 'w-2.5 bg-brand-300' : 'w-2.5 bg-line'
+              className={`h-2.5 rounded-full transition-all duration-300 disabled:cursor-not-allowed ${
+                i === current ? 'w-8 bg-brand-600' : i < current ? 'w-2.5 bg-brand-300' : i > maxIndex ? 'w-2.5 bg-line opacity-50' : 'w-2.5 bg-line'
               }`}
             />
           ))}
@@ -145,7 +157,7 @@ export function Lesson({ onGo }: Props) {
         </div>
 
         <div className="mt-4 flex gap-3">
-          <button type="button" onClick={() => go(index - 1)} disabled={index === 0} className="btn-ghost">
+          <button type="button" onClick={() => go(current - 1)} disabled={current === 0} className="btn-ghost">
             ย้อนกลับ
           </button>
           {isLast ? (
@@ -153,11 +165,27 @@ export function Lesson({ onGo }: Props) {
               เริ่มภารกิจ
             </button>
           ) : (
-            <button type="button" onClick={() => go(index + 1)} className="btn-primary flex-1 text-lg">
-              ถัดไป
+            <button
+              type="button"
+              onClick={() => go(current + 1)}
+              disabled={locked}
+              aria-describedby={locked ? 'lock-note' : undefined}
+              className="btn-primary flex-1 text-lg"
+            >
+              {locked && (
+                <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M6 11h12v9H6zM8.5 11V8a3.5 3.5 0 0 1 7 0v3" />
+                </svg>
+              )}
+              {locked ? 'ทำแบบทดสอบก่อน' : 'ถัดไป'}
             </button>
           )}
         </div>
+        {locked && (
+          <p id="lock-note" className="mt-2 text-center text-sm text-muted">
+            ตอบให้ครบทุกข้อจนจบรอบ แล้วจะไปสไลด์ถัดไปได้
+          </p>
+        )}
       </div>
     </section>
   )

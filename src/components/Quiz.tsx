@@ -85,8 +85,11 @@ function Finished({
   )
 }
 
+/** key ใน claimed ที่บอกว่าเล่นแบบทดสอบนี้จบแล้วอย่างน้อย 1 รอบ (ใช้ปลดล็อกสไลด์ถัดไป) */
+export const quizDoneKey = (id: 'sort' | 'pick') => `quizdone:${id}`
+
 /** ติดตามคะแนน/ติดกัน/เหรียญของ 1 รอบ */
-function useRound(total: number) {
+function useRound(total: number, id: 'sort' | 'pick') {
   const { award } = useGame()
   const [score, setScore] = useState(0)
   const [streak, setStreak] = useState(0)
@@ -103,14 +106,17 @@ function useRound(total: number) {
     const coins = quizCoins(nextStreak)
     // ไม่มี key = ได้เหรียญทุกครั้งที่ตอบถูก (เล่นซ้ำได้เหรียญเพิ่ม)
     award({ coins })
+    if (nextStreak >= 5) award({ key: 'combo-5', badge: 'combo-5' })
     setScore((s) => s + 1)
     setStreak(nextStreak)
     setEarned((e) => e + coins)
     setLastGain(coins)
   }
 
-  /** จบรอบ: ถูกหมดได้โบนัส */
+  /** จบรอบ: นับรอบ ปลดล็อกสไลด์ถัดไป และถูกหมดได้โบนัส */
   function finish(finalScore: number) {
+    award({ key: quizDoneKey(id) })
+    award({ count: 'quizRounds' })
     if (finalScore === total) {
       award({ coins: PERFECT_BONUS })
       setEarned((e) => e + PERFECT_BONUS)
@@ -134,7 +140,7 @@ export function QuizSort() {
   const [items, setItems] = useState(() => shuffled(lesson.sort))
   const [i, setI] = useState(0)
   const [picked, setPicked] = useState<RtcfPart | null>(null)
-  const round = useRound(items.length)
+  const round = useRound(items.length, 'sort')
   const item = items[i]
   const done = i >= items.length
 
@@ -148,6 +154,7 @@ export function QuizSort() {
     if (i === items.length - 1) {
       round.finish(round.score)
       if (round.score >= 8) award({ key: 'sort:badge', badge: 'sorter' })
+      if (round.score === items.length) award({ key: 'perfect-sort', badge: 'perfect-sort' })
     }
     setPicked(null)
     setI(i + 1)
@@ -225,14 +232,21 @@ export function QuizSort() {
   )
 }
 
+/** สลับลำดับข้อ และสลับฝั่ง ก/ข ของคำตอบ (จำตำแหน่งไม่ได้) */
+function shuffledPick() {
+  return shuffled(lesson.pick).map((q) =>
+    Math.random() < 0.5 ? q : { ...q, options: [q.options[1], q.options[0]] as [string, string], better: (1 - q.better) as 0 | 1 },
+  )
+}
+
 /** เกมเลือก prompt ที่ดีกว่า */
 export function QuizPick() {
   const { award } = useGame()
   const { buddy } = useBuddy()
-  const [items, setItems] = useState(() => shuffled(lesson.pick))
+  const [items, setItems] = useState(() => shuffledPick())
   const [i, setI] = useState(0)
   const [picked, setPicked] = useState<number | null>(null)
-  const round = useRound(items.length)
+  const round = useRound(items.length, 'pick')
   const item = items[i]
   const done = i >= items.length
 
@@ -261,7 +275,7 @@ export function QuizPick() {
         perfect={perfect}
         badgeText={perfect ? 'ได้ตรารางวัลตาไว' : undefined}
         onRetry={() => {
-          setItems(shuffled(lesson.pick))
+          setItems(shuffledPick())
           setI(0)
           round.reset()
         }}

@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { badges } from '../data'
 import { useLocalStorage } from '../hooks/useLocalStorage'
+import { newlyEarned } from '../lib/badges'
 import { celebrate } from '../lib/confetti'
 import { applyAward, buyItem, emptyGame, equipItem, reviveGame, type Award, type GameState, type ShopItem, type Slot } from '../lib/game'
 import { BadgeIcon } from './BadgeIcon'
@@ -32,23 +33,40 @@ export function useGame() {
 
 export function GameProvider({ children }: { children: ReactNode }) {
   const [game, setGame] = useLocalStorage<GameState>('promptfolio:game:v1', emptyGame, reviveGame)
-  const [newBadge, setNewBadge] = useState<string | null>(null)
+  // ตรารางวัลใหม่รอแสดง (ได้หลายอันพร้อมกันจะเด้งทีละอัน)
+  const [queue, setQueue] = useState<string[]>([])
   const [lastGain, setLastGain] = useState<GameApi['lastGain']>(null)
   // อ่าน state ล่าสุดได้ทันที ไม่ต้องรอ render (กันให้รางวัลซ้ำเมื่อเรียกติดกัน)
   const latest = useRef(game)
   latest.current = game
+
+  /** บันทึก state ใหม่ และให้ตราที่ปลดล็อกจากตัวนับ/ของที่มี */
+  const commit = useCallback(
+    (next: GameState, eventBadges: string[] = []) => {
+      const auto = newlyEarned(next, badges)
+      const final = auto.length ? { ...next, badges: [...next.badges, ...auto] } : next
+      latest.current = final
+      setGame(final)
+      const fresh = [...eventBadges, ...auto]
+      if (fresh.length) setQueue((q) => [...q, ...fresh])
+    },
+    [setGame],
+  )
+
+  // ผู้ใช้เดิมที่ทำเงื่อนไขครบแล้ว (ก่อนมีตราใหม่) ได้ตราตอนเปิดเว็บ
+  useEffect(() => {
+    if (newlyEarned(latest.current, badges).length) commit(latest.current)
+  }, [commit])
 
   const award = useCallback(
     (a: Award) => {
       const prev = latest.current
       const next = applyAward(prev, a)
       if (next === prev) return
-      latest.current = next
-      setGame(next)
       if (a.coins) setLastGain({ id: Date.now(), amount: a.coins })
-      if (a.badge && !prev.badges.includes(a.badge)) setNewBadge(a.badge)
+      commit(next, a.badge && !prev.badges.includes(a.badge) ? [a.badge] : [])
     },
-    [setGame],
+    [commit],
   )
 
   const buy = useCallback(
@@ -56,28 +74,27 @@ export function GameProvider({ children }: { children: ReactNode }) {
       const prev = latest.current
       const next = buyItem(prev, item)
       if (next === prev) return false
-      latest.current = next
-      setGame(next)
       setLastGain({ id: Date.now(), amount: -item.price })
+      commit(next)
       return true
     },
-    [setGame],
+    [commit],
   )
 
   const equip = useCallback(
-    (slot: Slot, id: string | null) => {
-      const next = equipItem(latest.current, slot, id)
-      latest.current = next
-      setGame(next)
-    },
-    [setGame],
+    (slot: Slot, id: string | null) => commit(equipItem(latest.current, slot, id)),
+    [commit],
   )
 
-  const reset = useCallback(() => setGame(emptyGame), [setGame])
-  const clearBadge = useCallback(() => setNewBadge(null), [])
+  const reset = useCallback(() => {
+    latest.current = emptyGame
+    setGame(emptyGame)
+    setQueue([])
+  }, [setGame])
+  const clearBadge = useCallback(() => setQueue((q) => q.slice(1)), [])
 
   return (
-    <GameContext.Provider value={{ game, award, buy, equip, reset, lastGain, newBadge, clearBadge }}>
+    <GameContext.Provider value={{ game, award, buy, equip, reset, lastGain, newBadge: queue[0] ?? null, clearBadge }}>
       {children}
     </GameContext.Provider>
   )
@@ -86,7 +103,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
 /** ป๊อปอัปตรารางวัลใหม่ (วางไว้ใน App ใต้ BuddyProvider เพื่อให้ผู้ช่วยแต่งตัวตามของที่ใส่) */
 export function BadgePopupHost() {
   const { newBadge, clearBadge } = useGame()
-  return newBadge ? <BadgePopup id={newBadge} onClose={clearBadge} /> : null
+  return newBadge ? <BadgePopup key={newBadge} id={newBadge} onClose={clearBadge} /> : null
 }
 
 function BadgePopup({ id, onClose }: { id: string; onClose: () => void }) {
@@ -114,7 +131,7 @@ function BadgePopup({ id, onClose }: { id: string; onClose: () => void }) {
         <p className="text-sm font-semibold text-muted">ได้ตรารางวัลใหม่!</p>
         <div className="mt-3 flex items-end justify-center gap-2">
           <Buddy action="cheer" className="size-24" />
-          <BadgeIcon part={badge.color} className="size-24 animate-wiggle" />
+          <BadgeIcon part={badge.color} icon={badge.icon} className="size-24 animate-wiggle" />
         </div>
         <h2 id="badge-title" className="mt-3 text-2xl font-bold">
           {badge.name}

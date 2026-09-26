@@ -22,6 +22,8 @@ describe('ระบบเหรียญและตรารางวัล', (
     expect(reviveGame('xx')).toEqual(emptyGame)
     expect(reviveGame({ stars: 120, badges: [1, 'learner'], claimed: ['a'] })).toEqual({
       coins: 120,
+      earned: 120,
+      counts: {},
       badges: ['learner'],
       claimed: ['a'],
       owned: [],
@@ -47,7 +49,9 @@ describe('บทเรียน', () => {
   })
 
   it('เหรียญที่เว็บให้มีอยู่ในรายการเหรียญ', () => {
-    expect(badges.map((b) => b.id).sort()).toEqual(['artist', 'first-prompt', 'learner', 'sharp-eye', 'sorter'])
+    expect(badges.map((b) => b.id)).toEqual(
+      expect.arrayContaining(['learner', 'sorter', 'perfect-sort', 'sharp-eye', 'combo-5', 'first-prompt', 'artist']),
+    )
   })
 
   it('แยกส่วน prompt ตามหัวข้อ', () => {
@@ -158,5 +162,50 @@ describe('ร้านค้า', () => {
       expect(i.price).toBeGreaterThan(0)
     }
     for (const slot of ['head', 'face', 'neck']) expect(shopItems.some((i) => i.slot === slot)).toBe(true)
+  })
+})
+
+describe('ตรารางวัลสะสม', () => {
+  it('มีตราให้สะสมอย่างน้อย 15 แบบ ไม่ซ้ำ และทุกตรามีไอคอน', async () => {
+    const { badges } = await import('../data')
+    expect(badges.length).toBeGreaterThanOrEqual(15)
+    expect(new Set(badges.map((b) => b.id)).size).toBe(badges.length)
+    for (const b of badges) expect(b.icon, b.id).toBeTruthy()
+  })
+
+  it('ปลดล็อกตราจากตัวนับ ภารกิจ เหรียญรวม และของที่มี', async () => {
+    const { badges } = await import('../data')
+    const { newlyEarned, missionKey } = await import('./badges')
+    let s = applyAward(emptyGame, { key: 'done:m4:abc', coins: 30, count: 'prompts' })
+    s = applyAward(s, { key: missionKey('m4') })
+    expect(newlyEarned(s, badges).sort()).toEqual(['first-prompt', 'portfolio'])
+
+    s = { ...s, earned: 500, owned: ['bow', 'round-glasses', 'bowtie'], equipped: { head: 'bow', face: 'round-glasses', neck: 'bowtie' } }
+    expect(newlyEarned(s, badges)).toEqual(expect.arrayContaining(['coins-200', 'coins-500', 'shopper', 'fashion']))
+    expect(newlyEarned(s, badges)).not.toContain('collector') // ต้องมี 6 ชิ้น
+  })
+
+  it('ทำครบ 3 ภารกิจได้ตราครบทุกภารกิจ', async () => {
+    const { badges } = await import('../data')
+    const { newlyEarned, missionKey } = await import('./badges')
+    const s = { ...emptyGame, claimed: ['m4', 'present', 'image'].map(missionKey) }
+    expect(newlyEarned(s, badges)).toEqual(expect.arrayContaining(['portfolio', 'presenter', 'artist', 'all-missions']))
+  })
+
+  it('ตราจากเหตุการณ์ไม่ได้มาเอง และตราที่ได้แล้วไม่ซ้ำ', async () => {
+    const { badges } = await import('../data')
+    const { newlyEarned } = await import('./badges')
+    expect(newlyEarned(emptyGame, badges)).toEqual([])
+    const s = { ...emptyGame, counts: { taps: 25 }, badges: ['buddy-friend'] }
+    expect(newlyEarned(s, badges)).toEqual([])
+  })
+
+  it('ตัวนับและเหรียญรวมเพิ่มถูก (ซื้อของไม่ลดเหรียญรวม)', () => {
+    let s = applyAward(emptyGame, { coins: 50, count: 'quizRounds' })
+    s = applyAward(s, { count: 'quizRounds' })
+    expect(s.counts.quizRounds).toBe(2)
+    s = buyItem(s, { id: 'bow', slot: 'head', name: 'โบว์', price: 30 })
+    expect(s.coins).toBe(20)
+    expect(s.earned).toBe(50)
   })
 })

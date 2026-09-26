@@ -1,5 +1,6 @@
 import type { BuddyAction, MoveAction } from '../components/BuddyArt'
 import type { ShopItem } from '../lib/game'
+import type { BadgeRule } from '../lib/badges'
 import type { Goal, PromptTemplate, Question, RtcfPart, Tool, ToolId } from '../types'
 import goalsJson from './goals.json'
 import questionsJson from './questions.json'
@@ -90,17 +91,27 @@ export interface Lesson {
   pick: { options: [string, string]; better: 0 | 1; why: string }[]
 }
 
+export type BadgeIconName =
+  | 'book' | 'sort' | 'target' | 'eye' | 'fire' | 'repeat'
+  | 'pencil' | 'folder' | 'slides' | 'palette' | 'trophy' | 'scroll' | 'crown'
+  | 'coins' | 'gem' | 'bag' | 'box' | 'sparkle' | 'heart'
+
 export interface Badge {
   id: string
+  /** หมวดบนชั้นวางตรา */
+  group: string
   name: string
   desc: string
   /** ใช้สีของส่วน RTCF */
   color: RtcfPart
+  icon: BadgeIconName
+  /** วิธีได้ตรานี้ */
+  rule: BadgeRule
 }
 
 export const rtcf = rtcfJson as RtcfInfo[]
 export const lesson = lessonJson as Lesson
-export const badges = badgesJson as Badge[]
+export const badges = badgesJson as unknown as Badge[]
 
 export type BuddyKind = 'cat' | 'bear' | 'bunny' | 'robot' | 'dino'
 

@@ -11,9 +11,15 @@ export interface ShopItem {
   price: number
 }
 
+/** ตัวนับสะสม ใช้ปลดล็อกตรารางวัล */
+export type Counter = 'prompts' | 'quizRounds' | 'taps'
+
 export interface GameState {
   /** เหรียญที่มีอยู่ (ใช้ซื้อของในร้านได้) */
   coins: number
+  /** เหรียญที่เคยได้ทั้งหมด (ไม่ลดเมื่อซื้อของ) */
+  earned: number
+  counts: Partial<Record<Counter, number>>
   /** ตรารางวัลที่ได้แล้ว */
   badges: string[]
   /** รางวัลที่รับไปแล้ว กันได้เหรียญซ้ำจากเรื่องเดิม */
@@ -28,16 +34,21 @@ export interface Award {
   key?: string
   coins?: number
   badge?: string
+  /** เพิ่มตัวนับ 1 ครั้ง */
+  count?: Counter
 }
 
-export const emptyGame: GameState = { coins: 0, badges: [], claimed: [], owned: [], equipped: {} }
+export const emptyGame: GameState = { coins: 0, earned: 0, counts: {}, badges: [], claimed: [], owned: [], equipped: {} }
 
 /** ให้รางวัล: ถ้ามี key ได้ครั้งเดียวต่อ key (คืน state เดิมถ้าเคยได้แล้ว) ถ้าไม่มี key ได้ทุกครั้ง */
 export function applyAward(state: GameState, award: Award): GameState {
   if (award.key && state.claimed.includes(award.key)) return state
+  const coins = award.coins ?? 0
   return {
     ...state,
-    coins: state.coins + (award.coins ?? 0),
+    coins: state.coins + coins,
+    earned: state.earned + Math.max(coins, 0),
+    counts: award.count ? { ...state.counts, [award.count]: (state.counts[award.count] ?? 0) + 1 } : state.counts,
     badges: award.badge && !state.badges.includes(award.badge) ? [...state.badges, award.badge] : state.badges,
     claimed: award.key ? [...state.claimed, award.key] : state.claimed,
   }
@@ -96,5 +107,15 @@ export function reviveGame(raw: unknown): GameState {
       if (typeof id === 'string' && owned.includes(id)) equipped[slot] = id
     }
   }
-  return { coins: coins >= 0 ? coins : 0, badges: strings(r.badges), claimed: strings(r.claimed), owned, equipped }
+  const counts: GameState['counts'] = {}
+  if (r.counts && typeof r.counts === 'object') {
+    for (const k of ['prompts', 'quizRounds', 'taps'] as Counter[]) {
+      const v = (r.counts as Record<string, unknown>)[k]
+      if (typeof v === 'number' && v > 0) counts[k] = v
+    }
+  }
+  const safeCoins = coins >= 0 ? coins : 0
+  // เวอร์ชันก่อนไม่ได้เก็บยอดรวม: เริ่มจากเหรียญที่มีอยู่
+  const earned = typeof r.earned === 'number' && r.earned >= safeCoins ? r.earned : safeCoins
+  return { coins: safeCoins, earned, counts, badges: strings(r.badges), claimed: strings(r.claimed), owned, equipped }
 }

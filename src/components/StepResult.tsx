@@ -11,6 +11,7 @@ import {
   toolById,
 } from '../lib/promptBuilder'
 import { celebrate } from '../lib/confetti'
+import { missionKey } from '../lib/badges'
 import { fingerprint, MISSION_COINS } from '../lib/game'
 import { PARTS } from '../lib/rtcf'
 import type { Answers, GoalId, ToolId } from '../types'
@@ -54,7 +55,8 @@ export function StepResult({ goal, answers, toolId, onAnswer, onGoTo, onReset }:
   // ภารกิจสำเร็จ: พลุกระดาษ + เหรียญ (prompt ใหม่) + ตรารางวัล (ครั้งแรก)
   useEffect(() => {
     celebrate('big')
-    award({ key: doneKey, coins: MISSION_COINS, badge: goal === 'image' ? 'artist' : 'first-prompt' })
+    award({ key: doneKey, coins: MISSION_COINS, count: 'prompts' })
+    award({ key: missionKey(goal) })
   }, [doneKey, goal, award])
 
   let body

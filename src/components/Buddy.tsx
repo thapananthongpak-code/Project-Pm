@@ -153,7 +153,7 @@ interface LivelyProps {
 /** ผู้ช่วยที่มีชีวิต: ขยับเอง พึมพำ แตะแล้วตอบสนองตามนิสัย พร้อมเวทีแสงด้านหลัง */
 export function LivelyBuddy({ action = 'idle', lively = true, onTap, pulse, buddy: own, outfit, className = '', label }: LivelyProps) {
   const { buddy: current } = useBuddy()
-  const { game } = useGame()
+  const { game, award } = useGame()
   const buddy = own ?? current
   const motion = useBuddyMotion(buddy, action, lively)
   const lastNod = useRef(0)
@@ -201,6 +201,7 @@ export function LivelyBuddy({ action = 'idle', lively = true, onTap, pulse, budd
       type="button"
       onClick={() => {
         play(pickOne(buddy.tap))
+        award({ count: 'taps' })
         onTap?.()
       }}
       aria-label={label ?? `แตะผู้ช่วย (${buddy.intro})`}

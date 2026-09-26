@@ -1,32 +1,23 @@
 [
-  {
-    "id": "learner",
-    "name": "รู้จัก RTCF",
-    "desc": "เรียนบทเรียนครบทุกหน้า",
-    "color": "R"
-  },
-  {
-    "id": "sorter",
-    "name": "นักแยก RTCF",
-    "desc": "เกมแยก RTCF ถูก 8 ข้อขึ้นไป",
-    "color": "T"
-  },
-  {
-    "id": "sharp-eye",
-    "name": "ตาไว",
-    "desc": "เลือก prompt ที่ดีกว่าถูกทุกข้อ",
-    "color": "C"
-  },
-  {
-    "id": "first-prompt",
-    "name": "prompt แรกของฉัน",
-    "desc": "สร้าง prompt ทำสไลด์สำเร็จ",
-    "color": "F"
-  },
-  {
-    "id": "artist",
-    "name": "นักสร้างภาพ",
-    "desc": "สร้าง prompt ภาพสำเร็จ",
-    "color": "C"
-  }
+  { "id": "learner", "group": "เรียนรู้", "name": "รู้จัก RTCF", "desc": "เรียนบทเรียนครบทุกหน้า", "color": "R", "icon": "book", "rule": { "type": "event" } },
+  { "id": "sorter", "group": "เรียนรู้", "name": "นักแยก RTCF", "desc": "เกมแยก RTCF ถูก 8 ข้อขึ้นไป", "color": "T", "icon": "sort", "rule": { "type": "event" } },
+  { "id": "perfect-sort", "group": "เรียนรู้", "name": "สายตาเหยี่ยว", "desc": "เกมแยก RTCF ถูกหมด 10/10", "color": "T", "icon": "target", "rule": { "type": "event" } },
+  { "id": "sharp-eye", "group": "เรียนรู้", "name": "ตาไว", "desc": "เกมเลือกแบบที่ดีกว่าถูกทุกข้อ", "color": "C", "icon": "eye", "rule": { "type": "event" } },
+  { "id": "combo-5", "group": "เรียนรู้", "name": "คอมโบ 5", "desc": "ตอบถูกติดกัน 5 ข้อ", "color": "C", "icon": "fire", "rule": { "type": "event" } },
+  { "id": "quiz-5", "group": "เรียนรู้", "name": "ขาประจำแบบทดสอบ", "desc": "เล่นแบบทดสอบครบ 5 รอบ", "color": "F", "icon": "repeat", "rule": { "type": "count", "counter": "quizRounds", "goal": 5 } },
+
+  { "id": "first-prompt", "group": "ภารกิจ", "name": "prompt แรกของฉัน", "desc": "สร้าง prompt สำเร็จครั้งแรก", "color": "F", "icon": "pencil", "rule": { "type": "count", "counter": "prompts", "goal": 1 } },
+  { "id": "portfolio", "group": "ภารกิจ", "name": "พอร์ตพร้อมยื่น", "desc": "ภารกิจพอร์ตโฟลิโอ ม.4 สำเร็จ", "color": "R", "icon": "folder", "rule": { "type": "mission", "goal": "m4" } },
+  { "id": "presenter", "group": "ภารกิจ", "name": "นักนำเสนอ", "desc": "ภารกิจสื่อนำเสนองานสำเร็จ", "color": "T", "icon": "slides", "rule": { "type": "mission", "goal": "present" } },
+  { "id": "artist", "group": "ภารกิจ", "name": "นักสร้างภาพ", "desc": "ภารกิจสร้างภาพสำเร็จ", "color": "C", "icon": "palette", "rule": { "type": "mission", "goal": "image" } },
+  { "id": "all-missions", "group": "ภารกิจ", "name": "ครบทุกภารกิจ", "desc": "ทำภารกิจสำเร็จครบทั้ง 3 แบบ", "color": "F", "icon": "trophy", "rule": { "type": "missions" } },
+  { "id": "prompt-5", "group": "ภารกิจ", "name": "นักเขียน prompt", "desc": "สร้าง prompt ใหม่ครบ 5 ครั้ง", "color": "R", "icon": "scroll", "rule": { "type": "count", "counter": "prompts", "goal": 5 } },
+  { "id": "prompt-10", "group": "ภารกิจ", "name": "เซียน prompt", "desc": "สร้าง prompt ใหม่ครบ 10 ครั้ง", "color": "R", "icon": "crown", "rule": { "type": "count", "counter": "prompts", "goal": 10 } },
+
+  { "id": "coins-200", "group": "สะสม", "name": "กระปุกออมสิน", "desc": "เก็บเหรียญได้รวม 200 เหรียญ", "color": "C", "icon": "coins", "rule": { "type": "earned", "goal": 200 } },
+  { "id": "coins-500", "group": "สะสม", "name": "เศรษฐีน้อย", "desc": "เก็บเหรียญได้รวม 500 เหรียญ", "color": "C", "icon": "gem", "rule": { "type": "earned", "goal": 500 } },
+  { "id": "shopper", "group": "สะสม", "name": "ช้อปครั้งแรก", "desc": "ซื้อของในร้านค้าชิ้นแรก", "color": "T", "icon": "bag", "rule": { "type": "owned", "goal": 1 } },
+  { "id": "collector", "group": "สะสม", "name": "นักสะสม", "desc": "มีของแต่งตัวครบ 6 ชิ้น", "color": "F", "icon": "box", "rule": { "type": "owned", "goal": 6 } },
+  { "id": "fashion", "group": "สะสม", "name": "แฟชั่นนิสต้า", "desc": "แต่งตัวผู้ช่วยครบ หมวก แว่น และของคล้องคอ", "color": "R", "icon": "sparkle", "rule": { "type": "equipped", "goal": 3 } },
+  { "id": "buddy-friend", "group": "สะสม", "name": "เพื่อนซี้ผู้ช่วย", "desc": "แตะเล่นกับผู้ช่วยครบ 20 ครั้ง", "color": "T", "icon": "heart", "rule": { "type": "count", "counter": "taps", "goal": 20 } }
 ]

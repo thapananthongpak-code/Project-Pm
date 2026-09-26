@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { useTheme } from '../hooks/useTheme'
 import { BuddyButton } from './Buddy'
+import { BadgesButton } from './BadgeShelf'
 import { CoinCounter } from './Game'
 import { container } from './layout'
 
@@ -88,6 +89,7 @@ export function Header({ active, onMenu }: Props) {
         </button>
         <div className="order-3 w-full md:order-none md:mx-auto md:w-auto">{nav}</div>
         <CoinCounter onClick={() => onMenu('shop')} />
+        <BadgesButton />
         <BuddyButton />
         <button
           type="button"
