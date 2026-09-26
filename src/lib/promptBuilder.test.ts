@@ -222,3 +222,32 @@ describe('โครงสร้าง RTCF', () => {
     }
   })
 })
+
+describe('ตัวเลือกในภารกิจ', () => {
+  it('มีตัวเลือกให้เลือกเยอะในทุกภารกิจ', async () => {
+    const { questions, imageStyles, imageSubjects, refinements, imageRefinements } = await import('../data')
+    const f = (id: string) => questions.flatMap((q) => q.fields).find((x) => x.id === id)!
+    for (const id of ['roleM4', 'rolePresent', 'roleImage']) expect(f(id).options!.length, id).toBeGreaterThanOrEqual(7)
+    for (const id of ['slideStyle', 'colors', 'track', 'subject']) expect(f(id).options!.length, id).toBeGreaterThanOrEqual(10)
+    for (const id of ['strengths', 'works', 'keyPoints', 'imageDesc']) expect(f(id).suggestions!.length, id).toBeGreaterThanOrEqual(10)
+    expect(imageStyles.length).toBeGreaterThanOrEqual(12)
+    expect(imageSubjects.length).toBeGreaterThanOrEqual(5)
+    expect(refinements.length).toBeGreaterThanOrEqual(8)
+    expect(imageRefinements.length).toBeGreaterThanOrEqual(8)
+  })
+
+  it('ไม่มีตัวเลือกซ้ำในช่องเดียวกัน', async () => {
+    const { questions } = await import('../data')
+    for (const field of questions.flatMap((q) => q.fields)) {
+      for (const list of [field.options, field.suggestions]) {
+        if (list) expect(new Set(list).size, field.id).toBe(list.length)
+      }
+    }
+  })
+
+  it('ชุดสติกเกอร์มีตัวละคร พื้นหลังสไลด์ไม่มี', async () => {
+    const { buildImagePrompt } = await import('./promptBuilder')
+    expect(buildImagePrompt('m4', { ...m4, imageSubject: 'ชุดสติกเกอร์' }, 'chatgpt')).toContain('- ตัวละคร:')
+    expect(buildImagePrompt('m4', { ...m4, imageSubject: 'พื้นหลังสไลด์' }, 'chatgpt')).not.toContain('ตัวละคร:')
+  })
+})

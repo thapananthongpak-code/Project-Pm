@@ -26,7 +26,7 @@ export const templates = templatesJson as PromptTemplate[]
 export const refinements = refinementsJson as Refinement[]
 
 export interface ImageSubject {
-  id: 'avatar' | 'scene' | 'icons'
+  id: 'avatar' | 'scene' | 'icons' | 'stickers' | 'background'
   label: string
   desc: string
   ratio: string

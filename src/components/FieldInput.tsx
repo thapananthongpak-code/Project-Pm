@@ -1,4 +1,5 @@
 import { byGoal } from '../lib/byGoal'
+import { hasSuggestion, toggleSuggestion } from '../lib/suggest'
 import type { Field, GoalId } from '../types'
 
 interface Props {
@@ -88,6 +89,33 @@ export function FieldInput({ field, goal, value, error, hideOptional, onChange }
             />
           )}
         </>
+      )}
+
+      {field.suggestions && field.type !== 'chips' && (
+        <div className="mt-2" role="group" aria-label={`ตัวเลือกด่วนสำหรับ${label}`}>
+          <p className="text-xs font-semibold text-muted">แตะเพื่อเพิ่มได้เลย (แตะซ้ำเพื่อเอาออก)</p>
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
+            {field.suggestions.map((s) => {
+              const on = hasSuggestion(value, s, field.join ?? 'line')
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => onChange(toggleSuggestion(value, s, field.join ?? 'line'))}
+                  className={`min-h-9 rounded-full border px-3 text-sm font-medium transition duration-200 active:scale-95 ${
+                    on
+                      ? 'animate-pop border-sea-500 bg-sea-500 text-white'
+                      : 'border-dashed border-sea-300 bg-surface text-sea-700 hover:bg-sea-50 dark:text-sea-200 dark:hover:bg-sea-700/20'
+                  }`}
+                >
+                  {on ? '' : '+ '}
+                  {s}
+                </button>
+              )
+            })}
+          </div>
+        </div>
       )}
 
       {error && (
