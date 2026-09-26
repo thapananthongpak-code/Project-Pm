@@ -253,13 +253,13 @@ describe('ตัวเลือกในภารกิจ', () => {
 })
 
 describe('ประโยคแผนการเรียน', () => {
-  it('อ่านถูกทุกตัวเลือก รวม ปวช. และยังไม่แน่ใจ', async () => {
+  it('อ่านถูกทุกตัวเลือก รวมยังไม่แน่ใจ และค่าเก่าที่ถูกเอาออกแล้ว', async () => {
     const { trackPhrase, buildPrompts } = await import('./promptBuilder')
     expect(trackPhrase('วิทย์-คณิต')).toBe('ม.4 แผนการเรียน วิทย์-คณิต')
-    expect(trackPhrase('ปวช.')).toBe('ระดับ ปวช.')
-    expect(trackPhrase('ยังไม่แน่ใจ')).toBe('ม.4 (ยังไม่แน่ใจแผนการเรียน)')
+    expect(trackPhrase('ยังไม่แน่ใจ')).toBe('ม.4 (ยังไม่ได้เลือกแผนการเรียน)')
+    expect(trackPhrase('ปวช.')).toBe('ม.4')
     const content = buildPrompts('m4', { ...m4, track: 'ปวช.' }, 'chatgpt').content
-    expect(content).toContain('เพื่อสมัครเรียนต่อ ระดับ ปวช. ที่')
-    expect(content).not.toContain('แผนการเรียนปวช')
+    expect(content).toContain('เพื่อสมัครเรียนต่อ ม.4 ที่')
+    expect(content).not.toContain('ปวช')
   })
 })

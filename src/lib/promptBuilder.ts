@@ -61,13 +61,14 @@ export function audienceFor(goal: GoalId | null): string {
   return goal === 'present' ? 'เพื่อนและครู' : 'กรรมการ'
 }
 
-/** ประโยคระดับ/แผนการเรียน ให้อ่านถูกทุกตัวเลือก (เช่น ปวช. ไม่ใช่แผนการเรียน ม.4) */
+const trackOptions = new Set(questions.flatMap((q) => q.fields.find((f) => f.id === 'track')?.options ?? []))
+
+/** ประโยคแผนการเรียน ม.4 ให้อ่านถูกทุกตัวเลือก (ค่าเก่าที่ไม่มีในตัวเลือกแล้ว ใช้แค่ "ม.4") */
 export function trackPhrase(track: string | undefined): string {
   const t = track?.trim()
   if (!t) return ''
-  if (t === 'ยังไม่แน่ใจ') return 'ม.4 (ยังไม่แน่ใจแผนการเรียน)'
-  if (t === 'ปวช.') return 'ระดับ ปวช.'
-  return `ม.4 แผนการเรียน ${t}`
+  if (t === 'ยังไม่แน่ใจ') return 'ม.4 (ยังไม่ได้เลือกแผนการเรียน)'
+  return trackOptions.has(t) ? `ม.4 แผนการเรียน ${t}` : 'ม.4'
 }
 
 /** รวมคำตอบกับค่าเริ่มต้น และค่าพิเศษที่เทมเพลตใช้ */
