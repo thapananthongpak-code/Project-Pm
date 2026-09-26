@@ -7,12 +7,36 @@ import { BadgeShelf } from './BadgeShelf'
 import { useGame } from './Game'
 import type { Menu } from './Header'
 import { Buddy, BuddyTip, LivelyBuddy, useBuddy } from './Buddy'
-import { QuizPick, QuizSort, quizDoneKey } from './Quiz'
+import { QuizPick, QuizSort } from './Quiz'
 import { RtcfTag, RtcfText } from './Rtcf'
 import { SCHOOL } from './layout'
 
 const slides = lesson.slides
 const goodPrompt = lesson.assemble.map((a) => `${partHeading[a.part]}: ${a.text}`).join('\n')
+
+type QuizId = 'sort' | 'pick'
+const quizOf: Partial<Record<SlideKind, QuizId>> = { 'quiz-sort': 'sort', 'quiz-pick': 'pick' }
+
+/**
+ * แบบทดสอบที่เล่นจบแล้ว เก็บใน sessionStorage: รีเฟรชยังอยู่
+ * แต่เปิดเว็บใหม่ (แท็บใหม่/คาบใหม่) ต้องทำแบบทดสอบก่อนถึงไปต่อได้ ล็อกจึงไม่หายถาวรหลังทำครั้งแรก
+ */
+const PASSED_KEY = 'promptfolio:quiz-passed:v1'
+function readPassed(): QuizId[] {
+  try {
+    const raw = JSON.parse(sessionStorage.getItem(PASSED_KEY) ?? '[]')
+    return Array.isArray(raw) ? raw.filter((q): q is QuizId => q === 'sort' || q === 'pick') : []
+  } catch {
+    return []
+  }
+}
+function writePassed(passed: QuizId[]) {
+  try {
+    sessionStorage.setItem(PASSED_KEY, JSON.stringify(passed))
+  } catch {
+    // โหมดส่วนตัวบางเบราว์เซอร์: ล็อกยังทำงานในหน้านี้ได้ตามปกติ
+  }
+}
 
 const slideTitles: Record<SlideKind, string> = {
   cover: 'เริ่มต้น',
@@ -46,13 +70,20 @@ export function Lesson({ onGo }: Props) {
     return () => window.removeEventListener('resize', fit)
   }, [present])
   const stageRef = useRef<HTMLDivElement>(null)
-  const { game, award, reset } = useGame()
+  const { award, reset } = useGame()
 
-  // ล็อก: สไลด์แบบทดสอบต้องเล่นจบอย่างน้อย 1 รอบ ถึงจะไปสไลด์ถัดไปได้
-  const quizOf: Partial<Record<SlideKind, 'sort' | 'pick'>> = { 'quiz-sort': 'sort', 'quiz-pick': 'pick' }
+  // ล็อก: สไลด์แบบทดสอบต้องเล่นจบ 1 รอบ (ในการเปิดเว็บครั้งนี้) ถึงจะไปสไลด์ถัดไปได้
+  const [passed, setPassed] = useState(readPassed)
+  const pass = useCallback((q: QuizId) => {
+    setPassed((p) => {
+      const next = p.includes(q) ? p : [...p, q]
+      writePassed(next)
+      return next
+    })
+  }, [])
   const lockAt = slides.findIndex((s) => {
     const q = quizOf[s.kind]
-    return q !== undefined && !game.claimed.includes(quizDoneKey(q))
+    return q !== undefined && !passed.includes(q)
   })
   /** สไลด์สุดท้ายที่ไปถึงได้ตอนนี้ */
   const maxIndex = lockAt === -1 ? slides.length - 1 : lockAt
@@ -164,8 +195,11 @@ export function Lesson({ onGo }: Props) {
             kind={slide.kind}
             part={slide.part}
             onGo={onGo}
+            onPass={pass}
             onReset={() => {
               reset()
+              setPassed([])
+              writePassed([])
               setDir('prev')
               setIndex(0)
             }}
@@ -212,11 +246,13 @@ function SlideBody({
   kind,
   part,
   onGo,
+  onPass,
   onReset,
 }: {
   kind: SlideKind
   part?: RtcfPart
   onGo: (menu: Menu) => void
+  onPass: (quiz: QuizId) => void
   onReset: () => void
 }) {
   const { buddy } = useBuddy()
@@ -371,7 +407,7 @@ function SlideBody({
         <div className="space-y-4">
           <h2 className="text-2xl font-bold sm:text-4xl">เกม: ประโยคนี้คือส่วนไหน?</h2>
           <p className="text-muted">อ่านประโยค แล้วกด R, T, C หรือ F · ตอบถูกได้เหรียญ ถูกติดกันได้มากขึ้น เล่นซ้ำได้</p>
-          <QuizSort />
+          <QuizSort onFinish={() => onPass('sort')} />
         </div>
       )
 
@@ -380,7 +416,7 @@ function SlideBody({
         <div className="space-y-4">
           <h2 className="text-2xl font-bold sm:text-4xl">เกม: แบบไหนดีกว่า?</h2>
           <p className="text-muted">เลือก prompt ที่ AI จะตอบได้ตรงใจกว่า · ตอบถูกได้เหรียญ เล่นซ้ำได้</p>
-          <QuizPick />
+          <QuizPick onFinish={() => onPass('pick')} />
         </div>
       )
 

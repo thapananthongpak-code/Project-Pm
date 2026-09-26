@@ -96,11 +96,8 @@ function Finished({
   )
 }
 
-/** key ใน claimed ที่บอกว่าเล่นแบบทดสอบนี้จบแล้วอย่างน้อย 1 รอบ (ใช้ปลดล็อกสไลด์ถัดไป) */
-export const quizDoneKey = (id: 'sort' | 'pick') => `quizdone:${id}`
-
 /** ติดตามคะแนน/ติดกัน/เหรียญของ 1 รอบ */
-function useRound(total: number, id: 'sort' | 'pick') {
+function useRound(total: number) {
   const { game, award } = useGame()
   // ดูตอนเริ่มรอบ: เล่นเกินรอบเต็มของวันนี้แล้วหรือยัง (ไม่เปลี่ยนกลางรอบ)
   const [tired, setTired] = useState(() => dailyCount(game, 'quizRounds') >= FULL_ROUNDS_PER_DAY)
@@ -126,9 +123,8 @@ function useRound(total: number, id: 'sort' | 'pick') {
     setLastGain(coins)
   }
 
-  /** จบรอบ: นับรอบ ปลดล็อกสไลด์ถัดไป และถูกหมดได้โบนัส */
+  /** จบรอบ: นับรอบ และถูกหมดได้โบนัส */
   function finish(finalScore: number) {
-    award({ key: quizDoneKey(id) })
     award({ count: 'quizRounds', daily: 'quizRounds' })
     if (finalScore === total) {
       award({ coins: perfectBonus(tired) })
@@ -148,13 +144,18 @@ function useRound(total: number, id: 'sort' | 'pick') {
 }
 
 /** เกมแยกประเภท: ประโยคนี้คือ R, T, C หรือ F */
-export function QuizSort() {
+interface QuizProps {
+  /** เล่นจบรอบ (บทเรียนใช้ปลดล็อกสไลด์ถัดไป) */
+  onFinish?: () => void
+}
+
+export function QuizSort({ onFinish }: QuizProps) {
   const { award } = useGame()
   const { buddy } = useBuddy()
   const [items, setItems] = useState(() => shuffled(lesson.sort))
   const [i, setI] = useState(0)
   const [picked, setPicked] = useState<RtcfPart | null>(null)
-  const round = useRound(items.length, 'sort')
+  const round = useRound(items.length)
   const item = items[i]
   const done = i >= items.length
 
@@ -167,6 +168,7 @@ export function QuizSort() {
   function next() {
     if (i === items.length - 1) {
       round.finish(round.score)
+      onFinish?.()
       if (round.score >= 8) award({ key: 'sort:badge', badge: 'sorter' })
       if (round.score === items.length) award({ key: 'perfect-sort', badge: 'perfect-sort' })
     }
@@ -255,13 +257,13 @@ function shuffledPick() {
 }
 
 /** เกมเลือก prompt ที่ดีกว่า */
-export function QuizPick() {
+export function QuizPick({ onFinish }: QuizProps) {
   const { award } = useGame()
   const { buddy } = useBuddy()
   const [items, setItems] = useState(() => shuffledPick())
   const [i, setI] = useState(0)
   const [picked, setPicked] = useState<number | null>(null)
-  const round = useRound(items.length, 'pick')
+  const round = useRound(items.length)
   const item = items[i]
   const done = i >= items.length
 
@@ -274,6 +276,7 @@ export function QuizPick() {
   function next() {
     if (i === items.length - 1) {
       round.finish(round.score)
+      onFinish?.()
       if (round.score === items.length) award({ key: 'pick:badge', badge: 'sharp-eye' })
     }
     setPicked(null)
