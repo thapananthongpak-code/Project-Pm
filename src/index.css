@@ -261,18 +261,6 @@
 }
 @keyframes shine-now { from { transform: translateX(-120%); } to { transform: translateX(120%); } }
 
-/* ลายจุดบนพื้นหลัง */
-.dot-grid {
-  background-image: radial-gradient(var(--pf-line) 1.2px, transparent 1.4px);
-  background-size: 22px 22px;
-  mask-image: radial-gradient(ellipse at 50% 0%, #000 20%, transparent 75%);
-}
-@keyframes spin-slow { to { transform: rotate(360deg); } }
-@keyframes float-slow {
-  0%, 100% { transform: translateY(0) rotate(0); }
-  50% { transform: translateY(-14px) rotate(8deg); }
-}
-
 /* ===== ผู้ช่วย (BuddyArt) ขยับแต่ละชิ้นตาม data-action ===== */
 .buddy .b-all, .buddy .b-ears, .buddy .b-ear-l, .buddy .b-ear-r, .buddy .b-eyes, .buddy .b-pupils,
 .buddy .b-arm-l, .buddy .b-arm-r, .buddy .b-tail, .buddy .b-heart, .buddy .b-sparkle, .buddy .b-sweat,
